@@ -69,21 +69,49 @@ body[data-mode=puppet].holding #gl{cursor:grabbing}
 .tag i{width:6px;height:6px;border-radius:50%;background:var(--ember);box-shadow:0 0 0 0 rgba(255,138,76,.6);animation:ping 1.8s infinite}
 .card .ttl{font-weight:800;font-size:40px;line-height:.95;letter-spacing:-.03em}
 .card .dsc{color:var(--mute);font-size:14.5px;line-height:1.4;max-width:30ch}
+.card.primary{cursor:pointer}
 .card.primary .ttl,.card.primary .dsc,.card.primary .tag{grid-column:1}
-.go{grid-column:2;grid-row:2/span 2;width:64px;height:64px;border-radius:22px;background:var(--nut);color:#1d1109;display:grid;place-items:center;
+.go{grid-column:2;grid-row:2/span 3;width:64px;height:64px;border-radius:22px;background:var(--nut);color:#1d1109;display:grid;place-items:center;
   box-shadow:0 10px 30px rgba(227,173,107,.35);transition:transform .45s var(--spring)}
 .card.primary:active .go{transform:scale(.9) rotate(-8deg)}
 .go svg{width:28px;height:28px;stroke-width:2.2}
-.card.second{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:2px 14px;align-items:center;padding:12px;
-  background:rgba(30,19,12,.82);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px var(--line);animation:up .8s .25s var(--spring) both}
-.thumb{grid-row:1/span 2;grid-column:1;width:64px;height:64px;border-radius:18px;overflow:hidden;display:grid;place-items:center;color:var(--mute);
-  background:conic-gradient(#2c1d13 25%,#24170f 0 50%,#2c1d13 0 75%,#24170f 0) 0 0/16px 16px}
-.thumb img{width:100%;height:100%;object-fit:contain}
-.second .ttl{grid-column:2;align-self:end;font-size:21px;font-weight:800;letter-spacing:-.02em}
-.second .dsc{grid-column:2;align-self:start;font-size:13px;line-height:1.35;max-width:none}
-.acts{grid-column:3;grid-row:1/span 2;display:flex;flex-direction:column;gap:6px}
-.acts .pill{flex:none;height:44px;padding:0 16px;font-size:14px}
-.acts .pill.small{height:34px;font-size:12.5px;color:var(--mute);background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.bgchip{grid-column:1;justify-self:start;margin-top:8px;height:34px;padding:0 12px 0 5px;border-radius:99px;display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--ink);background:rgba(0,0,0,.28);box-shadow:inset 0 0 0 1px var(--line)}
+.bgchip i{width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.chars{animation:up .8s .25s var(--spring) both}
+.chars-head{display:flex;align-items:center;gap:8px;padding:2px 4px 8px}
+.ttl2{font-weight:800;font-size:19px;letter-spacing:-.02em}
+.cnt:empty{display:none}
+.cnt{font:500 11px var(--mono);color:var(--mute);background:var(--raise);padding:3px 7px;border-radius:99px}
+.addbtn{margin-left:auto;height:34px;padding:0 12px 0 8px;border-radius:99px;display:flex;align-items:center;gap:4px;font-weight:600;font-size:13px;background:var(--ink);color:#1d1109}
+.addbtn svg{width:18px;height:18px;stroke-width:2.4}
+.char-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 6px;scrollbar-width:none;margin:0 -2px}
+.ctile{flex:none;width:104px;scroll-snap-align:start;position:relative;display:flex;flex-direction:column;gap:6px}
+.cface{width:104px;height:124px;border-radius:20px;overflow:hidden;position:relative;box-shadow:inset 0 0 0 1px var(--line),0 10px 24px rgba(0,0,0,.35);transition:transform .35s var(--spring)}
+.cface:active{transform:scale(.94)}
+.cface img{position:absolute;inset:8px 8px 0;width:calc(100% - 16px);height:calc(100% - 8px);object-fit:contain;object-position:bottom;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))}
+.cface .w3d{position:absolute;left:6px;top:6px;font:600 9px var(--mono);letter-spacing:.1em;padding:3px 6px;border-radius:99px;background:rgba(0,0,0,.55);color:#fff}
+.cname{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 30px 0 2px}
+.cmore{position:absolute;right:0;bottom:-6px;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--mute)}
+.cmore svg{width:18px;height:18px}
+.ctile.new .cface{display:grid;place-items:center;align-content:center;gap:6px;text-align:center;font-size:12px;font-weight:600;color:var(--mute);
+  background:repeating-linear-gradient(135deg,rgba(247,236,220,.04) 0 8px,transparent 8px 16px);box-shadow:inset 0 0 0 2px rgba(247,236,220,.16)}
+.ctile.new svg{width:28px;height:28px;margin:0 auto;color:var(--nut2)}
+.ctile.on .cface{box-shadow:0 0 0 2px var(--nut),0 10px 24px rgba(0,0,0,.35)}
+#modal{position:fixed;inset:0;z-index:45}
+#modal .mback{position:absolute;inset:0;background:rgba(8,5,3,.62);animation:fade .3s both}
+#modal .mpanel{position:absolute;left:0;right:0;bottom:0;max-height:78vh;overflow:auto;background:var(--panel2);border-radius:28px 28px 0 0;
+  padding:16px max(18px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));box-shadow:0 -18px 50px rgba(0,0,0,.5);animation:up .5s var(--spring) both}
+@media (min-width:700px){#modal .mpanel{left:50%;right:auto;width:520px;transform:translateX(-50%);bottom:24px;border-radius:26px}}
+.mhead{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.mhead h2{margin:0;flex:1;font-size:22px;font-weight:800;letter-spacing:-.02em}
+.namein{width:100%;height:48px;border-radius:14px;border:0;padding:0 14px;background:var(--raise);color:var(--ink);font:600 16px var(--display);-webkit-user-select:text;user-select:text}
+.glist{display:grid;grid-template-columns:auto 1fr;gap:10px 14px;align-items:center;margin:10px 0 4px}
+.glist .gi{width:58px;height:44px;border-radius:12px;background:var(--raise);display:grid;place-items:center;font:600 11px var(--mono);color:var(--nut2);letter-spacing:.04em}
+.glist b{display:block;font-size:14.5px}.glist span{color:var(--mute);font-size:13px}
+#flash{position:fixed;left:50%;top:42%;z-index:40;transform:translate(-50%,-50%) scale(.8);opacity:0;pointer-events:none;padding:14px 22px;border-radius:20px;
+  background:rgba(14,9,6,.78);backdrop-filter:blur(10px);font-weight:800;font-size:26px;letter-spacing:-.02em;transition:opacity .3s,transform .45s var(--spring);white-space:nowrap}
+#flash.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#flash small{display:block;font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--nut2);margin-bottom:2px}
 .pill{flex:1;height:46px;border-radius:15px;font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--raise);color:var(--ink)}
 .pill.hot{background:var(--ink);color:#1d1109}
 .m-foot{display:flex;justify-content:center;gap:8px;align-items:center;color:var(--mute);font-size:12.5px;margin:2px 0 0;animation:fade 1s .6s both}
@@ -202,11 +230,16 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
 #editor .h::before{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--ink)}
 #editor .h::after{content:attr(data-label);position:absolute;left:50%;top:100%;transform:translate(-50%,4px);padding:2px 7px;border-radius:99px;background:rgba(14,9,6,.8);font:600 10.5px var(--display);color:var(--ink);white-space:nowrap}
 #editor .h.mouth{border-color:var(--ember);background:rgba(255,138,76,.18)}
-#editor .h.grab{transform:scale(1.25)}
+#editor .h.grab{transform:scale(1.15)}
 #editor .edbar{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(520px,calc(100% - 32px));pointer-events:auto;
   display:flex;gap:12px;align-items:center;padding:12px 12px 12px 18px;border-radius:22px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line),0 14px 40px rgba(0,0,0,.5);font-size:13.5px;line-height:1.4;color:var(--mute)}
 #editor .edbar .pill{flex:none;padding:0 22px}
 
+/* ---------- upload scan + layout loupe ---------- */
+#scan{position:fixed;inset:0;z-index:58;width:100%;height:100%;background:#070101;transition:opacity .5s}
+#scan.out{opacity:0}
+#loupe{position:fixed;z-index:27;width:128px;height:128px;border-radius:50%;pointer-events:none;box-shadow:0 0 0 3px var(--ink),0 0 0 5px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.5);background:#000}
+#editor .stem{position:absolute;width:2px;margin-left:-1px;background:linear-gradient(var(--nut2),rgba(246,207,150,0));pointer-events:none;transform-origin:top}
 /* ---------- toast, busy ---------- */
 #toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));z-index:50;transform:translate(-50%,-140%);max-width:calc(100% - 32px);
   padding:12px 18px;border-radius:16px;background:var(--ink);color:#1d1109;font-weight:600;font-size:14px;line-height:1.35;box-shadow:0 12px 30px rgba(0,0,0,.4);transition:transform .5s var(--spring)}
@@ -252,7 +285,7 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
   }, true);
   addEventListener("unhandledrejection", function(e){ var r = e.reason; PC.say("Error: " + ((r && r.message) || r)); });
   addEventListener("DOMContentLoaded", function(){
-    ["goPeanut","goPuppet"].forEach(function(id){
+    ["goPeanut"].forEach(function(id){
       var b = document.getElementById(id);
       b && b.addEventListener("click", function(){ if (!PC.ready) PC.say("Still loading. Give it a few seconds and tap again."); });
     });
@@ -274,6 +307,8 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
   <symbol id="move" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></symbol>
   <symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
   <symbol id="micoff" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M4 4l16 16"/></symbol>
+  <symbol id="dots" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/></symbol>
+  <symbol id="hand" viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10V4.5a1.5 1.5 0 0 1 3 0V11M14 10.5V6a1.5 1.5 0 0 1 3 0v7.5c0 4-2.5 7-6 7s-5-1.8-6.5-4.5L3 12.8a1.5 1.5 0 0 1 2.5-1.6L8 14"/></symbol>
   <symbol id="x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="minus" viewBox="0 0 24 24"><path d="M6 12h12"/></symbol>
   <symbol id="plus" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></symbol>
@@ -293,21 +328,17 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
     <div class="m-sub">Your real eyes &amp; mouth, on anything</div>
   </header>
   <div class="m-cards">
-    <button class="card primary press" id="goPeanut">
+    <div class="card primary press" id="goPeanut" role="button" tabindex="0" aria-label="Open Peanut">
       <span class="tag"><i></i>3D · Live</span>
       <span class="ttl">Peanut</span>
       <span class="dsc">A roasted 3D peanut that wears your real eyes and mouth.</span>
       <span class="go"><svg class="i"><use href="#arrow"/></svg></span>
-    </button>
-    <div class="card second">
-      <div class="thumb" id="thumb"><svg class="i" style="width:30px;height:30px"><use href="#image"/></svg></div>
-      <div class="ttl">Your Image</div>
-      <div class="dsc">Any head-and-shoulders picture, wearing your real eyes and mouth.</div>
-      <div class="acts">
-        <button class="pill hot press" id="goPuppet"><svg class="i"><use href="#t-puppet"/></svg><span id="goPuppetLbl">Upload</span></button>
-        <button class="pill small press" id="newPuppet" hidden>New image</button>
-      </div>
+      <button class="bgchip press" id="bgPeanut" aria-label="Peanut background"><i></i><span>Background</span></button>
     </div>
+    <section class="chars">
+      <div class="chars-head"><span class="ttl2">Characters</span><span class="cnt" id="charCount"></span><button class="addbtn press" id="addChar"><svg class="i"><use href="#plus"/></svg>Add</button></div>
+      <div class="char-row" id="charRow"></div>
+    </section>
     <div id="status" role="status"></div>
     <p class="m-foot"><svg class="i" style="width:15px;height:15px"><use href="#t-camera"/></svg>Your camera stays on this device.</p>
   </div>
@@ -324,7 +355,7 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
   <nav id="bar" aria-label="Controls">
     <button class="bb press" id="bSettings"><svg class="i"><use href="#sliders"/></svg>Settings</button>
     <button class="bb press puppet-only" id="bLayout"><svg class="i"><use href="#move"/></svg>Layout</button>
-    <button class="bb press puppet-only" id="bImage"><svg class="i"><use href="#image"/></svg>Image</button>
+    <button class="bb press puppet-only" id="bImage"><svg class="i"><use href="#plus"/></svg>New</button>
     <button class="bb press" id="bFlip"><svg class="i"><use href="#flip"/></svg>Flip</button>
     <button class="bb press" id="bClean"><svg class="i"><use href="#eye"/></svg>Hide</button>
   </nav>
@@ -340,12 +371,17 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
 </section>
 
 <div id="editor" hidden>
+  <div class="stem" id="edStem" hidden></div>
   <div class="h" data-h="eyeR" data-label="Eye"></div>
   <div class="h" data-h="eyeL" data-label="Eye"></div>
   <div class="h mouth" data-h="mouth" data-label="Mouth"></div>
   <div class="edbar"><span>Drag the markers onto the picture's eyes and mouth.</span><button class="pill hot press" id="edDone">Done</button></div>
 </div>
 
+<div id="modal" hidden><div class="mback"></div><div class="mpanel" role="dialog" aria-modal="true"><div class="mhead"><h2 id="mTitle"></h2><button class="sh-x press" id="mClose" aria-label="Close"><svg class="i"><use href="#x"/></svg></button></div><div id="mBody"></div></div></div>
+<div id="flash" aria-live="polite"></div>
+<canvas id="scan" hidden aria-hidden="true"></canvas>
+<canvas id="loupe" hidden aria-hidden="true"></canvas>
 <div id="toast" role="status"></div>
 <div id="busy"><div class="bx"><svg viewBox="0 0 24 24" fill="#e3ad6b"><use href="#nut"/></svg><span id="busyMsg">Working…</span></div></div>
 <input type="file" id="pupFile" accept="image/*" hidden>
@@ -366,12 +402,42 @@ const DEFAULTS = {
   eyeSize:1, eyeSpacing:0.36, eyeHeight:1.18, mouthSize:1, mouthHeight:0.5,
   eyeMargin:0.055, mouthMargin:0.045, feather:0.07, symFill:true, blend:0.15, depth:1.3, skinMatch:0.8, retouch:0.8,
   pEyeSize:1.15, pMouthSize:1.15, pBgRemove:true,
-  pX:0, pY:0.55, pScale:1, pMove:0.4, pStick:true, pShadow:true, recMic:true,
+  pX:0, pY:0.55, pScale:1, pRot:0, pMove:0.4, pStick:true, pShadow:true, recMic:true,
+  nX:0, nY:0, nScale:1, nRot:0, nSpin:0, nTilt:0,
+  world:false, wBiome:"auto", wMorph:20, wSpeed:0.35, wRes:240, wJitter:0.5, wAffine:true, wDither:0.7, wDepth:15, wFog:0.5, wParallax:0.6,
+  coachSeen:false,
   mirror:true, pip_on:true, deviceId:"", facing:"user"
 };
+const WORLD_OPTS = [["auto","Auto-morph"],["meadow","Meadow"],["canyon","Canyon"],["city","Neon City"],["islands","Islands"],["snow","Snowfield"],["alien","Alien"]];
 let S = {...DEFAULTS};
 try{ Object.assign(S, JSON.parse(localStorage.getItem("peanutcam") || "{}")); }catch(e){}
-const save = () => { try{ localStorage.setItem("peanutcam", JSON.stringify(S)); }catch(e){} };
+// settings that belong to "what's on screen": the peanut has its own copy, every character has its own
+const SCOPED = ["bg","bgColor","world","wBiome","wMorph","wSpeed","wRes","wJitter","wAffine","wDither","wDepth","wFog","wParallax",
+  "skinMatch","depth","retouch","blend","eyeMargin","mouthMargin","feather","symFill","light","zoom"];
+const NUT_KEYS = ["nX","nY","nScale","nRot","nSpin","nTilt"];
+const CHAR_KEYS = ["pX","pY","pScale","pRot","pEyeSize","pMouthSize","pMove","pStick","pShadow"];
+let scopeId = "peanut";
+const scopeKeys = id => id === "peanut" ? [...SCOPED, ...NUT_KEYS] : [...SCOPED, ...CHAR_KEYS];
+const pick = (keys, src = S) => Object.fromEntries(keys.map(k => [k, src[k]]));
+let charSaveT = null;
+function storeScope(){
+  const cfg = pick(scopeKeys(scopeId));
+  if (scopeId === "peanut"){ try{ localStorage.setItem("peanutcam.peanut", JSON.stringify(cfg)); }catch(e){} }
+  else { const c = CHARS.find(c => c.id === scopeId); if (c){ c.cfg = cfg; clearTimeout(charSaveT); charSaveT = setTimeout(() => persistChar(c), 500); } }
+}
+const save = () => { try{ localStorage.setItem("peanutcam", JSON.stringify(S)); }catch(e){} storeScope(); };
+function scopeCfg(id){
+  if (id === "peanut"){ try{ return JSON.parse(localStorage.getItem("peanutcam.peanut") || "null") || pick(scopeKeys("peanut")); }catch(e){ return {}; } }
+  return CHARS.find(c => c.id === id)?.cfg || {};
+}
+async function loadScope(id){
+  storeScope();
+  scopeId = id;
+  const cfg = scopeCfg(id);
+  for (const k of scopeKeys(id)) S[k] = k in cfg ? cfg[k] : DEFAULTS[k];
+  await loadBgPhoto();
+  applyBg(); onChange("light"); resize(); WORLD.configure();
+}
 
 /* ---------- small helpers: haptics, toast, busy ---------- */
 const buzz = ms => { try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} };
@@ -490,23 +556,31 @@ const puppet = new THREE.Group(); puppet.visible = false; scene.add(puppet);
 // puppet -> pGrip (the hand holding the stick: position, tilt, size) -> pBody (picture, stick, shadow, features)
 const pGrip = new THREE.Group(); puppet.add(pGrip);
 const pBody = new THREE.Group(); pGrip.add(pBody);
-const STICK = {top:-0.95, len:3.1, w:0.17};          // relative to the picture's centre
+const STICK = {top:-1.0, len:2.9, w:0.44};           // flat ice-cream stick, relative to the picture's centre
 const GRIP_Y = STICK.top - STICK.len + 0.8;           // where the hand holds the stick
 pBody.position.y = -GRIP_Y;
 let PUP = null;                      // {canvas, meta, s, tint, png, original, meshes}
 function stickTexture(){
-  const c = document.createElement("canvas"); c.width = 64; c.height = 1024;
+  // flat birch ice-cream stick: pale wood, fine grain, soft bevelled edges, rounded end
+  const W = 160, Hh = 1024, c = document.createElement("canvas"); c.width = W; c.height = Hh;
   const x = c.getContext("2d");
-  x.beginPath(); x.roundRect(0, 0, 64, 1024, 32); x.clip();
-  const g = x.createLinearGradient(0, 0, 64, 0);
-  g.addColorStop(0, "#6e4826"); g.addColorStop(0.22, "#b98652"); g.addColorStop(0.42, "#e4bd88"); g.addColorStop(0.62, "#c79763"); g.addColorStop(1, "#5e3c1f");
-  x.fillStyle = g; x.fillRect(0, 0, 64, 1024);
-  let seed = 3; const rnd = () => ((seed = (seed*16807) % 2147483647) / 2147483647);
-  for (let i = 0; i < 26; i++){                       // wood grain
-    const gx = 6 + rnd()*52, ph = rnd()*6;
-    x.strokeStyle = `rgba(80,48,20,${0.08 + rnd()*0.14})`; x.lineWidth = 0.6 + rnd()*1.4;
-    x.beginPath(); for (let y = 0; y <= 1024; y += 16) x.lineTo(gx + Math.sin(y*0.01 + ph)*2.5, y); x.stroke();
+  x.beginPath(); x.roundRect(0, 0, W, Hh, W/2); x.clip();
+  x.fillStyle = "#e9cf9f"; x.fillRect(0, 0, W, Hh);
+  const g = x.createLinearGradient(0, 0, W, 0);
+  g.addColorStop(0, "rgba(120,80,40,.45)"); g.addColorStop(0.07, "rgba(120,80,40,.08)"); g.addColorStop(0.2, "rgba(255,248,230,.18)");
+  g.addColorStop(0.8, "rgba(255,248,230,.05)"); g.addColorStop(0.93, "rgba(120,80,40,.1)"); g.addColorStop(1, "rgba(110,70,35,.5)");
+  x.fillStyle = g; x.fillRect(0, 0, W, Hh);
+  let seed = 11; const rnd = () => ((seed = (seed*16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < 46; i++){                       // long grain lines
+    const gx = 8 + rnd()*(W - 16), ph = rnd()*6, amp = 1 + rnd()*3;
+    x.strokeStyle = `rgba(150,105,55,${0.06 + rnd()*0.16})`; x.lineWidth = 0.6 + rnd()*1.6;
+    x.beginPath(); for (let y = 0; y <= Hh; y += 12) x.lineTo(gx + Math.sin(y*0.006 + ph)*amp, y); x.stroke();
   }
+  for (let i = 0; i < 18; i++){                       // little dark flecks
+    x.fillStyle = `rgba(110,70,30,${0.15 + rnd()*0.2})`;
+    x.beginPath(); x.ellipse(10 + rnd()*(W - 20), rnd()*Hh, 0.8 + rnd()*1.5, 3 + rnd()*7, 0, 0, 7); x.fill();
+  }
+  x.strokeStyle = "rgba(255,250,235,.35)"; x.lineWidth = 3; x.beginPath(); x.roundRect(4, 4, W - 8, Hh - 8, W/2 - 4); x.stroke();
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
   return t;
 }
@@ -718,7 +792,15 @@ const BGS = {
 };
 const BG_LABEL = {roastery:"Roastery",studio:"Studio",neon:"Neon",sky:"Sky",snow:"Snowy",night:"Night",green:"Green",blue:"Blue"};
 let bgImageURL = null, bgImg = null;
+async function loadBgPhoto(){
+  if (S.bg !== "image") return;
+  const b = await idb.get("bgphoto:" + scopeId);
+  if (bgImageURL) URL.revokeObjectURL(bgImageURL);
+  bgImageURL = b ? URL.createObjectURL(b) : null; bgImg = null;
+  if (bgImageURL){ bgImg = new Image(); bgImg.src = bgImageURL; }
+}
 function applyBg(){
+  if (S.world){ stage.style.background = "#000"; floor.visible = false; return; }
   if (S.bg === "image" && bgImageURL) stage.style.background = `#000 url("${bgImageURL}") center/cover no-repeat`;
   else if (S.bg === "custom" || S.bg === "image") stage.style.background = S.bgColor;
   else stage.style.background = BGS[S.bg] || BGS.roastery;
@@ -727,7 +809,8 @@ function applyBg(){
 $("#bgFile").onchange = e => {
   const f = e.target.files[0]; if (!f) return;
   if (bgImageURL) URL.revokeObjectURL(bgImageURL);
-  bgImageURL = URL.createObjectURL(f); bgImg = new Image(); bgImg.src = bgImageURL; S.bg = "image"; applyBg(); renderBody(); e.target.value = "";
+  bgImageURL = URL.createObjectURL(f); bgImg = new Image(); bgImg.src = bgImageURL; S.bg = "image"; S.world = false; applyBg(); WORLD.configure(); save(); renderBody(); e.target.value = "";
+  idb.set("bgphoto:" + scopeId, f);
 };
 
 /* ---------- camera ---------- */
@@ -937,25 +1020,176 @@ const idb = {
   async set(k, v){ try{ const db = await this.open(); await new Promise(res => { const tx = db.transaction("kv", "readwrite"); tx.objectStore("kv").put(v, k); tx.oncomplete = res; tx.onerror = res; }); }catch(e){} }
 };
 function mkCanvas(w, h){ const c = document.createElement("canvas"); c.width = w; c.height = h; return [c, c.getContext("2d", {willReadFrequently:true})]; }
+
+/* ---------- "machine vision" scan while a picture is processed ----------
+   red monochrome view, sweeping scan line, face lock with all 478 points plotted,
+   then the background is chopped away in falling blocks and the subject returns to full colour */
+const SCAN = {on:false};
+const scanEl = $("#scan");
+function scanStart(src){
+  const dpr = Math.min(devicePixelRatio, 2);
+  scanEl.width = innerWidth*dpr; scanEl.height = innerHeight*dpr;
+  const x = scanEl.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const maxW = innerWidth - 2*Math.max(24, Math.min(90, innerWidth*0.12)), maxH = innerHeight*0.58, k = Math.min(maxW/src.width, maxH/src.height);
+  const w = src.width*k, h = src.height*k;
+  const red = document.createElement("canvas"); red.width = src.width; red.height = src.height;
+  const rx = red.getContext("2d"); rx.filter = "grayscale(1) contrast(1.25) brightness(.95)"; rx.drawImage(src, 0, 0);
+  rx.filter = "none"; rx.globalCompositeOperation = "multiply"; rx.fillStyle = "#ff2a1a"; rx.fillRect(0, 0, red.width, red.height);
+  Object.assign(SCAN, {on:true, x, src, red, rect:{x:(innerWidth - w)/2, y:innerHeight*0.2, w, h}, t0:performance.now(),
+    msgs:[], face:null, faceAt:0, subj:null, tiles:null, maskAt:0, doneAt:0, hex:[], resolve:null});
+  scanMsg("PEANUT//VISION 2.0  ONLINE"); scanMsg("ANALYSING IMAGE " + src.width + "×" + src.height);
+  scanEl.classList.remove("out"); scanEl.hidden = false;
+  requestAnimationFrame(scanTick);
+}
+function scanMsg(t){ if (SCAN.on) SCAN.msgs.push({t, at:performance.now()}); }
+function scanFace(lm){
+  if (!SCAN.on) return;
+  if (!lm){ scanMsg("NO FACE MATCH — MANUAL PLACEMENT"); return; }
+  SCAN.face = lm; SCAN.faceAt = performance.now();
+  scanMsg("MATCH: HUMAN FACE"); scanMsg("MAPPING 478 POINTS");
+}
+function scanMask(maskCanvas){
+  if (!SCAN.on) return;
+  const {src} = SCAN, w = src.width, h = src.height;
+  const subj = document.createElement("canvas"); subj.width = w; subj.height = h;
+  const sx = subj.getContext("2d"); sx.drawImage(src, 0, 0); sx.globalCompositeOperation = "destination-in"; sx.drawImage(maskCanvas, 0, 0, w, h);
+  const subjRed = document.createElement("canvas"); subjRed.width = w; subjRed.height = h;
+  const srx = subjRed.getContext("2d"); srx.drawImage(SCAN.red, 0, 0); srx.globalCompositeOperation = "destination-in"; srx.drawImage(maskCanvas, 0, 0, w, h);
+  const bg = document.createElement("canvas"); bg.width = w; bg.height = h;
+  const bx = bg.getContext("2d"); bx.drawImage(SCAN.red, 0, 0); bx.globalCompositeOperation = "destination-out"; bx.drawImage(maskCanvas, 0, 0, w, h);
+  const glow = document.createElement("canvas"); glow.width = w; glow.height = h;
+  const gx = glow.getContext("2d"); gx.drawImage(maskCanvas, 0, 0, w, h); gx.globalCompositeOperation = "source-in"; gx.fillStyle = "#ff3322"; gx.fillRect(0, 0, w, h);
+  // background blocks that fall away
+  const T = Math.max(10, Math.round(Math.min(w, h) / 22)), tiles = [];
+  const a = bx.getImageData(0, 0, w, h).data;
+  for (let y = 0; y < h; y += T) for (let xx = 0; xx < w; xx += T){
+    const cx = Math.min(w - 1, xx + (T >> 1)), cy = Math.min(h - 1, y + (T >> 1));
+    if (a[(cy*w + cx)*4 + 3] < 40) continue;
+    tiles.push({x:xx, y, d:Math.random()*0.55 + (y / h)*0.25, vx:(Math.random() - 0.5)*120, r:(Math.random() - 0.5)*4});
+  }
+  Object.assign(SCAN, {subj, subjRed, bgOnly:bg, glow, tiles, T, maskAt:performance.now()});
+  scanMsg("SEPARATING SUBJECT FROM BACKGROUND");
+}
+function scanFinish(){
+  if (!SCAN.on) return Promise.resolve();
+  scanMsg("EXTRACTION COMPLETE");
+  const now = performance.now(), minEnd = SCAN.t0 + 2600;
+  SCAN.doneAt = Math.max(now, minEnd - 1200);
+  return new Promise(r => SCAN.resolve = r);
+}
+function scanAbort(){ SCAN.on = false; scanEl.hidden = true; }
+function scanTick(now){
+  if (!SCAN.on) return;
+  requestAnimationFrame(scanTick);
+  const {x, rect:R} = SCAN, W = innerWidth, Hh = innerHeight, t = (now - SCAN.t0)/1000;
+  const RED = "#ff2a1a";
+  x.clearRect(0, 0, W, Hh);
+  // backdrop: deep red vignette + faint grid
+  const vg = x.createRadialGradient(W/2, Hh*0.45, 10, W/2, Hh*0.45, Math.max(W, Hh)*0.75);
+  vg.addColorStop(0, "#2a0503"); vg.addColorStop(1, "#050101"); x.fillStyle = vg; x.fillRect(0, 0, W, Hh);
+  x.strokeStyle = "rgba(255,42,26,.07)"; x.lineWidth = 1;
+  for (let gx = (t*12) % 32; gx < W; gx += 32){ x.beginPath(); x.moveTo(gx, 0); x.lineTo(gx, Hh); x.stroke(); }
+  for (let gy = 0; gy < Hh; gy += 32){ x.beginPath(); x.moveTo(0, gy); x.lineTo(W, gy); x.stroke(); }
+
+  const done = SCAN.doneAt && now >= SCAN.doneAt ? (now - SCAN.doneAt)/1000 : -1;
+  const sx = R.w / SCAN.src.width;
+  if (!SCAN.tiles){
+    x.globalAlpha = 0.9; x.drawImage(SCAN.red, R.x, R.y, R.w, R.h); x.globalAlpha = 1;
+  } else {
+    const e = (now - SCAN.maskAt)/1000;
+    // glow outline behind the subject
+    x.save(); x.shadowColor = RED; x.shadowBlur = 18 + 8*Math.sin(t*6); x.globalAlpha = Math.min(1, e*2);
+    x.drawImage(SCAN.glow, R.x, R.y, R.w, R.h); x.restore();
+    const colour = done < 0 ? 0 : Math.min(1, done/0.6);
+    x.drawImage(SCAN.subjRed, R.x, R.y, R.w, R.h);
+    if (colour > 0){ x.globalAlpha = colour; x.drawImage(SCAN.subj, R.x, R.y, R.w, R.h); x.globalAlpha = 1; }
+    // falling blocks
+    const T = SCAN.T;
+    for (const b of SCAN.tiles){
+      const k = e - b.d, dx = R.x + b.x*sx, dy = R.y + b.y*sx, ts = T*sx;
+      if (k <= 0){ x.drawImage(SCAN.bgOnly, b.x, b.y, T, T, dx, dy, ts, ts); continue; }
+      const fy = 900*k*k, a = Math.max(0, 1 - k*1.4);
+      if (a <= 0) continue;
+      x.save(); x.globalAlpha = a; x.translate(dx + ts/2 + b.vx*k, dy + ts/2 + fy); x.rotate(b.r*k);
+      x.drawImage(SCAN.bgOnly, b.x, b.y, T, T, -ts/2, -ts/2, ts, ts);
+      x.strokeStyle = RED; x.lineWidth = 1; x.strokeRect(-ts/2, -ts/2, ts, ts); x.restore();
+    }
+  }
+  // face lock: brackets close in, points plotted, feature reticles
+  if (SCAN.face && done < 0.4){
+    const f = SCAN.face, e = (now - SCAN.faceAt)/1000;
+    let x0 = 1, y0 = 1, x1 = 0, y1 = 0; for (const p of f){ x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
+    const pad = Math.max(0, 1 - e*2.5) * 60;
+    const bx0 = R.x + x0*R.w - 10 - pad, by0 = R.y + y0*R.h - 10 - pad, bx1 = R.x + x1*R.w + 10 + pad, by1 = R.y + y1*R.h + 10 + pad, L = 18;
+    x.strokeStyle = RED; x.lineWidth = 2; x.globalAlpha = done < 0 ? 1 : 1 - done/0.4;
+    for (const [cx, cy, sxn, syn] of [[bx0, by0, 1, 1], [bx1, by0, -1, 1], [bx0, by1, 1, -1], [bx1, by1, -1, -1]]){
+      x.beginPath(); x.moveTo(cx, cy + L*syn); x.lineTo(cx, cy); x.lineTo(cx + L*sxn, cy); x.stroke();
+    }
+    x.fillStyle = RED; x.font = "600 11px 'IBM Plex Mono', monospace";
+    x.fillText("FACE " + (97 + (Math.sin(t*3) + 1)).toFixed(1) + "%", bx0, by0 - 8);
+    const n = Math.min(f.length, Math.floor(e * 600));
+    x.fillStyle = "rgba(255,90,70,.9)";
+    for (let i = 0; i < n; i++) x.fillRect(R.x + f[i].x*R.w - 0.8, R.y + f[i].y*R.h - 0.8, 1.6, 1.6);
+    if (e > 0.7){
+      const ret = (ids, label) => {
+        let cx = 0, cy = 0; for (const id of ids){ cx += f[id].x; cy += f[id].y; } cx = R.x + cx/ids.length*R.w; cy = R.y + cy/ids.length*R.h;
+        const r = 10 + 4*Math.sin(t*8);
+        x.beginPath(); x.arc(cx, cy, r, 0, 7); x.stroke();
+        x.beginPath(); x.moveTo(cx - r - 6, cy); x.lineTo(cx - r + 3, cy); x.moveTo(cx + r - 3, cy); x.lineTo(cx + r + 6, cy); x.stroke();
+        x.fillText(label, cx + r + 8, cy - 6);
+      };
+      ret([33, 133], "EYE.R"); ret([263, 362], "EYE.L"); ret([61, 291, 0, 17], "MOUTH");
+    }
+    x.globalAlpha = 1;
+  }
+  // scan line
+  if (done < 0){
+    const ly = R.y + ((t*0.55) % 1) * R.h;
+    const tg = x.createLinearGradient(0, ly - 60, 0, ly); tg.addColorStop(0, "rgba(255,42,26,0)"); tg.addColorStop(1, "rgba(255,42,26,.28)");
+    x.fillStyle = tg; x.fillRect(R.x - 8, ly - 60, R.w + 16, 60);
+    x.fillStyle = "#ff5a40"; x.shadowColor = RED; x.shadowBlur = 14; x.fillRect(R.x - 14, ly - 1, R.w + 28, 2); x.shadowBlur = 0;
+  }
+  // HUD text, typed out
+  x.font = "500 11.5px 'IBM Plex Mono', monospace"; x.fillStyle = RED;
+  let ty = Math.max(16, R.y - 16 - SCAN.msgs.length*16) ;
+  ty = 22 + (parseFloat(getComputedStyle(document.documentElement).paddingTop) || 0);
+  SCAN.msgs.forEach(m => { const k = Math.min(m.t.length, Math.floor((now - m.at)/18)); x.fillText("> " + m.t.slice(0, k) + (k < m.t.length && (t*4|0) % 2 ? "▌" : ""), 16, ty); ty += 16; });
+  x.textAlign = "right"; x.globalAlpha = 0.55; x.font = "500 9.5px 'IBM Plex Mono', monospace";
+  if (W - (R.x + R.w) > 52) for (let i = 0; i < 9; i++){ const v = Math.floor(Math.abs(Math.sin(t*2.3 + i*1.7))*0xFFFFFF).toString(16).toUpperCase().padStart(6, "0"); x.fillText(v, W - 16, R.y + 14 + i*15); }
+  x.textAlign = "left"; x.globalAlpha = 1; x.font = "500 11.5px 'IBM Plex Mono', monospace";
+  // progress bar
+  const stage = SCAN.doneAt ? 1 : SCAN.tiles ? 0.8 : SCAN.face ? 0.5 : Math.min(0.35, t*0.2);
+  SCAN.prog = (SCAN.prog || 0) + (stage - (SCAN.prog || 0))*0.12;
+  const by = R.y + R.h + 26;
+  x.strokeStyle = "rgba(255,42,26,.5)"; x.strokeRect(R.x, by, R.w, 6); x.fillStyle = RED; x.fillRect(R.x + 1, by + 1, (R.w - 2)*SCAN.prog, 4);
+  x.fillText((SCAN.prog*100).toFixed(0).padStart(3, "0") + "%", R.x, by + 22);
+  // CRT scanlines
+  x.fillStyle = "rgba(0,0,0,.18)"; for (let yy = 0; yy < Hh; yy += 3) x.fillRect(0, yy, W, 1);
+  // finish: fade out
+  if (done >= 0.9 && !scanEl.classList.contains("out")){ scanEl.classList.add("out"); setTimeout(() => { scanAbort(); SCAN.resolve?.(); }, 520); }
+}
 const avgPt = (pts) => [pts.reduce((a,p)=>a+p[0],0)/pts.length, pts.reduce((a,p)=>a+p[1],0)/pts.length];
+const wait = ms => new Promise(r => setTimeout(r, ms));
 async function processImage(blob){
-  busy("Opening your picture…"); await nextFrame();
   const bmp = await createImageBitmap(blob);
   const sc = Math.min(1, 1100 / Math.max(bmp.width, bmp.height));
   const w0 = Math.round(bmp.width*sc), h0 = Math.round(bmp.height*sc);
   const [src, sx] = mkCanvas(w0, h0); sx.drawImage(bmp, 0, 0, w0, h0);
-  busy("Finding the face…"); await nextFrame();
+  scanStart(src); await wait(450);
+  scanMsg("LOCATING FACE…"); await nextFrame();
   await vision();
   if (!imgLandmarker) imgLandmarker = await createTask(VISION.FaceLandmarker, {baseOptions:{modelAssetPath:MODEL}, runningMode:"IMAGE", numFaces:1}, false);
   const lm = imgLandmarker.detect(src).faceLandmarks?.[0] || null;
+  scanFace(lm); await wait(lm ? 1000 : 400);
 
   // background: keep existing transparency, otherwise cut the person out
   const data = sx.getImageData(0, 0, w0, h0).data;
   let clear = 0; for (let i = 3; i < data.length; i += 16) if (data[i] < 250) clear++;
   const hasAlpha = clear > data.length / 16 * 0.01;
-  let cut = src;
+  let cut = src, maskForScan = null;
+  if (hasAlpha){ maskForScan = src; }
   if (!hasAlpha && S.pBgRemove){
-    busy("Cutting out the background…"); await nextFrame();
+    scanMsg("SEGMENTING…"); await nextFrame();
     try{
       if (!segmenter) segmenter = await createTask(VISION.ImageSegmenter, {baseOptions:{modelAssetPath:PC.seg}, runningMode:"IMAGE", outputConfidenceMasks:true, outputCategoryMask:false}, false);
       const res = segmenter.segment(src);
@@ -970,11 +1204,12 @@ async function processImage(blob){
       const [oc, ox] = mkCanvas(w0, h0);
       ox.drawImage(src, 0, 0);
       ox.globalCompositeOperation = "destination-in"; ox.filter = "blur(1.2px)"; ox.drawImage(mc, 0, 0, w0, h0);
-      cut = oc;
+      cut = oc; maskForScan = mc;
     }catch(e){
       console.error(e); toast("Couldn't remove the background, so the whole picture is used.");
     }
   }
+  if (maskForScan){ scanMask(maskForScan); await wait(1100); }
   // crop to the visible person
   const cd = cut.getContext("2d", {willReadFrequently:true}).getImageData(0, 0, w0, h0).data;
   let x0 = w0, y0 = h0, x1 = 0, y1 = 0;
@@ -1008,46 +1243,179 @@ function sampleTint(ctx, pts, r, w, h){
   }
   return n ? [R/n/255, G/n/255, Bc/n/255] : [0.75, 0.55, 0.42];
 }
-async function usePuppet(canvas, meta, png, original){
-  PUP = {canvas, meta, png, original, tint:new THREE.Color().setRGB(...meta.tint)};
+/* ---------- character gallery: every uploaded picture keeps its own cut-out, layout and settings ---------- */
+let CHARS = [];
+const newId = () => Math.random().toString(36).slice(2, 10);
+async function persistChar(c){ await idb.set("char:" + c.id, {id:c.id, name:c.name, png:c.png, original:c.original, meta:c.meta, cfg:c.cfg, thumb:c.thumb, created:c.created}); }
+async function persistIndex(){ await idb.set("chars", CHARS.map(c => c.id)); }
+function makeThumb(canvas){
+  const k = Math.min(1, 240 / Math.max(canvas.width, canvas.height));
+  const [t, x] = mkCanvas(Math.round(canvas.width*k), Math.round(canvas.height*k)); x.drawImage(canvas, 0, 0, t.width, t.height);
+  return t.toDataURL("image/png");
+}
+async function loadChars(){
+  let ids = await idb.get("chars");
+  if (!ids){                                         // first run after the update: bring over the single saved picture
+    ids = [];
+    const old = await idb.get("puppet");
+    if (old?.png){
+      const c = {id:newId(), name:"My picture", png:old.png, original:old.original, meta:old.meta, cfg:pick(scopeKeys("x"), {...DEFAULTS, ...S}), created:Date.now()};
+      try{ const bmp = await createImageBitmap(old.png); const [cv, x] = mkCanvas(bmp.width, bmp.height); x.drawImage(bmp, 0, 0); c.thumb = makeThumb(cv); }catch(e){}
+      await persistChar(c); ids = [c.id];
+    }
+    await idb.set("chars", ids);
+  }
+  CHARS = [];
+  for (const id of ids){ const c = await idb.get("char:" + id); if (c?.png) CHARS.push(c); }
+  renderChars();
+}
+async function canvasFromBlob(b){ const bmp = await createImageBitmap(b); const [c, x] = mkCanvas(bmp.width, bmp.height); x.drawImage(bmp, 0, 0); return c; }
+async function setPuppetFrom(c){
+  const canvas = await canvasFromBlob(c.png);
+  PUP = {id:c.id, canvas, meta:c.meta, tint:new THREE.Color().setRGB(...c.meta.tint)};
   buildPuppet();
-  if (stageMode === "puppet") showStage("puppet");
-  const url = canvas.toDataURL("image/png");
-  $("#thumb").innerHTML = `<img alt="" src="${url}">`;
-  $("#goPuppetLbl").textContent = "Open"; $("#newPuppet").hidden = false;
 }
-async function savePuppet(){
-  if (!PUP) return;
-  if (!PUP.png) PUP.png = await new Promise(r => PUP.canvas.toBlob(r, "image/png"));
-  await idb.set("puppet", {png:PUP.png, original:PUP.original, meta:PUP.meta});
+async function openChar(id){
+  const c = CHARS.find(c => c.id === id); if (!c) return;
+  if (!(await ensureCamera())) return;
+  await loadScope(id);
+  await setPuppetFrom(c);
+  enterMode("puppet");
+  renderChars();
 }
-async function loadSavedPuppet(){
-  const rec = await idb.get("puppet");
-  if (!rec?.png) return;
+async function addCharacter(blob, name){
   try{
-    const bmp = await createImageBitmap(rec.png);
-    const [c, x] = mkCanvas(bmp.width, bmp.height); x.drawImage(bmp, 0, 0);
-    await usePuppet(c, rec.meta, rec.png, rec.original);
-  }catch(e){}
-}
-async function importImage(file){
-  try{
-    const {canvas, meta} = await processImage(file);
-    await usePuppet(canvas, meta, null, file);
-    await savePuppet();
-    busy();
-    return meta;
+    const {canvas, meta} = await processImage(blob);
+    const png = await new Promise(r => canvas.toBlob(r, "image/png"));
+    const c = {id:newId(), name:(name || "Character " + (CHARS.length + 1)).slice(0, 24), png, original:blob, meta,
+               cfg:{...pick(scopeKeys("x"), DEFAULTS), bg:"studio"}, thumb:makeThumb(canvas), created:Date.now()};
+    CHARS.unshift(c); await persistChar(c); await persistIndex();
+    renderChars();
+    await scanFinish();
+    return c;
   }catch(e){
-    busy(); console.error(e);
+    scanAbort(); console.error(e);
     toast("That picture couldn't be opened. Try a JPG or PNG.");
     return null;
   }
 }
-async function reprocess(){
-  if (!PUP?.original){ toast("Upload the picture again to change this."); return; }
-  const meta = await importImage(PUP.original);
-  if (meta && !meta.face) openEditor();
+async function addAndOpen(blob, name){
+  const c = await addCharacter(blob, name); if (!c) return;
+  await openChar(c.id);
+  if (!c.meta.face){ openEditor(); toast("No face found. Drag the markers onto the eyes and mouth.", 4200); }
+  else toast("Drag to move it, pinch to resize. Tap Layout to fine-tune.");
 }
+async function reprocess(){
+  const c = CHARS.find(c => c.id === scopeId);
+  if (!c?.original){ toast("Upload the picture again to change this."); return; }
+  try{
+    const {canvas, meta} = await processImage(c.original);
+    c.png = await new Promise(r => canvas.toBlob(r, "image/png")); c.meta = meta; c.thumb = makeThumb(canvas);
+    await persistChar(c); await setPuppetFrom(c); showStage("puppet"); renderChars();
+    await scanFinish();
+  }catch(e){ scanAbort(); toast("Couldn't redo that picture."); }
+}
+async function savePuppet(){ const c = CHARS.find(c => c.id === PUP?.id); if (c){ c.meta = PUP.meta; await persistChar(c); } }
+async function duplicateChar(id){
+  const c = CHARS.find(c => c.id === id); if (!c) return;
+  const d = {...c, id:newId(), name:(c.name + " copy").slice(0, 24), cfg:{...c.cfg}, meta:JSON.parse(JSON.stringify(c.meta)), created:Date.now()};
+  CHARS.splice(CHARS.indexOf(c) + 1, 0, d); await persistChar(d); await persistIndex(); renderChars(); toast("Duplicated");
+}
+async function deleteChar(id){
+  CHARS = CHARS.filter(c => c.id !== id); await idb.set("char:" + id, null); await persistIndex();
+  if (scopeId === id){ scopeId = "peanut"; PUP = null; if (mode === "puppet") goMenu(); }
+  renderChars(); toast("Character deleted");
+}
+const bgCss = cfg => cfg.world ? "linear-gradient(180deg,#3a1250 0%,#ff4fd8 52%,#1b0f2e 52%,#120a20 100%)"
+  : cfg.bg === "custom" || cfg.bg === "image" ? (cfg.bgColor || "#333") : (BGS[cfg.bg] || BGS.roastery);
+function renderChars(){
+  const row = $("#charRow"); if (!row) return;
+  row.innerHTML = "";
+  $("#charCount").textContent = CHARS.length ? CHARS.length : "";
+  const add = el("div", "ctile new", `<button class="cface press" aria-label="Add a character">${ico("image")}<span>Upload a<br>picture</span></button><div class="cname">New</div>`);
+  add.querySelector("button").onclick = () => { buzz(8); pickImage(); };
+  row.append(add);
+  for (const c of CHARS){
+    const t = el("div", "ctile" + (c.id === scopeId && mode === "puppet" ? " on" : ""));
+    const cfg = c.cfg || {};
+    t.innerHTML = `<button class="cface press" aria-label="Open ${c.name.replace(/"/g, "")}"></button><div class="cname"></div><button class="cmore press" aria-label="Options for ${c.name.replace(/"/g, "")}"><svg class="i"><use href="#dots"/></svg></button>`;
+    const face = t.querySelector(".cface"); face.style.background = bgCss(cfg);
+    if (c.thumb){ const im = new Image(); im.alt = ""; im.src = c.thumb; face.append(im); }
+    if (cfg.world) face.insertAdjacentHTML("beforeend", `<span class="w3d">3D</span>`);
+    t.querySelector(".cname").textContent = c.name;
+    face.onclick = () => { buzz(10); openChar(c.id); };
+    t.querySelector(".cmore").onclick = () => { buzz(8); charOptions(c.id); };
+    row.append(t);
+  }
+  const chip = $("#bgPeanut i"); if (chip) chip.style.background = bgCss(scopeCfg("peanut"));
+}
+
+/* ---------- modal panel (menu: background picker, character options, touch controls) ---------- */
+function openModal(title, build){
+  $("#mTitle").textContent = title; const b = $("#mBody"); b.innerHTML = ""; build(b);
+  $("#modal").hidden = false;
+}
+function closeModal(){ $("#modal").hidden = true; renderChars(); }
+$("#mClose").onclick = closeModal; $("#modal .mback").onclick = closeModal;
+// background picker that edits any scope's settings (live if it's the one on screen)
+function bgPicker(id, host){
+  const live = id === scopeId;
+  const cfg = live ? S : {...pick(scopeKeys(id), DEFAULTS), ...scopeCfg(id)};
+  const commit = () => {
+    if (live){ applyBg(); WORLD.configure(); save(); }
+    else if (id === "peanut"){ try{ localStorage.setItem("peanutcam.peanut", JSON.stringify(pick(scopeKeys("peanut"), cfg))); }catch(e){} }
+    else { const c = CHARS.find(c => c.id === id); if (c){ c.cfg = pick(scopeKeys(id), cfg); persistChar(c); } }
+    draw();
+  };
+  const draw = () => {
+    host.innerHTML = "";
+    host.append(el("div", "sec", "Background"));
+    const row = el("div", "swatches");
+    const opt = (key, label, css, on, fn) => { const b = el("button", "sw press", `<i style="background:${css}"></i>${label}`); b.setAttribute("aria-pressed", on); b.onclick = () => { buzz(6); fn(); commit(); }; row.append(b); };
+    for (const k of Object.keys(BG_LABEL)) opt(k, BG_LABEL[k], BGS[k], !cfg.world && cfg.bg === k, () => { cfg.bg = k; cfg.world = false; });
+    opt("world", "3D World", bgCss({world:true}), !!cfg.world, () => { cfg.world = true; });
+    const cs = el("div", "sw", `<i style="background:conic-gradient(#e33,#ec3,#3c6,#39e,#c3e,#e33)"><input type="color" aria-label="Custom colour" value="${cfg.bgColor}"></i>Colour`);
+    cs.setAttribute("aria-pressed", !cfg.world && cfg.bg === "custom");
+    cs.querySelector("input").onchange = e => { cfg.bgColor = e.target.value; cfg.bg = "custom"; cfg.world = false; commit(); };
+    row.append(cs);
+    if (live){ const ph = el("button", "sw press", `<i style="background:var(--raise);display:grid;place-items:center">${ico("image")}</i>Photo`); ph.setAttribute("aria-pressed", !cfg.world && cfg.bg === "image"); ph.onclick = () => $("#bgFile").click(); row.append(ph); }
+    host.append(row);
+    if (cfg.world){
+      host.append(el("div", "sec", "3D world"));
+      const chips = el("div", "chips");
+      for (const [v, label] of WORLD_OPTS){ const c = el("button", "chip press", label); c.setAttribute("aria-pressed", cfg.wBiome === v); c.onclick = () => { buzz(6); cfg.wBiome = v; commit(); }; chips.append(c); }
+      host.append(chips);
+      host.append(el("p", "note", "More 3D world options (resolution, wobble, dithering, fog, parallax) are in Settings › Look."));
+    }
+  };
+  draw();
+}
+function charOptions(id){
+  const c = CHARS.find(c => c.id === id); if (!c) return;
+  openModal("Character", b => {
+    const name = el("input", "namein"); name.value = c.name; name.maxLength = 24; name.setAttribute("aria-label", "Name");
+    name.onchange = () => { c.name = name.value.trim().slice(0, 24) || c.name; persistChar(c); };
+    b.append(name);
+    const host = el("div"); b.append(host); bgPicker(id, host);
+    const row = el("div", "btnrow");
+    const open = el("button", "pill hot press", "Open"); open.onclick = () => { closeModal(); openChar(id); };
+    const dup = el("button", "pill press", "Duplicate"); dup.onclick = () => { duplicateChar(id); closeModal(); };
+    const del = el("button", "pill press danger", "Delete");
+    del.onclick = () => { if (del.dataset.armed !== "1"){ del.dataset.armed = "1"; del.textContent = "Tap to confirm"; buzz(12); setTimeout(() => { del.dataset.armed = ""; del.textContent = "Delete"; }, 3000); return; } closeModal(); deleteChar(id); };
+    row.append(open, dup, del); b.append(row);
+  });
+}
+$("#bgPeanut").onclick = e => { e.stopPropagation(); buzz(8); openModal("Peanut background", b => bgPicker("peanut", b)); };
+$("#addChar").onclick = () => { buzz(8); pickImage(); };
+
+// pictures shared to the app from the gallery or another app become new characters
+window.onSharedImage = async () => {
+  try{
+    const r = await fetch("/__shared?" + Date.now()); if (!r.ok) return;
+    const b = await r.blob(); window.PeanutNative?.clearShared?.();
+    await addAndOpen(b, "Shared picture");
+  }catch(e){ console.error(e); }
+};
 
 /* ---------- settings sheet ---------- */
 const fmtX = v => "×" + (+v).toFixed(2), fmtP = v => Math.round(v*100) + "%", fmtN = v => (+v).toFixed(2);
@@ -1060,24 +1428,28 @@ const faceShared = (blendLabel) => [
   SEC("Cut-out"), RG("eyeMargin","Skin around eyes",0,0.25,0.005,fmtN), RG("mouthMargin","Skin around lips",0,0.2,0.005,fmtN), RG("feather","Edge softness",0.01,0.25,0.005,fmtN),
   TG("symFill","Fill in hidden side when turning")
 ];
-const motionTab = ["motion","Motion",[RG("motion","Head motion",0,1.6,0.02,fmtX), RG("wobble","Wobble",0,1,0.01), RG("steady","Steadiness",0,1,0.01), TG("bounce","Bounce when talking"), TG("invYaw","Invert left/right turning"), TG("invPitch","Invert nodding")]];
+const motionTab = ["motion","Motion",[{t:"gestures"}, SEC("Head"), RG("motion","Head motion",0,1.6,0.02,fmtX), RG("wobble","Wobble",0,1,0.01), RG("steady","Steadiness",0,1,0.01), TG("bounce","Bounce when talking"), TG("invYaw","Invert left/right turning"), TG("invPitch","Invert nodding")]];
 const cameraTab = ["camera","Camera",[{t:"camsel"}, TG("mirror","Mirror view (selfie)"), TG("pip_on","Show camera preview"),
   {t:"note", text:"On Windows, connect your phone as a webcam (Phone Link, DroidCam or Iriun), then pick it above."}, {t:"btns", items:[["Reset all settings","reset"]]}]];
 const TABS = {
   peanut: [
-    ["look","Look",[{t:"bg"}, CH("roast","Roast",[[0.08,"Raw","#e6c08f"],[0.35,"Golden","#c8945a"],[0.6,"Roasted","#9a6337"],[0.92,"Burnt","#4b2c17"]]),
+    ["look","Look",[{t:"bg"}, {t:"if", when:() => S.world, items:[SEC("3D world"), CH("wBiome","World",WORLD_OPTS), RG("wMorph","Morph every",5,60,1,v => Math.round(v) + "s"), RG("wSpeed","Fly speed",0,1,0.01),
+      CH("wRes","Resolution",[[200,"200p"],[240,"240p"],[360,"360p"],[480,"480p"]]), RG("wJitter","Vertex wobble",0,1,0.01), TG("wAffine","Texture warp"),
+      RG("wDither","Dithering",0,1,0.01), CH("wDepth","Colour depth",[[15,"15-bit"],[12,"12-bit"],[9,"9-bit"]]), RG("wFog","Fog",0,1,0.01), RG("wParallax","Head parallax",0,1,0.01)]}, CH("roast","Roast",[[0.08,"Raw","#e6c08f"],[0.35,"Golden","#c8945a"],[0.6,"Roasted","#9a6337"],[0.92,"Burnt","#4b2c17"]]),
       RG("bump","Shell texture",0,3,0.05,fmtX), RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX), TG("floor","Floor shadow")]],
     ["face","Face",[SEC("Placement"), RG("eyeSize","Eye size",0.5,1.8,0.02,fmtX), RG("eyeSpacing","Eye spacing",0.2,0.6,0.01,fmtN), RG("eyeHeight","Eye height",0.6,1.6,0.02,fmtN),
       RG("mouthSize","Mouth size",0.5,1.8,0.02,fmtX), RG("mouthHeight","Mouth height",0,1.2,0.02,fmtN), ...faceShared("Blend skin into shell")]],
     motionTab, cameraTab
   ],
   puppet: [
-    ["puppet","Puppet",[{t:"btns", items:[["Change image","newImage"],["Edit layout","layout"]]},
-      {t:"note", text:"Drag the picture or its stick to move it. Pinch to resize."},
+    ["puppet","Puppet",[{t:"btns", items:[["Change picture","newImage"],["Edit layout","layout"]]},
+      {t:"note", text:"Drag to move it. Two fingers: pinch to resize, twist to rotate. Three-finger swipes switch background and character."},
       SEC("Lollipop"), RG("pScale","Size",0.4,2.2,0.02,fmtX), RG("pMove","Movement",0,1,0.01), TG("pStick","Show stick"), TG("pShadow","Shadow"),
       {t:"btns", items:[["Put it back in the middle","centre"]]},
       SEC("Picture"), TG("pBgRemove","Remove photo background")]],
-    ["look","Look",[{t:"bg"}, RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX)]],
+    ["look","Look",[{t:"bg"}, {t:"if", when:() => S.world, items:[SEC("3D world"), CH("wBiome","World",WORLD_OPTS), RG("wMorph","Morph every",5,60,1,v => Math.round(v) + "s"), RG("wSpeed","Fly speed",0,1,0.01),
+      CH("wRes","Resolution",[[200,"200p"],[240,"240p"],[360,"360p"],[480,"480p"]]), RG("wJitter","Vertex wobble",0,1,0.01), TG("wAffine","Texture warp"),
+      RG("wDither","Dithering",0,1,0.01), CH("wDepth","Colour depth",[[15,"15-bit"],[12,"12-bit"],[9,"9-bit"]]), RG("wFog","Fog",0,1,0.01), RG("wParallax","Head parallax",0,1,0.01)]}, RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX)]],
     ["face","Face",[SEC("Placement"), RG("pEyeSize","Eye size",0.5,2,0.02,fmtX), RG("pMouthSize","Mouth size",0.5,2,0.02,fmtX), {t:"btns", items:[["Move eyes and mouth","layout"]]},
       ...faceShared("Blend skin into picture")]],
     motionTab, cameraTab
@@ -1118,6 +1490,7 @@ function onChange(k){
   if (k === "mirror" || k === "pip_on") syncPip();
   if (k === "pStick" && PUP){ PUP.stick.visible = S.pStick; buildPuppet(); }
   if (k === "pShadow" && PUP) PUP.shadow.visible = S.pShadow;
+  if (k[0] === "w" && k.length > 1 && k[1] === k[1].toUpperCase()) WORLD.configure();
 }
 function buildItem(it){
   if (it.t === "sec") return el("div", "sec", it.label);
@@ -1143,15 +1516,18 @@ function buildItem(it){
   if (it.t === "bg"){
     const wrap = el("div"); wrap.append(el("div", "sec", "Background"));
     const row = el("div", "swatches");
-    const mark = () => row.querySelectorAll(".sw").forEach(s => s.setAttribute("aria-pressed", s.dataset.bg === S.bg));
+    const mark = () => row.querySelectorAll(".sw").forEach(s => s.setAttribute("aria-pressed", s.dataset.bg === "world" ? !!S.world : !S.world && s.dataset.bg === S.bg));
     for (const k of Object.keys(BG_LABEL)){
       const s = el("button", "sw press", `<i style="background:${BGS[k]}"></i>${BG_LABEL[k]}`); s.dataset.bg = k;
-      s.onclick = () => { S.bg = k; buzz(6); applyBg(); mark(); save(); };
+      s.onclick = () => { const was = S.world; S.bg = k; S.world = false; buzz(6); applyBg(); WORLD.configure(); mark(); save(); if (was) renderBody(); };
       row.append(s);
     }
+    const ws = el("button", "sw press", `<i style="background:${bgCss({world:true})}"></i>3D World`); ws.dataset.bg = "world";
+    ws.onclick = () => { S.world = true; buzz(8); applyBg(); WORLD.configure(); save(); renderBody(); };
+    row.append(ws);
     const cs = el("div", "sw", `<i style="background:conic-gradient(#e33,#ec3,#3c6,#39e,#c3e,#e33)"><input type="color" aria-label="Custom colour" value="${S.bgColor}"></i>Colour`); cs.dataset.bg = "custom";
     const ci = cs.querySelector("input");
-    ci.oninput = () => { S.bgColor = ci.value; S.bg = "custom"; applyBg(); mark(); };
+    ci.oninput = () => { S.bgColor = ci.value; S.bg = "custom"; S.world = false; applyBg(); WORLD.configure(); mark(); };
     ci.onchange = save;
     const im = el("button", "sw press", `<i style="background:var(--raise);display:grid;place-items:center">${ico("image")}</i>Photo`); im.dataset.bg = "image";
     im.onclick = () => $("#bgFile").click();
@@ -1168,6 +1544,12 @@ function buildItem(it){
     return row;
   }
   if (it.t === "note") return el("p", "note", it.text);
+  if (it.t === "gestures"){
+    const w = el("div"); w.append(el("div", "sec", "Touch controls"), gestureList());
+    const r = el("div", "btnrow"); const b = el("button", "pill press", "Reset position"); b.onclick = () => { buzz(8); resetPose(); }; r.append(b); w.append(r);
+    return w;
+  }
+  if (it.t === "if") { const w = el("div"); if (it.when()) for (const x of it.items) w.append(buildItem(x)); return w; }
   if (it.t === "camsel"){
     const s = el("select", "sel"); s.setAttribute("aria-label", "Camera");
     cameraList().then(devs => {
@@ -1245,8 +1627,8 @@ $("#shClose").onclick = () => { buzz(6); closeSheet(); };
   g.addEventListener("pointerup", up); g.addEventListener("pointercancel", up);
 })();
 const ACTIONS = {
-  newImage: () => pickImage(),
-  centre: () => { S.pX = DEFAULTS.pX; S.pY = DEFAULTS.pY; S.pScale = DEFAULTS.pScale; save(); renderBody(); },
+  newImage: () => replaceImage(),
+  centre: () => { S.pX = DEFAULTS.pX; S.pY = DEFAULTS.pY; S.pScale = DEFAULTS.pScale; S.pRot = 0; save(); renderBody(); },
   layout: () => { closeSheet(); openEditor(); },
   reset: (b) => {
     if (b.dataset.armed !== "1"){ b.dataset.armed = "1"; b.textContent = "Tap again to reset everything"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "Reset all settings"; }, 3000); return; }
@@ -1282,17 +1664,45 @@ function placeEditor(){
     h.style.left = sx + "px"; h.style.top = sy + "px";
   }
 }
+// while dragging, the marker floats above the finger and a magnifier shows exactly where it lands
+const LIFT = 78, EDG = {h:null, fx:0, fy:0, mx:0, my:0};
+const loupe = $("#loupe"), lctx = loupe.getContext("2d");
+function edMove(e){
+  EDG.fx = e.clientX; EDG.fy = e.clientY; EDG.mx = e.clientX; EDG.my = e.clientY - LIFT;
+  const stem = $("#edStem"); stem.hidden = false;
+  stem.style.left = EDG.fx + "px"; stem.style.top = EDG.my + "px"; stem.style.height = LIFT - 22 + "px";
+}
+function drawLoupe(){
+  if (!EDG.h) return;
+  const L = 128, Z = 2.6, dpr = canvas.width / innerWidth, src = L / Z * dpr;
+  // stay out from under the finger: opposite top corner
+  const left = EDG.fx > innerWidth/2 ? 16 : innerWidth - L - 16;
+  loupe.style.left = left + "px"; loupe.style.top = (16 + 60) + "px";
+  if (loupe.width !== L*2){ loupe.width = loupe.height = L*2; }
+  lctx.setTransform(2, 0, 0, 2, 0, 0);
+  lctx.fillStyle = getComputedStyle(stage).backgroundColor || "#000"; lctx.fillRect(0, 0, L, L);
+  try{ lctx.drawImage(canvas, EDG.mx*dpr - src/2, EDG.my*dpr - src/2, src, src, 0, 0, L, L); }catch(e){}
+  lctx.strokeStyle = "rgba(255,255,255,.9)"; lctx.lineWidth = 1;
+  lctx.beginPath(); lctx.moveTo(L/2, L/2 - 18); lctx.lineTo(L/2, L/2 - 5); lctx.moveTo(L/2, L/2 + 5); lctx.lineTo(L/2, L/2 + 18);
+  lctx.moveTo(L/2 - 18, L/2); lctx.lineTo(L/2 - 5, L/2); lctx.moveTo(L/2 + 5, L/2); lctx.lineTo(L/2 + 18, L/2); lctx.stroke();
+  lctx.strokeStyle = EDG.h.dataset.h === "mouth" ? "#ff8a4c" : "#f6cf96"; lctx.lineWidth = 2;
+  lctx.beginPath(); lctx.arc(L/2, L/2, 22, 0, 7); lctx.stroke();
+  lctx.fillStyle = "rgba(14,9,6,.75)"; lctx.fillRect(0, L - 22, L, 22);
+  lctx.fillStyle = "#f7ecdc"; lctx.font = "600 11px 'Bricolage Grotesque', sans-serif"; lctx.textAlign = "center";
+  lctx.fillText(EDG.h.dataset.h === "mouth" ? "Mouth" : "Eye", L/2, L - 7);
+}
 for (const h of editor.querySelectorAll(".h")){
   let on = false;
-  h.addEventListener("pointerdown", e => { on = true; h.setPointerCapture(e.pointerId); h.classList.add("grab"); buzz(6); });
+  h.addEventListener("pointerdown", e => { on = true; h.setPointerCapture(e.pointerId); h.classList.add("grab"); EDG.h = h; edMove(e); loupe.hidden = false; buzz(6); });
   h.addEventListener("pointermove", e => {
     if (!on) return;
-    const p = screenToPx(e.clientX, e.clientY); if (!p) return;
+    edMove(e);
+    const p = screenToPx(EDG.mx, EDG.my); if (!p) return;
     const m = PUP.meta;
     m[h.dataset.h] = [clamp(p[0], 0, PUP.canvas.width), clamp(p[1], 0, PUP.canvas.height)];
     if (h.dataset.h !== "mouth") m.unit = Math.hypot(m.eyeL[0] - m.eyeR[0], m.eyeL[1] - m.eyeR[1]) / 0.7;
   });
-  const up = () => { if (!on) return; on = false; h.classList.remove("grab"); };
+  const up = () => { if (!on) return; on = false; h.classList.remove("grab"); EDG.h = null; loupe.hidden = true; $("#edStem").hidden = true; buzz(4); };
   h.addEventListener("pointerup", up); h.addEventListener("pointercancel", up);
 }
 
@@ -1324,78 +1734,151 @@ function enterMode(m){
   mode = m; document.body.dataset.mode = m;
   showStage(m === "puppet" ? "puppet" : "peanut");
   closeSheet(); buzz(12);
+  if (!S.coachSeen){ S.coachSeen = true; save(); setTimeout(showGestures, 700); }
 }
-function goMenu(){
+async function goMenu(){
   closeEditor(); closeSheet(); stopRec();
   mode = "menu"; document.body.dataset.mode = "menu";
-  showStage("peanut"); menuPose(); buzz(8);
+  await loadScope("peanut");
+  showStage("peanut"); menuPose(); renderChars(); buzz(8);
 }
+async function openPeanut(){ if (!(await ensureCamera())) return; await loadScope("peanut"); enterMode("peanut"); }
 $("#bHome").onclick = goMenu;
-$("#goPeanut").onclick = async () => { buzz(10); if (await ensureCamera()) enterMode("peanut"); };
-$("#goPuppet").onclick = async () => {
-  buzz(10);
-  if (!PUP) return pickImage();
-  if (await ensureCamera()) enterMode("puppet");
-};
-$("#newPuppet").onclick = () => { buzz(8); pickImage(); };
+$("#goPeanut").onclick = () => { buzz(10); openPeanut(); };
+$("#goPeanut").onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openPeanut(); } };
 $("#bImage").onclick = () => { buzz(8); pickImage(); };
 $("#bLayout").onclick = () => { buzz(8); editing ? closeEditor() : openEditor(); };
-function pickImage(){ $("#pupFile").click(); }
+let replacing = false;
+function pickImage(){ replacing = false; $("#pupFile").click(); }
+function replaceImage(){ replacing = true; $("#pupFile").click(); }
 $("#pupFile").onchange = async e => {
   const f = e.target.files[0]; e.target.value = ""; if (!f) return;
-  const meta = await importImage(f); if (!meta) return;
-  if (await ensureCamera()){
-    enterMode("puppet");
-    if (!meta.face){ openEditor(); toast("No face found in that picture. Drag the markers to place the eyes and mouth.", 4200); }
-    else toast("Tap Layout to adjust where your eyes and mouth go.");
-  }
+  if (replacing){ replacing = false; const c = CHARS.find(c => c.id === scopeId); if (c){ c.original = f; closeSheet(); await reprocess(); return; } }
+  await addAndOpen(f, f.name.replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ").slice(0, 24));
 };
+// flash a big label in the middle of the screen (character / background switches)
+let flashT;
+function flash(label, sub){ const f = $("#flash"); f.innerHTML = (sub ? `<small>${sub}</small>` : "") + label; f.classList.add("show"); clearTimeout(flashT); flashT = setTimeout(() => f.classList.remove("show"), 1100); }
+// order for three-finger swipes
+const BG_CYCLE = () => [...Object.keys(BG_LABEL), "world"];
+function cycleBg(dir){
+  const list = BG_CYCLE(), cur = S.world ? "world" : S.bg, i = list.indexOf(cur);
+  const n = list[(i + dir + list.length) % list.length];
+  if (n === "world"){ S.world = true; } else { S.world = false; S.bg = n; }
+  applyBg(); WORLD.configure(); save(); buzz(10);
+  flash(n === "world" ? "3D World" : BG_LABEL[n], "Background");
+  if (sheet.classList.contains("open")) renderBody();
+}
+async function cycleChar(dir){
+  const list = ["peanut", ...CHARS.map(c => c.id)];
+  if (list.length < 2){ toast("Add a character to switch between them."); return; }
+  const cur = mode === "puppet" ? scopeId : "peanut", n = list[(list.indexOf(cur) + dir + list.length) % list.length];
+  buzz(12);
+  if (n === "peanut"){ await openPeanut(); flash("Peanut", "Character"); }
+  else { await openChar(n); flash(CHARS.find(c => c.id === n)?.name || "", "Character"); }
+}
+function resetPose(){
+  if (mode === "puppet"){ S.pX = DEFAULTS.pX; S.pY = DEFAULTS.pY; S.pScale = DEFAULTS.pScale; S.pRot = 0; }
+  else { for (const k of NUT_KEYS) S[k] = DEFAULTS[k]; }
+  save(); buzz([10, 40, 10]); flash("Reset", "Position");
+}
+const GESTURES = [
+  ["1 finger", "Drag", "Character: move it. Peanut: spin and tilt it."],
+  ["2 fingers", "Pinch / twist / drag", "Resize, rotate and move."],
+  ["2 fingers", "Double tap", "Put it back where it started."],
+  ["3 fingers", "Swipe left / right", "Next or previous background."],
+  ["3 fingers", "Swipe up / down", "Next or previous character (Peanut included)."],
+  ["3 fingers", "Tap", "Hide or show the controls."]
+];
+function gestureList(){
+  const g = el("div", "glist");
+  for (const [who, what, why] of GESTURES) g.insertAdjacentHTML("beforeend", `<div class="gi">${who.replace(" finger", "F").replace("s", "")}</div><div><b>${what}</b><span>${why}</span></div>`);
+  return g;
+}
+function showGestures(){
+  openModal("Touch controls", b => {
+    b.append(gestureList());
+    b.append(el("p", "note", "Some phones use a three-finger swipe down for screenshots; swipe up instead to change character."));
+    const ok = el("button", "pill hot press", "Got it"); ok.style.width = "100%"; ok.style.marginTop = "8px"; ok.onclick = closeModal; b.append(ok);
+  });
+}
 $("#bFlip").onclick = async () => {
   buzz(8);
   S.deviceId = ""; S.facing = S.facing === "user" ? "environment" : "user"; S.mirror = S.facing === "user"; syncPip(); save();
   try{ await openCamera(); }catch(err){ toast("Couldn't switch camera."); }
 };
 $("#bClean").onclick = () => { buzz(8); closeSheet(); document.body.classList.add("clean"); toast("Tap anywhere to show controls", 1800); };
-const ptrs = new Map(); let drag = null, suppressClick = false, holding = false;
+/* ---------- touch controls (both the peanut and characters) ---------- */
+let suppressClick = false, holding = false;
 const perPx = () => 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov/2)) * camera.position.z / innerHeight;
-const canDrag = () => mode === "puppet" && stageMode === "puppet" && PUP && !editing;
+const canGesture = () => (mode === "puppet" && PUP || mode === "peanut") && !editing;
+const G = {pts:new Map(), n:0, max:0, t0:0, moved:false, base:null, swipe:{x:0, y:0}, lastTap2:0};
+const isPup = () => mode === "puppet";
+function gBaseline(){
+  const pts = [...G.pts.values()]; G.n = pts.length;
+  const cx = pts.reduce((a, p) => a + p.x, 0)/G.n, cy = pts.reduce((a, p) => a + p.y, 0)/G.n;
+  const d = G.n > 1 ? Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) : 1;
+  const a = G.n > 1 ? Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x) : 0;
+  G.base = {cx, cy, d:Math.max(20, d), a,
+    x:isPup() ? S.pX : S.nX, y:isPup() ? S.pY : S.nY, s:isPup() ? S.pScale : S.nScale, r:isPup() ? S.pRot : S.nRot, spin:S.nSpin, tilt:S.nTilt};
+}
 canvas.addEventListener("pointerdown", e => {
-  if (!canDrag()) return;
-  ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (!canGesture()) return;
+  if (G.pts.size === 0){ G.max = 0; G.t0 = performance.now(); G.moved = false; G.swipe = {x:0, y:0}; }
+  G.pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
   try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
-  const pts = [...ptrs.values()];
-  if (pts.length === 1) drag = {x:e.clientX, y:e.clientY, px:S.pX, py:S.pY, moved:false};
-  else if (pts.length === 2){
-    const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-    drag = {pinch:true, d0:Math.max(20, d), s0:S.pScale, mx:(pts[0].x + pts[1].x)/2, my:(pts[0].y + pts[1].y)/2, px:S.pX, py:S.pY, moved:true};
-  }
+  G.max = Math.max(G.max, G.pts.size); gBaseline();
 });
 canvas.addEventListener("pointermove", e => {
-  if (!drag || !ptrs.has(e.pointerId)) return;
-  ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
-  const pts = [...ptrs.values()], k = perPx();
-  if (drag.pinch && pts.length >= 2){
-    const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y), mx = (pts[0].x + pts[1].x)/2, my = (pts[0].y + pts[1].y)/2;
-    S.pScale = clamp(drag.s0 * d / drag.d0, 0.4, 2.2);
-    S.pX = drag.px + (mx - drag.mx) * k; S.pY = drag.py - (my - drag.my) * k;
-    return;
-  }
-  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-  if (!drag.moved && Math.hypot(dx, dy) > 6){ drag.moved = true; holding = true; document.body.classList.add("holding"); buzz(6); }
-  if (drag.moved){
-    const lim = camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
-    S.pX = clamp(drag.px + dx * k, -lim * camera.aspect, lim * camera.aspect);
-    S.pY = clamp(drag.py - dy * k, -lim, lim);
+  if (!G.pts.has(e.pointerId)) return;
+  G.pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (G.pts.size !== G.n) return;
+  const pts = [...G.pts.values()], b = G.base, k = perPx();
+  const cx = pts.reduce((a, p) => a + p.x, 0)/G.n, cy = pts.reduce((a, p) => a + p.y, 0)/G.n, dx = cx - b.cx, dy = cy - b.cy;
+  if (G.n === 1){
+    if (G.max > 1) return;                       // a finger left over from a pinch does nothing
+    if (!G.moved && Math.hypot(dx, dy) > 6){ G.moved = true; holding = isPup(); document.body.classList.toggle("holding", holding); buzz(6); }
+    if (!G.moved) return;
+    if (isPup()){
+      const lim = camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+      S.pX = clamp(b.x + dx * k, -lim * camera.aspect, lim * camera.aspect); S.pY = clamp(b.y - dy * k, -lim, lim);
+    } else { S.nSpin = b.spin + dx * 0.012; S.nTilt = clamp(b.tilt + dy * 0.006, -0.7, 0.7); }
+  } else if (G.n === 2){
+    const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y), a = Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x);
+    let da = a - b.a; if (da > Math.PI) da -= 2*Math.PI; if (da < -Math.PI) da += 2*Math.PI;
+    if (!G.moved && (Math.abs(d - b.d) > 10 || Math.hypot(dx, dy) > 10 || Math.abs(da) > 0.08)){ G.moved = true; buzz(5); }
+    if (!G.moved) return;
+    const sc = clamp(b.s * d / b.d, isPup() ? 0.4 : 0.35, isPup() ? 2.2 : 2.5), rot = b.r - da;
+    if (isPup()){ S.pScale = sc; S.pRot = rot; S.pX = b.x + dx * k; S.pY = b.y - dy * k; }
+    else { S.nScale = sc; S.nRot = rot; S.nX = b.x + dx * k; S.nY = b.y - dy * k; }
+  } else if (G.n >= 3){
+    G.swipe = {x:dx, y:dy}; if (Math.hypot(dx, dy) > 12) G.moved = true;
   }
 });
-const endPtr = e => {
-  if (!ptrs.delete(e.pointerId)) return;
-  if (drag?.moved){ suppressClick = true; save(); }
-  if (ptrs.size === 0){ drag = null; if (holding){ buzz(4); } holding = false; document.body.classList.remove("holding"); }
-  else if (drag?.pinch){ const p = [...ptrs.values()][0]; drag = {x:p.x, y:p.y, px:S.pX, py:S.pY, moved:true}; }
+const gEnd = e => {
+  if (!G.pts.delete(e.pointerId)) return;
+  if (G.pts.size > 0){ gBaseline(); return; }
+  const dur = performance.now() - G.t0;
+  if (G.max >= 3){
+    const {x, y} = G.swipe;
+    if (Math.max(Math.abs(x), Math.abs(y)) > 50){
+      if (Math.abs(x) > Math.abs(y)) cycleBg(x < 0 ? 1 : -1); else cycleChar(y < 0 ? 1 : -1);
+    } else if (dur < 500){ document.body.classList.toggle("clean"); buzz(8); }
+  } else if (G.max === 2 && !G.moved && dur < 320){
+    const t = performance.now();
+    if (t - G.lastTap2 < 450){ resetPose(); G.lastTap2 = 0; } else G.lastTap2 = t;
+  }
+  if (G.moved || G.max > 1){ suppressClick = true; save(); }
+  if (holding) buzz(4);
+  holding = false; document.body.classList.remove("holding"); G.n = 0;
 };
-canvas.addEventListener("pointerup", endPtr); canvas.addEventListener("pointercancel", endPtr);
-canvas.addEventListener("wheel", e => { if (!canDrag()) return; e.preventDefault(); S.pScale = clamp(S.pScale * Math.exp(-e.deltaY * 0.0012), 0.4, 2.2); clearTimeout(canvas._wt); canvas._wt = setTimeout(save, 400); }, {passive:false});
+canvas.addEventListener("pointerup", gEnd); canvas.addEventListener("pointercancel", gEnd);
+canvas.addEventListener("wheel", e => {
+  if (!canGesture()) return; e.preventDefault();
+  const f = Math.exp(-e.deltaY * 0.0012);
+  if (isPup()) S.pScale = clamp(S.pScale * f, 0.4, 2.2); else S.nScale = clamp(S.nScale * f, 0.35, 2.5);
+  clearTimeout(canvas._wt); canvas._wt = setTimeout(save, 400);
+}, {passive:false});
 canvas.addEventListener("click", () => {
   if (suppressClick){ suppressClick = false; return; }
   if (document.body.classList.contains("clean")) document.body.classList.remove("clean");
@@ -1450,6 +1933,7 @@ function recFrame(){
   if (!REC.on) return;
   const w = REC.c.width, h = REC.c.height, k = `${S.bg}|${S.bgColor}|${bgImg?.src || ""}|${w}x${h}`;
   if (k !== REC.bgKey){ paintBg(REC.bg.getContext("2d"), w, h); REC.bgKey = k; }
+  if (S.world){ REC.x.drawImage(canvas, 0, 0, w, h); return; }
   REC.x.drawImage(REC.bg, 0, 0);
   REC.x.drawImage(canvas, 0, 0, w, h);
   const t = Math.floor((performance.now() - REC.t0) / 1000);
@@ -1522,8 +2006,256 @@ $("#micBtn").onclick = () => {
   toast(S.recMic ? "Recordings include your voice" : "Recordings are silent");
 };
 
+/* ---------- 3D world: PS1-style background, built with a modern pipeline ----------
+   Low-resolution render target + nearest upscale, vertex snapping in clip space, affine (warped) textures,
+   ordered dithering with colour-depth reduction, per-vertex lighting and fog. The terrain, props and sky are
+   all driven by uniforms, so one world can morph smoothly into another; the camera flies forever and can
+   follow your head for a window-like parallax. */
+const BIOMES = {
+  meadow:{amp:9, freq:0.03, ridge:0.1, terrace:0, water:-0.35, floor:-0.8, sky:["#3f7fd6","#cfe3f2"], fog:"#cfe3f2", low:"#3d7a2f", high:"#9cc061", rock:"#7d776b", waterC:"#3a73b0",
+    sun:"#fff1c9", sunDir:[0.4,0.55,-0.75], stars:0, trunkH:1.1, trunkR:0.2, crownH:2.6, crownR:1.15, crownTop:0.0, propScale:1.1, density:0.45, tall:0.3, trunkC:"#5b3a20", crownC:"#2f6a2a", glow:0, windows:0, grid:0, gridC:"#000000"},
+  canyon:{amp:15, freq:0.022, ridge:0.6, terrace:2.4, water:-60, floor:-1.2, sky:["#d9824a","#f6d3a0"], fog:"#efc192", low:"#a24e28", high:"#e09a5c", rock:"#8a4426", waterC:"#000000",
+    sun:"#ffe0a8", sunDir:[-0.5,0.35,-0.8], stars:0, trunkH:0.0, trunkR:0.2, crownH:2.4, crownR:0.35, crownTop:0.8, propScale:1, density:0.16, tall:0.6, trunkC:"#3f6b2c", crownC:"#4f8a37", glow:0, windows:0, grid:0, gridC:"#000000"},
+  city:{amp:0.5, freq:0.05, ridge:0, terrace:0, water:-60, floor:0, sky:["#07051a","#3a1250"], fog:"#2a0d3d", low:"#120a20", high:"#1a1030", rock:"#1a1030", waterC:"#000000",
+    sun:"#ff4fd8", sunDir:[0,0.25,-1], stars:0.8, trunkH:0.0, trunkR:1, crownH:5, crownR:2.3, crownTop:1.0, propScale:1.0, density:0.62, tall:1.0, trunkC:"#000000", crownC:"#1d1636", glow:0, windows:1, grid:1, gridC:"#ff3fd0"},
+  islands:{amp:7, freq:0.028, ridge:0, terrace:0, water:0.7, floor:-1.0, sky:["#f08a5d","#ffd2a0"], fog:"#f7c39a", low:"#d8c48a", high:"#4f8a3a", rock:"#6b6250", waterC:"#2b6e9e",
+    sun:"#ffd29a", sunDir:[0.2,0.15,-1], stars:0, trunkH:2.6, trunkR:0.12, crownH:0.5, crownR:1.5, crownTop:0.15, propScale:1, density:0.5, tall:0.3, trunkC:"#8a6a3c", crownC:"#3c7a2c", glow:0, windows:0, grid:0, gridC:"#000000"},
+  snow:{amp:11, freq:0.03, ridge:0.35, terrace:0, water:-60, floor:-0.6, sky:["#8fa8c8","#e6eef7"], fog:"#e6eef7", low:"#e8eef5", high:"#ffffff", rock:"#8d95a3", waterC:"#000000",
+    sun:"#ffffff", sunDir:[0.5,0.4,-0.7], stars:0, trunkH:0.6, trunkR:0.15, crownH:3.2, crownR:1.0, crownTop:0.0, propScale:1, density:0.5, tall:0.4, trunkC:"#4a3424", crownC:"#2e4f3c", glow:0, windows:0, grid:0, gridC:"#000000"},
+  alien:{amp:10, freq:0.035, ridge:0.9, terrace:0, water:-0.4, floor:-1.0, sky:["#0d0524","#5b1e6b"], fog:"#3b1450", low:"#3a1a5c", high:"#c04fd8", rock:"#24123a", waterC:"#2affc8",
+    sun:"#7affea", sunDir:[-0.3,0.4,-1], stars:1, trunkH:0.0, trunkR:0.2, crownH:3.5, crownR:0.6, crownTop:0.0, propScale:1, density:0.35, tall:0.8, trunkC:"#000000", crownC:"#5affe0", glow:0.9, windows:0, grid:0, gridC:"#000000"}
+};
+const BIOME_ORDER = ["meadow","canyon","islands","city","snow","alien"];
+const WORLD = (() => {
+  const GLSL_COMMON = `
+    uniform float uAmp, uFreq, uRidge, uTerrace, uWater, uFloor, uJitter;
+    uniform vec2 uScroll, uSnap;
+    float hash2(vec2 p){ p = fract(p*vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x*p.y); }
+    float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f*f*(3.0 - 2.0*f);
+      return mix(mix(hash2(i), hash2(i + vec2(1.0, 0.0)), u.x), mix(hash2(i + vec2(0.0, 1.0)), hash2(i + vec2(1.0, 1.0)), u.x), u.y); }
+    float fbm(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 4; i++){ s += a*vnoise(p); p = p*2.03 + vec2(17.1, 9.2); a *= 0.5; } return s; }
+    float terrainH(vec2 w){
+      vec2 p = w*uFreq;
+      float n = fbm(p), r = 1.0 - abs(2.0*fbm(p*0.6 + vec2(31.7, 11.3)) - 1.0);
+      float h = (mix(n, r*r, uRidge) - 0.35) * uAmp;
+      if (uTerrace > 0.01){ float q = floor(h/uTerrace)*uTerrace; h = mix(h, q + smoothstep(0.7, 1.0, fract(h/uTerrace))*uTerrace, 0.85); }
+      h = mix(uFloor, h, smoothstep(3.5, 15.0, abs(w.x)));       // the valley the camera flies along
+      return max(h, uWater);
+    }
+    vec4 psxSnap(vec4 cp){
+      if (uJitter <= 0.001) return cp;
+      vec2 g = uSnap / (1.0 + uJitter*3.0);
+      vec3 n = cp.xyz / cp.w; n.xy = floor(n.xy*g + 0.5) / g; return vec4(n*cp.w, cp.w);
+    }`;
+  const U = {
+    uAmp:{value:9}, uFreq:{value:0.03}, uRidge:{value:0}, uTerrace:{value:0}, uWater:{value:-1}, uFloor:{value:-1}, uJitter:{value:0.5},
+    uScroll:{value:new THREE.Vector2()}, uSnap:{value:new THREE.Vector2(160, 120)}, uTime:{value:0}, uAffine:{value:1},
+    uLow:{value:new THREE.Color()}, uHigh:{value:new THREE.Color()}, uRock:{value:new THREE.Color()}, uWaterC:{value:new THREE.Color()},
+    uSky:{value:new THREE.Color()}, uHorizon:{value:new THREE.Color()}, uFogC:{value:new THREE.Color()}, uSunC:{value:new THREE.Color()},
+    uSunDir:{value:new THREE.Vector3(0.4, 0.5, -0.7).normalize()}, uStars:{value:0}, uFogNear:{value:30}, uFogFar:{value:150},
+    uTrunkH:{value:1}, uTrunkR:{value:0.2}, uCrownH:{value:2}, uCrownR:{value:1}, uCrownTop:{value:0}, uPropScale:{value:1}, uDensity:{value:0.4}, uTall:{value:0},
+    uTrunkC:{value:new THREE.Color()}, uCrownC:{value:new THREE.Color()}, uGlow:{value:0}, uWindows:{value:0}, uGrid:{value:0}, uGridC:{value:new THREE.Color()},
+    uTex:{value:null}
+  };
+  // a tiny noisy texture, sampled with nearest filtering: the warped "PS1" texture look
+  const tc = document.createElement("canvas"); tc.width = tc.height = 32;
+  const tx = tc.getContext("2d"), id = tx.createImageData(32, 32);
+  for (let i = 0; i < 1024; i++){ const v = 150 + Math.random()*80 + ((i % 32) % 8 === 0 ? -40 : 0); id.data[i*4] = id.data[i*4+1] = id.data[i*4+2] = v; id.data[i*4+3] = 255; }
+  tx.putImageData(id, 0, 0);
+  const tex = new THREE.CanvasTexture(tc); tex.magFilter = tex.minFilter = THREE.NearestFilter; tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.generateMipmaps = false;
+  U.uTex.value = tex;
+
+  const scene = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(62, 1, 0.3, 420);
+  // terrain
+  const tg = new THREE.PlaneGeometry(220, 220, 96, 96); tg.rotateX(-Math.PI/2); tg.translate(0, 0, -95);
+  const terrain = new THREE.Mesh(tg, new THREE.ShaderMaterial({uniforms:U,
+    vertexShader: GLSL_COMMON + `
+      uniform vec3 uLow, uHigh, uRock, uWaterC, uSunDir; uniform float uFogNear, uFogFar;
+      varying vec3 vCol; varying vec3 vUvw; varying vec2 vUvP; varying float vFog; varying float vWater; varying vec2 vW;
+      void main(){
+        vec3 p = position; vec2 w = p.xz + uScroll; float h = terrainH(w); p.y = h;
+        float e = 0.7; vec3 n = normalize(vec3(h - terrainH(w + vec2(e, 0.0)), e, h - terrainH(w + vec2(0.0, e))));
+        float t = clamp((h - uFloor)/(uAmp*0.7 + 0.001), 0.0, 1.0);
+        vec3 c = mix(uLow, uHigh, t); c = mix(c, uRock, smoothstep(0.25, 0.55, 1.0 - n.y));
+        float water = step(h, uWater + 0.001); c = mix(c, uWaterC, water);
+        c *= 0.42 + 0.78*max(dot(n, uSunDir), 0.0);
+        vec4 mv = modelViewMatrix*vec4(p, 1.0); vec4 cp = projectionMatrix*mv;
+        vFog = smoothstep(uFogNear, uFogFar, -mv.z); vCol = c; vWater = water; vW = w;
+        vec2 uv = w*0.32; vUvP = uv; vUvw = vec3(uv*cp.w, cp.w);
+        gl_Position = psxSnap(cp);
+      }`,
+    fragmentShader: `
+      uniform sampler2D uTex; uniform float uAffine, uTime, uGrid; uniform vec3 uFogC, uGridC;
+      varying vec3 vCol; varying vec3 vUvw; varying vec2 vUvP; varying float vFog; varying float vWater; varying vec2 vW;
+      void main(){
+        vec2 uv = mix(vUvP, vUvw.xy/vUvw.z, uAffine);
+        vec3 c = vCol*(0.78 + 0.44*texture2D(uTex, uv).r);
+        if (vWater > 0.5) c = vCol*(0.75 + 0.5*texture2D(uTex, uv*0.5 + vec2(uTime*0.05, uTime*0.03)).r);
+        if (uGrid > 0.0){ vec2 g = abs(fract(vW*0.125) - 0.5); c = mix(c, uGridC, step(0.45, max(g.x, g.y))*uGrid); }
+        gl_FragColor = vec4(mix(c, uFogC, vFog), 1.0);
+      }`}));
+  terrain.frustumCulled = false; scene.add(terrain);
+  // props: one low-poly "trunk + crown" shape, reshaped per world (trees, cacti, towers, palms, pines, crystals)
+  const trunk = new THREE.CylinderGeometry(1, 1, 1, 4, 1).translate(0, 0.5, 0).toNonIndexed();
+  const crown = new THREE.CylinderGeometry(1, 1, 1, 4, 1).translate(0, 0.5, 0).toNonIndexed();
+  const merge = (a, b) => {
+    const g = new THREE.BufferGeometry(), na = a.attributes.position.count, nb = b.attributes.position.count;
+    for (const k of ["position", "normal", "uv"]){ const A = a.attributes[k].array, Bv = b.attributes[k].array, out = new Float32Array(A.length + Bv.length); out.set(A); out.set(Bv, A.length); g.setAttribute(k, new THREE.BufferAttribute(out, a.attributes[k].itemSize)); }
+    const part = new Float32Array(na + nb).fill(1, na), ty = new Float32Array(na + nb);
+    const pos = g.attributes.position.array; for (let i = 0; i < na + nb; i++) ty[i] = pos[i*3+1];
+    g.setAttribute("part", new THREE.BufferAttribute(part, 1)); g.setAttribute("ty", new THREE.BufferAttribute(ty, 1));
+    return g;
+  };
+  const pg = new THREE.InstancedBufferGeometry().copy(merge(trunk, crown));
+  const N = 1100, data = new Float32Array(N*4);
+  for (let i = 0; i < N; i++){ data[i*4] = (Math.random()*2 - 1)*100; data[i*4+1] = Math.random()*180; data[i*4+2] = Math.random(); data[i*4+3] = Math.random(); }
+  pg.setAttribute("iData", new THREE.InstancedBufferAttribute(data, 4)); pg.instanceCount = N;
+  const props = new THREE.Mesh(pg, new THREE.ShaderMaterial({uniforms:U,
+    vertexShader: GLSL_COMMON + `
+      attribute float part; attribute float ty; attribute vec4 iData;
+      uniform float uTrunkH, uTrunkR, uCrownH, uCrownR, uCrownTop, uPropScale, uDensity, uTall, uFogNear, uFogFar;
+      uniform vec3 uTrunkC, uCrownC, uSunDir;
+      varying vec3 vCol; varying float vFog; varying vec3 vUvw; varying vec2 vUvP; varying float vPart; varying vec4 vData; varying vec2 vWin;
+      void main(){
+        float T = 180.0, lx = iData.x, lz = mod(iData.y - uScroll.y, T) - (T - 12.0);
+        float h = terrainH(vec2(lx, lz) + uScroll);
+        float keep = step(iData.z, uDensity) * step(6.0, abs(lx)) * step(uWater + 0.05, h);
+        float s = uPropScale * (0.65 + 0.7*iData.w) * keep;
+        float tall = mix(1.0, 0.45 + 1.9*fract(iData.w*7.31), uTall);
+        float ang = iData.z*18.85; mat2 R = mat2(cos(ang), -sin(ang), sin(ang), cos(ang));
+        vec3 p = position; vec3 nn = normal; p.xz = R*p.xz; nn.xz = R*nn.xz;
+        if (part < 0.5){ p.xz *= uTrunkR; p.y *= uTrunkH; }
+        else { p.xz *= uCrownR*mix(1.0, uCrownTop, ty); p.y = uTrunkH + p.y*uCrownH*tall; }
+        vWin = vec2(atan(position.z, position.x)*1.27 + 4.0, position.y*uCrownH*tall*1.6);
+        p *= s; p += vec3(lx, h - 0.05, lz);
+        vec3 c = part < 0.5 ? uTrunkC : uCrownC;
+        vCol = c*(0.55 + 0.55*max(dot(normalize(nn + vec3(0.0, 0.3, 0.0)), uSunDir), 0.0));
+        vec4 mv = modelViewMatrix*vec4(p, 1.0); vec4 cp = projectionMatrix*mv;
+        vFog = smoothstep(uFogNear, uFogFar, -mv.z); vPart = part; vData = iData;
+        vec2 uv = vec2(position.x + position.z, position.y)*0.8; vUvP = uv; vUvw = vec3(uv*cp.w, cp.w);
+        gl_Position = psxSnap(cp);
+      }`,
+    fragmentShader: `
+      uniform sampler2D uTex; uniform float uAffine, uGlow, uWindows, uTime; uniform vec3 uFogC, uCrownC, uSunC;
+      varying vec3 vCol; varying float vFog; varying vec3 vUvw; varying vec2 vUvP; varying float vPart; varying vec4 vData; varying vec2 vWin;
+      float h21(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233)))*43758.5453); }
+      void main(){
+        vec2 uv = mix(vUvP, vUvw.xy/vUvw.z, uAffine);
+        vec3 c = vCol*(0.8 + 0.4*texture2D(uTex, uv).r);
+        if (uWindows > 0.0 && vPart > 0.5){
+          vec2 cell = floor(vWin*vec2(1.0, 1.0)), f = fract(vWin);
+          float win = step(0.22, f.x)*step(f.x, 0.78)*step(0.25, f.y)*step(f.y, 0.75);
+          float lit = step(0.5, h21(cell + vData.zw*31.0));
+          vec3 wc = mix(vec3(1.0, 0.85, 0.5), uSunC, step(0.8, h21(cell*1.7 + vData.zw)));
+          c = mix(c, wc, win*lit*uWindows);
+        }
+        if (vPart > 0.5) c += uCrownC*uGlow*(0.6 + 0.4*sin(uTime*2.0 + vData.w*20.0));
+        gl_FragColor = vec4(mix(c, uFogC, vFog), 1.0);
+      }`}));
+  props.frustumCulled = false; scene.add(props);
+  // sky dome with sun and stars
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(380, 24, 14), new THREE.ShaderMaterial({uniforms:U, side:THREE.BackSide, depthWrite:false,
+    vertexShader: GLSL_COMMON + `varying vec3 vDir; void main(){ vDir = position; vec4 cp = projectionMatrix*modelViewMatrix*vec4(position, 1.0); gl_Position = psxSnap(cp); }`,
+    fragmentShader: `
+      uniform vec3 uSky, uHorizon, uFogC, uSunC, uSunDir; uniform float uStars; varying vec3 vDir;
+      float h21(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233)))*43758.5453); }
+      void main(){
+        vec3 d = normalize(vDir); float y = d.y;
+        vec3 c = y > 0.0 ? mix(uHorizon, uSky, pow(clamp(y, 0.0, 1.0), 0.55)) : uFogC;
+        float s = dot(d, normalize(uSunDir));
+        c += uSunC*(smoothstep(0.9965, 0.998, s) + 0.22*pow(max(s, 0.0), 24.0));
+        vec2 sp = floor(vec2(atan(d.z, d.x), asin(clamp(y, -1.0, 1.0)))*120.0);
+        c += uStars*step(0.994, h21(sp))*smoothstep(0.05, 0.35, y);
+        gl_FragColor = vec4(c, 1.0);
+      }`}));
+  sky.frustumCulled = false; sky.renderOrder = -1; scene.add(sky);
+
+  // low-res target + dither/quantise pass to the screen
+  let rt = null;
+  const bay = new Uint8Array([0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5].map(v => v*16 + 8));
+  const bayTex = new THREE.DataTexture(bay, 4, 4, THREE.RedFormat); bayTex.magFilter = bayTex.minFilter = THREE.NearestFilter; bayTex.wrapS = bayTex.wrapT = THREE.RepeatWrapping; bayTex.needsUpdate = true;
+  const post = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({depthTest:false, depthWrite:false,
+    uniforms:{tDiffuse:{value:null}, tBayer:{value:bayTex}, uRes:{value:new THREE.Vector2(320, 240)}, uDither:{value:0.7}, uLevels:{value:31}},
+    vertexShader:`varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader:`
+      uniform sampler2D tDiffuse, tBayer; uniform vec2 uRes; uniform float uDither, uLevels; varying vec2 vUv;
+      void main(){
+        vec3 c = texture2D(tDiffuse, vUv).rgb;
+        float b = texture2D(tBayer, floor(vUv*uRes)/4.0 + 0.125).r - 0.5;
+        c = floor((c + b*uDither/uLevels)*uLevels + 0.5)/uLevels;
+        gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
+      }`}));
+  post.frustumCulled = false;
+  const postScene = new THREE.Scene(); postScene.add(post);
+  const postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+  // morphing between worlds
+  const COLS = ["low","high","rock","waterC","fog","sun","trunkC","crownC","gridC"];
+  const NUMS = ["amp","freq","ridge","terrace","water","floor","stars","trunkH","trunkR","crownH","crownR","crownTop","propScale","density","tall","glow","windows","grid"];
+  const st = {from:"meadow", to:"meadow", t:1, dur:3, since:0, scroll:0, camY:3, autoIdx:0, cfgKey:""};
+  const col = (h) => new THREE.Color(h);
+  function setTo(b, dur){ if (st.to === b && st.t >= 1) return; st.from = st.t >= 1 ? st.to : st.to; st.to = b; st.t = 0; st.dur = dur; }
+  function configure(){
+    const want = S.wBiome === "auto" ? (BIOMES[st.to] ? st.to : "meadow") : S.wBiome;
+    if (S.wBiome !== "auto" && want !== st.to) setTo(want, 2.5);
+    const h = S.wRes, w = Math.round(h * innerWidth / innerHeight);
+    if (!rt || rt.height !== h || rt.width !== w){
+      rt?.dispose();
+      rt = new THREE.WebGLRenderTarget(w, h, {minFilter:THREE.NearestFilter, magFilter:THREE.NearestFilter, depthBuffer:true});
+      post.material.uniforms.tDiffuse.value = rt.texture;
+    }
+    post.material.uniforms.uRes.value.set(w, h); U.uSnap.value.set(w*0.5, h*0.5);
+    post.material.uniforms.uDither.value = S.wDither*1.6;
+    post.material.uniforms.uLevels.value = S.wDepth === 9 ? 7 : S.wDepth === 12 ? 15 : 31;
+    U.uJitter.value = S.wJitter; U.uAffine.value = S.wAffine ? 1 : 0;
+    U.uFogNear.value = THREE.MathUtils.lerp(70, 10, S.wFog); U.uFogFar.value = THREE.MathUtils.lerp(220, 70, S.wFog);
+    cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix();
+  }
+  addEventListener("resize", () => { if (rt) configure(); });
+  const _a = new THREE.Color(), _b = new THREE.Color(), _sd = new THREE.Vector3(), _sd2 = new THREE.Vector3();
+  function apply(){
+    const A = BIOMES[st.from], Bm = BIOMES[st.to], k = st.t < 1 ? st.t*st.t*(3 - 2*st.t) : 1;
+    const L = (a, b) => a + (b - a)*k;
+    const map = {amp:"uAmp", freq:"uFreq", ridge:"uRidge", terrace:"uTerrace", water:"uWater", floor:"uFloor", stars:"uStars", trunkH:"uTrunkH", trunkR:"uTrunkR",
+      crownH:"uCrownH", crownR:"uCrownR", crownTop:"uCrownTop", propScale:"uPropScale", density:"uDensity", tall:"uTall", glow:"uGlow", windows:"uWindows", grid:"uGrid"};
+    for (const n of NUMS){
+      let a = A[n], b = Bm[n];
+      if (n === "water"){ a = Math.max(a, A.floor - 2); b = Math.max(b, Bm.floor - 2); }   // no sudden flood when morphing from "no water"
+      U[map[n]].value = L(a, b);
+    }
+    const cmap = {low:"uLow", high:"uHigh", rock:"uRock", waterC:"uWaterC", fog:"uFogC", sun:"uSunC", trunkC:"uTrunkC", crownC:"uCrownC", gridC:"uGridC"};
+    for (const c of COLS) U[cmap[c]].value.copy(_a.set(A[c])).lerp(_b.set(Bm[c]), k);
+    U.uSky.value.copy(_a.set(A.sky[0])).lerp(_b.set(Bm.sky[0]), k);
+    U.uHorizon.value.copy(_a.set(A.sky[1])).lerp(_b.set(Bm.sky[1]), k);
+    U.uSunDir.value.copy(_sd.fromArray(A.sunDir).normalize().lerp(_sd2.fromArray(Bm.sunDir).normalize(), k)).normalize();
+  }
+  function render(dt, now){
+    if (!rt) configure();
+    // auto-morph through the worlds
+    st.since += dt;
+    if (S.wBiome === "auto" && st.since > S.wMorph && st.t >= 1){ st.since = 0; st.autoIdx = (BIOME_ORDER.indexOf(st.to) + 1) % BIOME_ORDER.length; setTo(BIOME_ORDER[st.autoIdx], Math.min(5, S.wMorph*0.5)); }
+    if (st.t < 1) st.t = Math.min(1, st.t + dt/st.dur);
+    apply();
+    U.uTime.value = now/1000;
+    st.scroll -= dt*(1.5 + 14*S.wSpeed);
+    U.uScroll.value.set(0, st.scroll);
+    // camera: above the valley floor (or the water), gently bobbing, nudged by your head
+    const base = Math.max(U.uFloor.value, U.uWater.value) + 2.4 + U.uAmp.value*0.04;
+    st.camY += (base - st.camY)*Math.min(1, dt*2);
+    const par = S.wParallax;
+    cam.position.set(spr.tx.p*4*par, st.camY + Math.sin(now/1300)*0.15 + spr.ty.p*2*par, 0);
+    cam.lookAt(cam.position.x*0.35 - spr.yaw.p*6*par, st.camY - 1.1 + spr.pitch.p*-4*par, -30);
+    sky.position.copy(cam.position);
+    renderer.setRenderTarget(rt); renderer.setClearColor(U.uFogC.value, 1); renderer.clear(); renderer.render(scene, cam);
+    renderer.setRenderTarget(null); renderer.setClearColor(0x000000, 0);
+    renderer.render(postScene, postCam);
+  }
+  return {configure, render};
+})();
+
 /* ---------- physics + render loop ---------- */
-const spr = {}; for (const k of ["pitch","yaw","roll","tx","ty","lean","jaw","menu","gx","gy","gs","tilt","talk"]) spr[k] = {p: k === "lean" || k === "menu" ? 1 : 0, v: 0};
+const spr = {}; for (const k of ["pitch","yaw","roll","tx","ty","lean","jaw","menu","gx","gy","gs","tilt","talk","pr","nx","ny","ns","nr","nsp","nti"]) spr[k] = {p: ["lean","menu","ns"].includes(k) ? 1 : 0, v: 0};
 function step(st, tgt, dt, k, zeta){ const c = 2*zeta*Math.sqrt(k); st.v += (k*(tgt - st.p) - c*st.v) * dt; st.p += st.v * dt; }
 let lastT = 0;
 function loop(now){
@@ -1542,7 +2274,11 @@ function loop(now){
     step(spr.lean, target.lean, h, 70, 0.8);
     step(spr.jaw, S.bounce ? target.jaw : 0, h, 260, 0.35 + 0.4*(1 - wob));
     step(spr.menu, mode === "menu" ? 1 : 0, h, 60, 0.85);
+    const nOn = mode === "peanut" ? 1 : 0;
+    step(spr.nx, S.nX*nOn, h, 300, 0.8); step(spr.ny, S.nY*nOn, h, 300, 0.8); step(spr.ns, nOn ? S.nScale : 1, h, 260, 0.6);
+    step(spr.nr, S.nRot*nOn, h, 260, 0.7); step(spr.nsp, S.nSpin*nOn, h, 200, 0.7); step(spr.nti, S.nTilt*nOn, h, 200, 0.7);
     if (stageMode === "puppet"){
+      step(spr.pr, S.pRot, h, 260, 0.7);
       // the hand: follows your drag closely; the stick tilts against fast moves and settles with a little wobble
       step(spr.gx, S.pX, h, 320, 0.8); step(spr.gy, S.pY, h, 320, 0.8);
       step(spr.gs, S.pScale * (holding ? 1.035 : 1), h, 260, 0.55);
@@ -1554,9 +2290,9 @@ function loop(now){
   const mk = spr.menu.p;
   if (stageMode === "peanut"){
     const idle = (seen ? 0 : Math.sin(now/900) * 0.05) + mk * Math.sin(now/1600) * 0.35 * (seen ? 0.3 : 1);
-    rig.rotation.set(spr.pitch.p, spr.yaw.p + idle, spr.roll.p);
-    rig.position.set(spr.tx.p * (1 - mk), spr.ty.p * (1 - mk) + mk * MENU.y, 0);
-    rig.scale.setScalar(spr.lean.p * (1 - mk) + MENU.s * mk);
+    rig.rotation.set(spr.pitch.p + spr.nti.p, spr.yaw.p + idle + spr.nsp.p, spr.roll.p + spr.nr.p);
+    rig.position.set((spr.tx.p + spr.nx.p) * (1 - mk), (spr.ty.p + spr.ny.p) * (1 - mk) + mk * MENU.y, 0);
+    rig.scale.setScalar((spr.lean.p * spr.ns.p) * (1 - mk) + MENU.s * mk);
     const sq = spr.jaw.p * 0.06 + clamp(spr.ty.v * 0.03, -0.04, 0.04) * wob;
     nut.scale.set(1 - sq*0.45, 1 + sq, 1 - sq*0.45);
     nut.rotation.set(-spr.pitch.v * 0.025 * wob, 0, -spr.yaw.v * 0.02 * wob - spr.tx.v * 0.05 * wob);
@@ -1564,7 +2300,7 @@ function loop(now){
     const sc = spr.gs.p, bob = (spr.talk.p * 0.07 + Math.sin(now / 1500) * 0.012) * S.pMove * (editing ? 0 : 1);
     pGrip.position.set(spr.gx.p, spr.gy.p + GRIP_Y * sc + bob, 0);
     pGrip.scale.setScalar(sc);
-    pGrip.rotation.set(0, editing ? 0 : spr.yaw.p * 0.18 * S.pMove, spr.tilt.p);
+    pGrip.rotation.set(0, editing ? 0 : spr.yaw.p * 0.18 * S.pMove, spr.tilt.p + (editing ? 0 : spr.pr.p));
   }
   const set = (m, o) => {
     const u = m.material.uniforms;
@@ -1575,16 +2311,24 @@ function loop(now){
   set(F_EYE.L.real, faceVis * (1 - W.eyeL)); set(F_EYE.L.alt, faceVis * W.eyeL);
   set(F_MOUTH.real, faceVis * (1 - W.mouth)); set(F_MOUTH.alt, faceVis * W.mouth);
 
-  renderer.render(scene, camera);
+  if (S.world && mode !== "menu" || S.world && mode === "menu" && scopeId === "peanut"){
+    WORLD.render(dt, now);
+    renderer.autoClear = false; renderer.clearDepth(); renderer.render(scene, camera); renderer.autoClear = true;
+  } else renderer.render(scene, camera);
   recFrame();
-  if (editing && PUP) placeEditor();
+  if (editing && PUP){ placeEditor(); drawLoupe(); }
 }
 
 /* ---------- boot ---------- */
 applyShell(); updateTint(); applyBg(); resize(); menuPose(); onChange("light"); syncPip(); syncMicBtn();
 document.fonts?.ready.then(menuPose); setTimeout(menuPose, 1200);
 requestAnimationFrame(loop);
-loadSavedPuppet();
+(async () => {
+  try{ const pc = JSON.parse(localStorage.getItem("peanutcam.peanut") || "null"); if (pc) for (const k of scopeKeys("peanut")) if (k in pc) S[k] = pc[k]; }catch(e){}
+  await loadBgPhoto(); applyBg(); WORLD.configure();
+  await loadChars();
+  try{ if (window.PeanutNative?.hasShared?.()) window.onSharedImage(); }catch(e){}
+})();
 PC.ready = true;
 </script>
 </body>

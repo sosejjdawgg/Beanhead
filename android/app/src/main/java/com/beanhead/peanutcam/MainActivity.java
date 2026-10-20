@@ -51,6 +51,8 @@ public class MainActivity extends Activity {
     private WebView web;
     private PermissionRequest pendingRequest;
     private ValueCallback<Uri[]> fileCallback;
+    private volatile Uri sharedUri;
+    private boolean pageReady = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +79,11 @@ public class MainActivity extends Activity {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 return serveAsset(request.getUrl());
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                pageReady = true;
             }
 
             @Override
@@ -115,6 +122,7 @@ public class MainActivity extends Activity {
         if (!has(Manifest.permission.CAMERA)) missing.add(Manifest.permission.CAMERA);
         if (!missing.isEmpty()) requestPermissions(missing.toArray(new String[0]), REQ_CAMERA);
 
+        handleShare(getIntent());
         if (savedInstanceState != null) {
             web.restoreState(savedInstanceState);
         } else {
@@ -122,9 +130,38 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** A picture shared from another app: the page fetches it from /__shared and makes a character. */
+    private void handleShare(Intent intent) {
+        if (intent == null || !Intent.ACTION_SEND.equals(intent.getAction())) return;
+        String type = intent.getType();
+        if (type == null || !type.startsWith("image/")) return;
+        @SuppressWarnings("deprecation")
+        Uri u = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        if (u == null) return;
+        sharedUri = u;
+        if (pageReady && web != null) web.evaluateJavascript("window.onSharedImage && window.onSharedImage()", null);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleShare(intent);
+    }
+
     private WebResourceResponse serveAsset(Uri url) {
         if (url == null || !"https".equals(url.getScheme()) || !HOST.equals(url.getHost())) return null;
         String path = url.getPath();
+        if ("/__shared".equals(path)) {
+            Uri u = sharedUri;
+            try {
+                if (u == null) throw new IOException("nothing shared");
+                String t = getContentResolver().getType(u);
+                return new WebResourceResponse(t != null ? t : "image/*", null, getContentResolver().openInputStream(u));
+            } catch (Exception e) {
+                return new WebResourceResponse("text/plain", "utf-8", 404, "Not Found", new HashMap<>(), new ByteArrayInputStream(new byte[0]));
+            }
+        }
         if (path == null || path.isEmpty() || path.equals("/")) path = "/index.html";
         String mime = mimeFor(path);
         try {
@@ -256,6 +293,16 @@ public class MainActivity extends Activity {
         private OutputStream out;
         private Uri uri;
         private File file;
+
+        @JavascriptInterface
+        public boolean hasShared() {
+            return sharedUri != null;
+        }
+
+        @JavascriptInterface
+        public void clearShared() {
+            sharedUri = null;
+        }
 
         @JavascriptInterface
         public void prepare() {
