@@ -20,7 +20,9 @@ import android.webkit.WebViewClient;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -78,15 +80,7 @@ public class MainActivity extends Activity {
         web.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
-                runOnUiThread(() -> {
-                    if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                        grantVideo(request);
-                    } else {
-                        if (pendingRequest != null) pendingRequest.deny();
-                        pendingRequest = request;
-                        requestPermissions(new String[]{Manifest.permission.CAMERA}, REQ_CAMERA);
-                    }
-                });
+                runOnUiThread(() -> handlePermissionRequest(request));
             }
 
             @Override
@@ -103,10 +97,11 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Ask for the camera up front so the Start button works on the first tap.
-        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.CAMERA}, REQ_CAMERA);
-        }
+        // Ask for the camera and microphone up front so the menu buttons work on the first tap.
+        List<String> missing = new ArrayList<>();
+        if (!has(Manifest.permission.CAMERA)) missing.add(Manifest.permission.CAMERA);
+        if (!has(Manifest.permission.RECORD_AUDIO)) missing.add(Manifest.permission.RECORD_AUDIO);
+        if (!missing.isEmpty()) requestPermissions(missing.toArray(new String[0]), REQ_CAMERA);
 
         if (savedInstanceState != null) {
             web.restoreState(savedInstanceState);
@@ -145,28 +140,45 @@ public class MainActivity extends Activity {
         if (p.endsWith(".png")) return "image/png";
         if (p.endsWith(".jpg") || p.endsWith(".jpeg")) return "image/jpeg";
         if (p.endsWith(".svg")) return "image/svg+xml";
+        if (p.endsWith(".webp")) return "image/webp";
         return "application/octet-stream";
     }
 
-    private void grantVideo(PermissionRequest request) {
+    private boolean has(String perm) {
+        return checkSelfPermission(perm) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /** The page asked for camera and/or microphone: get any missing Android permission first. */
+    private void handlePermissionRequest(PermissionRequest request) {
+        List<String> need = new ArrayList<>();
         for (String r : request.getResources()) {
-            if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(r)) {
-                request.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});
-                return;
-            }
+            if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(r) && !has(Manifest.permission.CAMERA)) need.add(Manifest.permission.CAMERA);
+            if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(r) && !has(Manifest.permission.RECORD_AUDIO)) need.add(Manifest.permission.RECORD_AUDIO);
         }
-        request.deny();
+        if (need.isEmpty()) {
+            grantAllowed(request);
+        } else {
+            if (pendingRequest != null) pendingRequest.deny();
+            pendingRequest = request;
+            requestPermissions(need.toArray(new String[0]), REQ_CAMERA);
+        }
+    }
+
+    private void grantAllowed(PermissionRequest request) {
+        List<String> ok = new ArrayList<>();
+        for (String r : request.getResources()) {
+            if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(r) && has(Manifest.permission.CAMERA)) ok.add(r);
+            if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(r) && has(Manifest.permission.RECORD_AUDIO)) ok.add(r);
+        }
+        if (ok.isEmpty()) request.deny();
+        else request.grant(ok.toArray(new String[0]));
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
         if (requestCode != REQ_CAMERA || pendingRequest == null) return;
-        if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) {
-            grantVideo(pendingRequest);
-        } else {
-            pendingRequest.deny();
-        }
+        grantAllowed(pendingRequest);
         pendingRequest = null;
     }
 

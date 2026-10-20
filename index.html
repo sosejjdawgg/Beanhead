@@ -2,80 +2,215 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#140c07">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0e0906">
 <title>Peanut Cam</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: full-bleed stage, floating control dock, bottom sheet for settings */
+/* Layout: full-bleed 3D stage; menu sits over it; in a mode, a floating bottom bar and a short settings sheet */
 :root{
-  --husk:#140c07;      /* panel ground */
-  --shell:#2a1a10;     /* raised surface */
-  --skin:#d9a86a;      /* accent: raw peanut */
-  --char:#0b0705;      /* deepest */
-  --cream:#f3e6d2;     /* text */
-  --dust:#b59a7c;      /* muted text */
+  --bg:#0e0906;                     /* roasted black */
+  --ink:#f7ecdc;                    /* paper cream */
+  --mute:#b39a7e;                   /* husk */
+  --faint:rgba(247,236,220,.07);
+  --line:rgba(247,236,220,.12);
+  --panel:rgba(24,15,10,.78);
+  --panel2:rgba(28,18,12,.94);
+  --raise:#2b1c12;
+  --nut:#e3ad6b;                    /* accent: raw peanut */
+  --nut2:#f6cf96;
+  --ember:#ff8a4c;                  /* live / voice */
   --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --spring:cubic-bezier(.2,1.4,.4,1);
+  --ease:cubic-bezier(.22,.8,.2,1);
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;overflow:hidden;background:var(--char);color:var(--cream);font-family:var(--display);-webkit-tap-highlight-color:transparent}
-#stage{position:fixed;inset:0;background:var(--char);background-size:cover;background-position:center}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--display);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+button{font:inherit;color:inherit;appearance:none;border:0;background:none;cursor:pointer;padding:0}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--nut);outline-offset:2px}
+svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.press{transition:transform .35s var(--spring), background-color .2s, color .2s, opacity .2s}
+.press:active{transform:scale(.93)}
+
+#stage{position:fixed;inset:0;background:var(--bg);transition:background .5s}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block}
-#pip{position:absolute;width:min(26vw,170px);aspect-ratio:3/4;object-fit:cover;border-radius:14px;border:2px solid rgba(243,230,210,.35);
-  top:calc(14px + env(safe-area-inset-top,0px));left:calc(14px + env(safe-area-inset-left,0px));box-shadow:0 8px 24px rgba(0,0,0,.4);background:#000}
+
+/* ---------- menu ---------- */
+#menu{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;justify-content:space-between;
+  padding:calc(22px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  background:linear-gradient(180deg, rgba(14,9,6,.55) 0%, rgba(14,9,6,0) 22%, rgba(14,9,6,0) 40%, rgba(14,9,6,.88) 64%, var(--bg) 100%)}
+.m-top{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.m-title{margin:0;font-weight:800;font-size:clamp(46px,14vw,92px);line-height:.86;letter-spacing:-.035em;display:flex;gap:.18em}
+.m-title span{display:inline-block}
+.m-title .accent{color:var(--nut);font-style:italic;font-weight:600}
+.m-title .ch{display:inline-block;animation:rise .9s var(--spring) both}
+.m-sub{font:500 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);animation:fade 1s .5s both}
+.m-cards{width:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.card{position:relative;border-radius:28px;overflow:hidden;text-align:left;color:var(--ink);isolation:isolate}
+.card::before{content:"";position:absolute;inset:0;z-index:-1;opacity:0;transition:opacity .4s;
+  background:radial-gradient(260px circle at var(--mx,70%) var(--my,30%), rgba(255,180,100,.22), transparent 60%)}
+.card:hover::before,.card.lit::before{opacity:1}
+.card.primary{display:grid;grid-template-columns:1fr auto;align-items:end;gap:4px 14px;width:100%;padding:18px 18px 18px 22px;
+  background:linear-gradient(155deg,#4a2c18 0%,#2a190e 55%,#1e120a 100%);
+  box-shadow:inset 0 0 0 1px rgba(246,207,150,.2), 0 24px 60px rgba(0,0,0,.5);animation:up .8s .15s var(--spring) both}
+.card.primary::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:conic-gradient(from var(--a,0deg), transparent 0 70%, rgba(246,207,150,.85) 80%, transparent 90%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 5s linear infinite}
+@property --a{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes spin{to{--a:360deg}}
+.tag{display:inline-flex;align-items:center;gap:6px;font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--nut2);
+  background:rgba(227,173,107,.14);padding:5px 9px;border-radius:99px;justify-self:start}
+.tag i{width:6px;height:6px;border-radius:50%;background:var(--ember);box-shadow:0 0 0 0 rgba(255,138,76,.6);animation:ping 1.8s infinite}
+.card .ttl{font-weight:800;font-size:40px;line-height:.95;letter-spacing:-.03em}
+.card .dsc{color:var(--mute);font-size:14.5px;line-height:1.4;max-width:30ch}
+.card.primary .ttl,.card.primary .dsc,.card.primary .tag{grid-column:1}
+.go{grid-column:2;grid-row:2/span 2;width:64px;height:64px;border-radius:22px;background:var(--nut);color:#1d1109;display:grid;place-items:center;
+  box-shadow:0 10px 30px rgba(227,173,107,.35);transition:transform .45s var(--spring)}
+.card.primary:active .go{transform:scale(.9) rotate(-8deg)}
+.go svg{width:28px;height:28px;stroke-width:2.2}
+.card.second{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:2px 14px;align-items:center;padding:12px;
+  background:rgba(30,19,12,.82);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px var(--line);animation:up .8s .25s var(--spring) both}
+.thumb{grid-row:1/span 2;grid-column:1;width:64px;height:64px;border-radius:18px;overflow:hidden;display:grid;place-items:center;color:var(--mute);
+  background:conic-gradient(#2c1d13 25%,#24170f 0 50%,#2c1d13 0 75%,#24170f 0) 0 0/16px 16px}
+.thumb img{width:100%;height:100%;object-fit:contain}
+.second .ttl{grid-column:2;align-self:end;font-size:21px;font-weight:800;letter-spacing:-.02em}
+.second .dsc{grid-column:2;align-self:start;font-size:13px;line-height:1.35;max-width:none}
+.acts{grid-column:3;grid-row:1/span 2;display:flex;flex-direction:column;gap:6px}
+.acts .pill{flex:none;height:44px;padding:0 16px;font-size:14px}
+.acts .pill.small{height:34px;font-size:12.5px;color:var(--mute);background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.pill{flex:1;height:46px;border-radius:15px;font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--raise);color:var(--ink)}
+.pill.hot{background:var(--ink);color:#1d1109}
+.m-foot{display:flex;justify-content:center;gap:8px;align-items:center;color:var(--mute);font-size:12.5px;margin:2px 0 0;animation:fade 1s .6s both}
+#status{min-height:20px;text-align:center;font:500 13px/1.45 var(--mono);color:var(--nut2)}
+body:not([data-mode=menu]) #menu{pointer-events:none}
+body:not([data-mode=menu]) #menu .m-top{transform:translateY(-40px);opacity:0}
+body:not([data-mode=menu]) #menu .m-cards{transform:translateY(60px);opacity:0}
+body:not([data-mode=menu]) #menu{background:transparent}
+#menu,.m-top,.m-cards{transition:transform .55s var(--ease), opacity .4s, background .5s}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;inset:0;z-index:10;pointer-events:none;opacity:0;transition:opacity .4s .1s}
+body[data-mode=peanut] #hud,body[data-mode=puppet] #hud{opacity:1}
+body[data-mode=menu] #hud *{pointer-events:none!important}
+#hud > *{pointer-events:auto}
+.fab{position:absolute;height:46px;padding:0 16px 0 12px;border-radius:16px;display:flex;align-items:center;gap:6px;font-weight:600;font-size:15px;
+  background:var(--panel);backdrop-filter:blur(16px) saturate(1.3);box-shadow:inset 0 0 0 1px var(--line), 0 8px 24px rgba(0,0,0,.35)}
+#bHome{top:calc(14px + env(safe-area-inset-top,0px));left:calc(14px + env(safe-area-inset-left,0px))}
+#pip{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:calc(14px + env(safe-area-inset-right,0px));width:min(24vw,140px);aspect-ratio:3/4;object-fit:cover;
+  border-radius:16px;background:#000;box-shadow:inset 0 0 0 1px var(--line), 0 10px 30px rgba(0,0,0,.45)}
 #pip.mirror{transform:scaleX(-1)}
-#chip{position:absolute;left:50%;transform:translateX(-50%);top:calc(16px + env(safe-area-inset-top,0px));
-  font:500 12px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:9px 13px;border-radius:99px;background:rgba(11,7,5,.72);color:var(--skin);backdrop-filter:blur(6px)}
-#dock{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
-.btn{appearance:none;border:0;cursor:pointer;width:52px;height:52px;border-radius:16px;background:rgba(20,12,7,.82);color:var(--cream);
-  display:grid;place-items:center;backdrop-filter:blur(8px);box-shadow:0 4px 16px rgba(0,0,0,.35)}
-.btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--skin);outline-offset:2px}
-.btn svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.clean #dock,.clean #pip,.clean #chip,.clean #sheet{display:none}
+#chip{position:absolute;left:50%;top:calc(76px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:flex;align-items:center;gap:8px;white-space:nowrap;
+  font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;border-radius:99px;background:var(--panel);color:var(--nut2);backdrop-filter:blur(10px)}
+#chip::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ember);animation:ping 1.6s infinite}
+#bar{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;gap:2px;padding:6px;border-radius:24px;
+  background:var(--panel);backdrop-filter:blur(18px) saturate(1.4);box-shadow:inset 0 0 0 1px var(--line), 0 14px 40px rgba(0,0,0,.45);transition:transform .45s var(--spring), opacity .3s}
+body.sheet-open #bar{transform:translate(-50%,140%);opacity:0}
+.bb{width:60px;height:56px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:600;color:var(--mute);position:relative}
+.bb:hover{color:var(--ink)}
+.bb.on{color:var(--nut2);background:rgba(227,173,107,.13)}
+.bb .ring{position:absolute;inset:6px 12px 20px;border-radius:12px;box-shadow:0 0 0 calc(var(--lv,0) * 6px) rgba(255,138,76,.35);transition:box-shadow .08s;pointer-events:none}
+.puppet-only{display:none!important}
+body[data-mode=puppet] .puppet-only{display:flex!important}
+.clean #hud{opacity:0!important}
+.clean #hud *{pointer-events:none!important}
 
-/* Start screen */
-#start{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,#4a2c17,#140c07 70%);
-  padding:24px max(20px,env(safe-area-inset-right,0px)) 24px max(20px,env(safe-area-inset-left,0px))}
-#start .card{max-width:440px;display:flex;flex-direction:column;gap:18px}
-#start h1{font-weight:800;font-size:clamp(44px,13vw,76px);line-height:.9;margin:0;letter-spacing:-.02em;text-wrap:balance}
-#start h1 span{color:var(--skin)}
-#start p{margin:0;color:var(--dust);line-height:1.5;font-size:15px}
-.go{appearance:none;border:0;cursor:pointer;font:800 18px var(--display);padding:16px 22px;border-radius:16px;background:var(--skin);color:var(--char);align-self:flex-start}
-.go[disabled]{opacity:.6;cursor:progress}
-#status{font:500 14px/1.5 var(--mono);color:var(--skin);min-height:21px}
+/* ---------- settings sheet ---------- */
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:20;height:min(46vh,430px);display:flex;flex-direction:column;
+  background:var(--panel2);backdrop-filter:blur(22px) saturate(1.3);border-radius:28px 28px 0 0;box-shadow:0 -1px 0 var(--line), 0 -18px 50px rgba(0,0,0,.45);
+  transform:translateY(calc(100% + 24px));transition:transform .5s var(--spring);padding-bottom:env(safe-area-inset-bottom,0px)}
+#sheet.open{transform:translateY(0)}
+#sheet.dragging{transition:none}
+@media (min-width:900px){
+  #sheet{left:auto;right:16px;bottom:16px;top:16px;height:auto;width:380px;border-radius:26px;transform:translateX(calc(100% + 40px))}
+  #sheet.open{transform:none}
+  body.sheet-open #bar{transform:translateX(-50%);opacity:1}
+}
+.sh-grab{height:22px;display:grid;place-items:center;cursor:grab;touch-action:none;flex:none}
+.sh-grab::before{content:"";width:44px;height:5px;border-radius:5px;background:var(--line)}
+.sh-head{display:flex;gap:8px;align-items:center;padding:0 max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px));flex:none}
+.seg{flex:1;display:flex;gap:2px;padding:4px;border-radius:16px;background:rgba(0,0,0,.28);overflow-x:auto;scrollbar-width:none}
+.seg button{flex:1;min-width:58px;height:44px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10.5px;font-weight:600;color:var(--mute);transition:background .25s,color .25s}
+.seg button svg{width:18px;height:18px}
+.seg button[aria-selected=true]{background:var(--raise);color:var(--nut2);box-shadow:inset 0 0 0 1px var(--line)}
+.sh-x{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:rgba(0,0,0,.28);color:var(--mute);flex:none}
+#shBody{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:2px max(18px,env(safe-area-inset-right,0px)) 18px max(18px,env(safe-area-inset-left,0px));-webkit-overflow-scrolling:touch}
+#shBody.swap > *{animation:slidein .4s var(--ease) both}
+#shBody.swap > *:nth-child(2){animation-delay:.03s}#shBody.swap > *:nth-child(3){animation-delay:.06s}#shBody.swap > *:nth-child(4){animation-delay:.09s}#shBody.swap > *:nth-child(n+5){animation-delay:.12s}
+.sec{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);padding:16px 0 6px}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px;min-height:54px;border-bottom:1px solid var(--faint)}
+.slabel{font-size:15px;line-height:1.25}
+.sctl{display:flex;align-items:center;gap:4px}
+.step{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:var(--raise);color:var(--ink)}
+.step svg{width:18px;height:18px;stroke-width:2.2}
+.sval{min-width:66px;height:40px;padding:0 8px;border-radius:13px;font:500 13.5px var(--mono);color:var(--nut2);font-variant-numeric:tabular-nums;transition:background .2s}
+.sval[aria-expanded=true]{background:rgba(227,173,107,.16)}
+.sval.pop{animation:pop .3s var(--spring)}
+.scrub{grid-column:1/-1;display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease)}
+.scrub.open{grid-template-rows:1fr}
+.scrub > div{overflow:hidden}
+.track{position:relative;height:44px;margin:4px 0 12px;border-radius:14px;background:var(--raise);overflow:hidden;touch-action:pan-y;cursor:ew-resize}
+.track::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),rgba(247,236,220,.1) calc(10% - 1px) 10%)}
+.fill{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,rgba(227,173,107,.25),rgba(246,207,150,.55))}
+.fill::after{content:"";position:absolute;right:0;top:8px;bottom:8px;width:4px;border-radius:4px;background:var(--ink);box-shadow:0 0 12px rgba(246,207,150,.8)}
+.track span{position:absolute;inset:0;display:grid;place-items:center;font:500 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(247,236,220,.45);pointer-events:none}
+.switch{width:54px;height:34px;border-radius:99px;background:var(--raise);position:relative;transition:background .25s;flex:none}
+.switch::after{content:"";position:absolute;top:4px;left:4px;width:26px;height:26px;border-radius:50%;background:var(--mute);transition:transform .45s var(--spring),background .25s}
+.switch[aria-checked=true]{background:var(--nut)}
+.switch[aria-checked=true]::after{transform:translateX(20px);background:#1d1109}
+.chips{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 14px}
+.chip{height:42px;padding:0 15px;border-radius:13px;background:var(--raise);font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
+.chip[aria-pressed=true]{background:var(--nut);color:#1d1109}
+.chip .dot{width:16px;height:16px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.3)}
+.swatches{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 14px;scrollbar-width:none;margin:0 -2px}
+.sw{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--mute)}
+.sw i{width:58px;height:58px;border-radius:18px;display:block;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transition:transform .4s var(--spring), box-shadow .2s;position:relative;overflow:hidden}
+.sw[aria-pressed=true]{color:var(--nut2)}
+.sw[aria-pressed=true] i{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--nut);transform:scale(.94)}
+.sw input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.btnrow{display:flex;gap:8px;padding:12px 0 6px}
+.btnrow .pill{height:48px}
+select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;padding:0 14px;background:var(--raise);color:var(--ink);font:500 14px var(--display)}
+.note{color:var(--mute);font-size:13px;line-height:1.5;margin:12px 0 4px}
+.meter{grid-column:1/-1;position:relative;height:14px;border-radius:8px;background:var(--raise);overflow:hidden;margin:2px 0 14px}
+.meter .lv{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#b8642e,var(--ember));transition:width .06s}
+.meter .gate{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.7}
+.danger{color:#ffb39a}
 
-/* Settings sheet */
-#sheet{position:absolute;left:0;right:0;bottom:0;max-height:62vh;overflow:auto;background:rgba(20,12,7,.94);backdrop-filter:blur(14px);
-  border-radius:22px 22px 0 0;padding:6px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
-  transform:translateY(105%);transition:transform .28s ease;z-index:10}
-#sheet.open{transform:none}
-@media (min-width:820px){#sheet{left:auto;right:84px;bottom:16px;width:380px;border-radius:20px;max-height:calc(100vh - 32px)}}
-@media (prefers-reduced-motion:reduce){#sheet{transition:none}}
-.grab{width:42px;height:4px;border-radius:4px;background:var(--dust);opacity:.5;margin:8px auto 4px}
-.tabs{display:flex;gap:6px;position:sticky;top:0;background:rgba(20,12,7,.96);padding:8px 0 10px;z-index:1}
-.tabs button{flex:1;appearance:none;border:0;cursor:pointer;padding:10px 6px;border-radius:12px;background:var(--shell);color:var(--dust);font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase}
-.tabs button[aria-selected="true"]{background:var(--skin);color:var(--char)}
-.pane{display:flex;flex-direction:column;gap:14px;padding-top:4px}
-.lbl{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dust)}
-.row{display:flex;flex-direction:column;gap:6px}
-.row .top{display:flex;justify-content:space-between;align-items:baseline}
-.row output{font:400 12px var(--mono);color:var(--cream);font-variant-numeric:tabular-nums}
-input[type=range]{width:100%;accent-color:var(--skin);height:28px}
-.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.chips button{appearance:none;cursor:pointer;border:2px solid transparent;border-radius:12px;height:58px;padding:0;display:flex;align-items:flex-end;overflow:hidden}
-.chips button span{width:100%;font:500 10px var(--mono);letter-spacing:.04em;text-transform:uppercase;background:rgba(11,7,5,.7);color:var(--cream);padding:4px 0}
-.chips button[aria-pressed="true"]{border-color:var(--skin)}
-.tog{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;font-size:15px}
-.tog input{width:22px;height:22px;accent-color:var(--skin)}
-.inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-input[type=color]{width:52px;height:38px;border:0;border-radius:10px;background:none;padding:0}
-select,.file{font:400 13px var(--mono);background:var(--shell);color:var(--cream);border:0;border-radius:10px;padding:10px;width:100%}
-.file{cursor:pointer;text-align:center}
-.hint{font-size:13px;line-height:1.45;color:var(--dust);margin:0}
-.reset{appearance:none;border:1px solid var(--dust);background:none;color:var(--dust);border-radius:10px;padding:10px;font:500 12px var(--mono);cursor:pointer}
+/* ---------- layout editor ---------- */
+#editor{position:fixed;inset:0;z-index:25;pointer-events:none}
+#editor .h{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;pointer-events:auto;touch-action:none;cursor:grab;
+  border:2px solid var(--nut2);background:rgba(227,173,107,.18);box-shadow:0 0 0 1px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.4);transition:transform .3s var(--spring)}
+#editor .h::before{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--ink)}
+#editor .h::after{content:attr(data-label);position:absolute;left:50%;top:100%;transform:translate(-50%,4px);padding:2px 7px;border-radius:99px;background:rgba(14,9,6,.8);font:600 10.5px var(--display);color:var(--ink);white-space:nowrap}
+#editor .h.mouth{border-color:var(--ember);background:rgba(255,138,76,.18)}
+#editor .h.grab{transform:scale(1.25)}
+#editor .split{position:absolute;left:0;right:0;height:44px;margin-top:-22px;pointer-events:auto;touch-action:none;cursor:ns-resize}
+#editor .split::before{content:"";position:absolute;left:8%;right:8%;top:21px;border-top:2px dashed var(--ember)}
+#editor .split b{position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:6px;height:32px;padding:0 12px;border-radius:99px;background:var(--ember);color:#1d1109;font-size:12px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+#editor .edbar{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(520px,calc(100% - 32px));pointer-events:auto;
+  display:flex;gap:12px;align-items:center;padding:12px 12px 12px 18px;border-radius:22px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line),0 14px 40px rgba(0,0,0,.5);font-size:13.5px;line-height:1.4;color:var(--mute)}
+#editor .edbar .pill{flex:none;padding:0 22px}
+
+/* ---------- toast, busy ---------- */
+#toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));z-index:50;transform:translate(-50%,-140%);max-width:calc(100% - 32px);
+  padding:12px 18px;border-radius:16px;background:var(--ink);color:#1d1109;font-weight:600;font-size:14px;line-height:1.35;box-shadow:0 12px 30px rgba(0,0,0,.4);transition:transform .5s var(--spring)}
+#toast.show{transform:translate(-50%,0)}
+#busy{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(14,9,6,.72);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .3s}
+#busy.show{opacity:1;pointer-events:auto}
+#busy .bx{display:flex;flex-direction:column;align-items:center;gap:16px;font-weight:600;font-size:16px}
+#busy svg{width:64px;height:64px;animation:wob 1.1s var(--ease) infinite}
+@keyframes rise{from{transform:translateY(.6em) rotate(6deg);opacity:0}}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+@keyframes fade{from{opacity:0}}
+@keyframes pop{40%{transform:scale(1.18)}}
+@keyframes slidein{from{transform:translateY(10px);opacity:0}}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(255,138,76,.55)}80%,100%{box-shadow:0 0 0 8px rgba(255,138,76,0)}}
+@keyframes wob{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg) translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 <script>
 /* Loader: picks bundled files inside the Android app, CDN on the web, and reports any failure on screen */
@@ -86,7 +221,8 @@ select,.file{font:400 13px var(--mono);background:var(--shell);color:var(--cream
     local: local, ready: false,
     three: local ? abs("./lib/three/") : "https://cdn.jsdelivr.net/npm/three@0.160.0/",
     mp: local ? abs("./lib/tasks-vision") : "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14",
-    model: local ? abs("./models/face_landmarker.task") : "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
+    model: local ? abs("./models/face_landmarker.task") : "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+    seg: local ? abs("./models/selfie_segmenter.tflite") : "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite"
   };
   var im = document.createElement("script");
   im.type = "importmap";
@@ -94,143 +230,146 @@ select,.file{font:400 13px var(--mono);background:var(--shell);color:var(--cream
   document.currentScript.after(im);
 
   PC.say = function(msg){
-    var start = document.getElementById("start"), st = document.getElementById("status"), chip = document.getElementById("chip");
-    if (start && st){ st.textContent = msg; }
-    else if (chip){ chip.textContent = msg; chip.hidden = false; }
+    if (document.body && document.body.dataset.mode === "menu"){ var st = document.getElementById("status"); if (st) st.textContent = msg; }
+    else { var c = document.getElementById("chip"); if (c){ c.textContent = msg; c.hidden = false; } }
   };
   addEventListener("error", function(e){
     var t = e.target;
     if (t && t !== window && t.tagName === "SCRIPT") PC.say("Couldn't load " + (t.src || "a script") + ". Check your internet connection and reload.");
     else if (e.message) PC.say("Error: " + e.message);
   }, true);
-  addEventListener("unhandledrejection", function(e){
-    var r = e.reason; PC.say("Error: " + ((r && r.message) || r));
-  });
+  addEventListener("unhandledrejection", function(e){ var r = e.reason; PC.say("Error: " + ((r && r.message) || r)); });
   addEventListener("DOMContentLoaded", function(){
-    var go = document.getElementById("go");
-    go.addEventListener("click", function(){
-      if (!PC.ready) PC.say("Still loading the 3D engine. Give it a few seconds and tap again.");
+    ["goPeanut","goPuppet"].forEach(function(id){
+      var b = document.getElementById(id);
+      b && b.addEventListener("click", function(){ if (!PC.ready) PC.say("Still loading. Give it a few seconds and tap again."); });
     });
-    setTimeout(function(){
-      if (!PC.ready) PC.say("The 3D engine didn't load. Check your internet connection, then reload the page.");
-    }, 20000);
+    setTimeout(function(){ if (!PC.ready) PC.say("The 3D engine didn't load. Check your internet connection, then reload."); }, 20000);
   });
 })();
 </script>
 </head>
-<body>
+<body data-mode="menu">
 
-<div id="stage">
-  <canvas id="gl"></canvas>
-  <video id="pip" playsinline muted autoplay hidden></video>
-  <div id="chip" hidden>Loading face tracker…</div>
-  <div id="dock" hidden>
-    <button class="btn" id="bSettings" aria-label="Settings"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
-    <button class="btn" id="bFlip" aria-label="Switch camera"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><path d="M9 13a3 3 0 0 1 5.5-1.6M15 13a3 3 0 0 1-5.5 1.6"/><path d="M14.5 9.5v2h-2M9.5 16.5v-2h2"/></svg></button>
-    <button class="btn" id="bFull" aria-label="Fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
-    <button class="btn" id="bClean" aria-label="Hide controls (tap screen to bring back)"><svg viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/><path d="M4 20 20 4"/></svg></button>
-  </div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="nut" viewBox="0 0 24 24"><path d="M12 2.5c3.1 0 5.2 2.1 5.2 4.9 0 1.6-.7 2.8-1.4 3.7-.5.6-.5 1.2 0 1.8.8.9 1.7 2.1 1.7 3.9 0 3-2.4 5-5.5 5s-5.5-2-5.5-5c0-1.8.9-3 1.7-3.9.5-.6.5-1.2 0-1.8-.7-.9-1.4-2.1-1.4-3.7 0-2.8 2.1-4.9 5.2-4.9z"/></symbol>
+  <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+  <symbol id="flip" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><path d="M9 13a3 3 0 0 1 5.5-1.6M15 13a3 3 0 0 1-5.5 1.6"/></symbol>
+  <symbol id="eye" viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/><path d="M4 20 20 4"/></symbol>
+  <symbol id="image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M20 16l-5-5-8 8"/></symbol>
+  <symbol id="move" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></symbol>
+  <symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+  <symbol id="micoff" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M4 4l16 16"/></symbol>
+  <symbol id="x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="minus" viewBox="0 0 24 24"><path d="M6 12h12"/></symbol>
+  <symbol id="plus" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></symbol>
+  <symbol id="t-look" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17M3.5 12h8.5"/></symbol>
+  <symbol id="t-face" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="9" cy="10" r=".6"/><circle cx="15" cy="10" r=".6"/><path d="M8.5 14.5c1.8 2 5.2 2 7 0"/></symbol>
+  <symbol id="t-motion" viewBox="0 0 24 24"><path d="M3 12c2.5-5 5-5 7.5 0s5 5 7.5 0"/><path d="M19 6l2 2-2 2"/></symbol>
+  <symbol id="t-camera" viewBox="0 0 24 24"><rect x="3" y="6.5" width="18" height="13" rx="3"/><circle cx="12" cy="13" r="3.5"/><path d="M9 6.5 10.5 4h3L15 6.5"/></symbol>
+  <symbol id="t-puppet" viewBox="0 0 24 24"><path d="M5 12a7 7 0 0 1 14 0"/><path d="M5 12l-1-4M19 12l1-4"/><path d="M5 14h14v2a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5z"/></symbol>
+</svg>
 
-  <section id="sheet" aria-label="Settings">
-    <div class="grab"></div>
-    <div class="tabs" role="tablist">
-      <button role="tab" data-tab="scene" aria-selected="true">Scene</button>
-      <button role="tab" data-tab="nut" aria-selected="false">Peanut</button>
-      <button role="tab" data-tab="face" aria-selected="false">Face</button>
-      <button role="tab" data-tab="cam" aria-selected="false">Camera</button>
-    </div>
+<div id="stage"><canvas id="gl"></canvas></div>
 
-    <div class="pane" data-pane="scene">
-      <div class="lbl">Background</div>
-      <div class="chips" id="bgChips"></div>
-      <div class="inline">
-        <input type="color" id="bgColor" value="#1f6f4a" aria-label="Custom colour">
-        <span class="hint">Custom colour</span>
+<!-- ===== menu ===== -->
+<div id="menu">
+  <header class="m-top">
+    <h1 class="m-title" aria-label="Peanut Cam"><span id="tw1">Peanut</span><span class="accent" id="tw2">Cam</span></h1>
+    <div class="m-sub">Your real eyes &amp; mouth, on anything</div>
+  </header>
+  <div class="m-cards">
+    <button class="card primary press" id="goPeanut">
+      <span class="tag"><i></i>3D · Live</span>
+      <span class="ttl">Peanut</span>
+      <span class="dsc">A roasted 3D peanut that wears your real eyes and mouth.</span>
+      <span class="go"><svg class="i"><use href="#arrow"/></svg></span>
+    </button>
+    <div class="card second">
+      <div class="thumb" id="thumb"><svg class="i" style="width:30px;height:30px"><use href="#image"/></svg></div>
+      <div class="ttl">Your Image</div>
+      <div class="dsc">Any head-and-shoulders picture. The head flaps open when you talk.</div>
+      <div class="acts">
+        <button class="pill hot press" id="goPuppet"><svg class="i"><use href="#t-puppet"/></svg><span id="goPuppetLbl">Upload</span></button>
+        <button class="pill small press" id="newPuppet" hidden>New image</button>
       </div>
-      <label class="file" for="bgFile">Use your own image…</label>
-      <input type="file" id="bgFile" accept="image/*" hidden>
-      <label class="tog">Floor shadow <input type="checkbox" id="floor"></label>
-      <div class="row"><div class="top"><span class="lbl">Zoom</span><output id="o_zoom"></output></div><input type="range" id="zoom" min="0.6" max="1.8" step="0.01"></div>
-      <div class="row"><div class="top"><span class="lbl">Light</span><output id="o_light"></output></div><input type="range" id="light" min="0.3" max="2" step="0.01"></div>
-      <p class="hint">Green or blue screen lets you key the background out in OBS. Press H on a keyboard to hide the controls.</p>
     </div>
-
-    <div class="pane" data-pane="nut" hidden>
-      <div class="row"><div class="top"><span class="lbl">Roast</span><output id="o_roast"></output></div><input type="range" id="roast" min="0" max="1" step="0.01"></div>
-      <div class="row"><div class="top"><span class="lbl">Shell texture</span><output id="o_bump"></output></div><input type="range" id="bump" min="0" max="3" step="0.05"></div>
-      <div class="row"><div class="top"><span class="lbl">Head motion</span><output id="o_motion"></output></div><input type="range" id="motion" min="0" max="1.6" step="0.01"></div>
-      <div class="row"><div class="top"><span class="lbl">Wobble</span><output id="o_wobble"></output></div><input type="range" id="wobble" min="0" max="1" step="0.01"></div>
-      <label class="tog">Bounce when talking <input type="checkbox" id="bounce"></label>
-    </div>
-
-    <div class="pane" data-pane="face" hidden>
-      <div class="row"><div class="top"><span class="lbl">Eye size</span><output id="o_eyeSize"></output></div><input type="range" id="eyeSize" min="0.5" max="1.8" step="0.01"></div>
-      <div class="row"><div class="top"><span class="lbl">Eye spacing</span><output id="o_eyeSpacing"></output></div><input type="range" id="eyeSpacing" min="0.2" max="0.6" step="0.005"></div>
-      <div class="row"><div class="top"><span class="lbl">Eye height</span><output id="o_eyeHeight"></output></div><input type="range" id="eyeHeight" min="0.6" max="1.6" step="0.01"></div>
-      <div class="row"><div class="top"><span class="lbl">Mouth size</span><output id="o_mouthSize"></output></div><input type="range" id="mouthSize" min="0.5" max="1.8" step="0.01"></div>
-      <div class="row"><div class="top"><span class="lbl">Mouth height</span><output id="o_mouthHeight"></output></div><input type="range" id="mouthHeight" min="0" max="1.2" step="0.01"></div>
-      <div class="row"><div class="top"><span class="lbl">Skin around eyes</span><output id="o_eyeMargin"></output></div><input type="range" id="eyeMargin" min="0" max="0.25" step="0.005"></div>
-      <div class="row"><div class="top"><span class="lbl">Skin around lips</span><output id="o_mouthMargin"></output></div><input type="range" id="mouthMargin" min="0" max="0.2" step="0.005"></div>
-      <div class="row"><div class="top"><span class="lbl">Edge softness</span><output id="o_feather"></output></div><input type="range" id="feather" min="0.01" max="0.25" step="0.005"></div>
-      <div class="row"><div class="top"><span class="lbl">Steadiness</span><output id="o_steady"></output></div><input type="range" id="steady" min="0" max="1" step="0.01"></div>
-      <label class="tog">Fill in hidden side when turning <input type="checkbox" id="symFill"></label>
-      <div class="row"><div class="top"><span class="lbl">3D depth</span><output id="o_depth"></output></div><input type="range" id="depth" min="0" max="2.5" step="0.01"></div>
-      <div class="row"><div class="top"><span class="lbl">Blend skin into shell</span><output id="o_skinMatch"></output></div><input type="range" id="skinMatch" min="0" max="1" step="0.01"></div>
-      <div class="row"><div class="top"><span class="lbl">Smooth skin</span><output id="o_retouch"></output></div><input type="range" id="retouch" min="0" max="1" step="0.01"></div>
-      <div class="row"><div class="top"><span class="lbl">Tint lips &amp; eyes</span><output id="o_blend"></output></div><input type="range" id="blend" min="0" max="1" step="0.01"></div>
-    </div>
-
-    <div class="pane" data-pane="cam" hidden>
-      <div class="lbl">Camera source</div>
-      <select id="camSel" aria-label="Camera source"></select>
-      <label class="tog">Mirror view (selfie) <input type="checkbox" id="mirror"></label>
-      <label class="tog">Show camera preview <input type="checkbox" id="pip_on"></label>
-      <label class="tog">Invert left/right turning <input type="checkbox" id="invYaw"></label>
-      <label class="tog">Invert nodding <input type="checkbox" id="invPitch"></label>
-      <p class="hint">On Windows, pick your phone here once it's connected as a webcam (Phone Link, DroidCam or Iriun).</p>
-      <button class="reset" id="reset">Reset all settings</button>
-    </div>
-  </section>
-</div>
-
-<div id="start">
-  <div class="card">
-    <h1>Peanut <span>Cam</span></h1>
-    <p>Your real eyes and mouth, live on a roasted 3D peanut. Nothing leaves your device: tracking runs in the browser.</p>
-    <button class="go" id="go">Start camera</button>
-    <div id="status"></div>
+    <div id="status" role="status"></div>
+    <p class="m-foot"><svg class="i" style="width:15px;height:15px"><use href="#t-camera"/></svg>Camera and microphone stay on this device.</p>
   </div>
 </div>
+
+<!-- ===== in-mode HUD ===== -->
+<div id="hud">
+  <button class="fab press" id="bHome"><svg class="i"><use href="#back"/></svg>Menu</button>
+  <video id="pip" playsinline muted autoplay></video>
+  <div id="chip" hidden>Loading face tracker…</div>
+  <nav id="bar" aria-label="Controls">
+    <button class="bb press" id="bSettings"><svg class="i"><use href="#sliders"/></svg>Settings</button>
+    <button class="bb press puppet-only" id="bMic"><span class="ring"></span><svg class="i"><use href="#mic"/></svg><span>Mic</span></button>
+    <button class="bb press puppet-only" id="bLayout"><svg class="i"><use href="#move"/></svg>Layout</button>
+    <button class="bb press puppet-only" id="bImage"><svg class="i"><use href="#image"/></svg>Image</button>
+    <button class="bb press" id="bFlip"><svg class="i"><use href="#flip"/></svg>Flip</button>
+    <button class="bb press" id="bClean"><svg class="i"><use href="#eye"/></svg>Hide</button>
+  </nav>
+</div>
+
+<section id="sheet" aria-label="Settings">
+  <div class="sh-grab" id="shGrab"></div>
+  <div class="sh-head">
+    <div class="seg" id="seg" role="tablist"></div>
+    <button class="sh-x press" id="shClose" aria-label="Close settings"><svg class="i"><use href="#x"/></svg></button>
+  </div>
+  <div id="shBody"></div>
+</section>
+
+<div id="editor" hidden>
+  <div class="split" id="edSplit"><b><svg class="i" style="width:14px;height:14px"><use href="#move"/></svg>Flap line</b></div>
+  <div class="h" data-h="eyeR" data-label="Eye"></div>
+  <div class="h" data-h="eyeL" data-label="Eye"></div>
+  <div class="h mouth" data-h="mouth" data-label="Mouth"></div>
+  <div class="edbar"><span>Drag the markers onto the picture's eyes and mouth. The head opens along the flap line.</span><button class="pill hot press" id="edDone">Done</button></div>
+</div>
+
+<div id="toast" role="status"></div>
+<div id="busy"><div class="bx"><svg viewBox="0 0 24 24" fill="#e3ad6b"><use href="#nut"/></svg><span id="busyMsg">Working…</span></div></div>
+<input type="file" id="pupFile" accept="image/*" hidden>
+<input type="file" id="bgFile" accept="image/*" hidden>
 
 <script type="module">
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
-const MP = window.PC.mp;
-const MODEL = window.PC.model;
+const PC = window.PC, MP = PC.mp, MODEL = PC.model;
+const $ = s => document.querySelector(s);
+const clamp = THREE.MathUtils.clamp;
 
 /* ---------- settings ---------- */
-const DEFAULTS = {bg:"roastery",bgColor:"#1f6f4a",floor:true,zoom:1,light:1,roast:0.55,bump:1.4,motion:1,bounce:true,
-  eyeSize:1,eyeSpacing:0.36,eyeHeight:1.18,mouthSize:1,mouthHeight:0.5,eyeMargin:0.055,mouthMargin:0.045,feather:0.07,steady:0.5,wobble:0.5,symFill:true,blend:0.15,depth:1.3,skinMatch:0.8,retouch:0.8,
-  mirror:true,pip_on:true,invYaw:false,invPitch:false,deviceId:"",facing:"user"};
-let S = {...DEFAULTS};
-try{ Object.assign(S, JSON.parse(localStorage.getItem("peanutcam")||"{}")); }catch(e){}
-const save = ()=>{ try{ localStorage.setItem("peanutcam", JSON.stringify(S)); }catch(e){} };
-
-const BGS = {
-  roastery:"radial-gradient(ellipse at 50% 32%, #8a5a33 0%, #3b2314 55%, #160c06 100%)",
-  counter:"linear-gradient(#efe6d8 0 63%, #b07a4f 63% 64.5%, #8b5a3c 64.5% 100%)",
-  neon:"radial-gradient(circle at 18% 22%, rgba(255,60,172,.45), transparent 48%), radial-gradient(circle at 82% 72%, rgba(43,210,255,.45), transparent 50%), linear-gradient(160deg,#1b1035,#0b0a1a)",
-  sky:"linear-gradient(#6fbcff, #d4eeff 68%, #f6e7c6)",
-  night:"radial-gradient(ellipse at 50% 115%, #34508f, #0a0e1f 70%)",
-  green:"#00ff00", blue:"#0047bb", custom:null, image:null
+const DEFAULTS = {
+  bg:"roastery", bgColor:"#1f6f4a", floor:true, zoom:1, light:1, roast:0.55, bump:1.4,
+  motion:1, wobble:0.5, steady:0.5, bounce:true, invYaw:false, invPitch:false,
+  eyeSize:1, eyeSpacing:0.36, eyeHeight:1.18, mouthSize:1, mouthHeight:0.5,
+  eyeMargin:0.055, mouthMargin:0.045, feather:0.07, symFill:true, blend:0.15, depth:1.3, skinMatch:0.8, retouch:0.8,
+  pEyeSize:1.15, pMouthSize:1.15, pFlap:0.85, pStyle:"right", pTrigger:"both", pSens:0.6, pBob:0.5, pBgRemove:true, micOn:true,
+  mirror:true, pip_on:true, deviceId:"", facing:"user"
 };
-const BG_LABEL = {roastery:"Roastery",counter:"Counter",neon:"Neon",sky:"Sky",night:"Night",green:"Green",blue:"Blue",custom:"Colour"};
-let bgImageURL = null;
+let S = {...DEFAULTS};
+try{ Object.assign(S, JSON.parse(localStorage.getItem("peanutcam") || "{}")); }catch(e){}
+const save = () => { try{ localStorage.setItem("peanutcam", JSON.stringify(S)); }catch(e){} };
+
+/* ---------- small helpers: haptics, toast, busy ---------- */
+const buzz = ms => { try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} };
+let toastT;
+function toast(msg, ms = 2800){ const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), ms); }
+function busy(msg){ $("#busyMsg").textContent = msg || ""; $("#busy").classList.toggle("show", !!msg); }
+const withTimeout = (p, ms, msg) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms))]);
+const nextFrame = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
 /* ---------- three.js scene ---------- */
-const canvas = document.getElementById("gl");
-const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, preserveDrawingBuffer:false});
+const canvas = $("#gl");
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -239,13 +378,12 @@ const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
-
 const hemi = new THREE.HemisphereLight(0xfff1dc, 0x3a2514, 0.6);
 const key = new THREE.DirectionalLight(0xffe2b8, 2.2); key.position.set(3, 4, 5);
 const rim = new THREE.DirectionalLight(0xffb070, 1.4); rim.position.set(-4, 2, -3);
 scene.add(hemi, key, rim);
 
-/* Peanut profile: two lobes with a pinched waist, upright */
+/* ---------- peanut ---------- */
 const H = 1.95;
 function radiusAt(y){
   const t = y / H; if (Math.abs(t) >= 1) return 0;
@@ -254,23 +392,18 @@ function radiusAt(y){
   return base * waist * (y > 0 ? 0.95 : 1.0);
 }
 function disp(phi, y){ return 1 + 0.022*Math.sin(3*phi + 2.1*y) + 0.018*Math.sin(5*y + 1.3)*Math.cos(2*phi); }
-
 function makePeanutGeometry(){
   const pts = [];
-  const N = 140;
-  for (let i = 0; i <= N; i++){ const y = -H + 2*H*i/N; pts.push(new THREE.Vector2(Math.max(radiusAt(y), 0.0001), y)); }
-  const g = new THREE.LatheGeometry(pts, 120, Math.PI, Math.PI*2); // seam at the back
+  for (let i = 0; i <= 140; i++){ const y = -H + 2*H*i/140; pts.push(new THREE.Vector2(Math.max(radiusAt(y), 0.0001), y)); }
+  const g = new THREE.LatheGeometry(pts, 120, Math.PI, Math.PI*2);
   const p = g.attributes.position;
   for (let i = 0; i < p.count; i++){
-    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
-    const phi = Math.atan2(x, z), f = disp(phi, y);
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i), f = disp(Math.atan2(x, z), y);
     p.setXYZ(i, x*f, y, z*f);
   }
   g.computeVertexNormals();
   return g;
 }
-
-/* Procedural shell: raised net of ridges over pitted husk, darkened by roast */
 function lerpColor(a, b, t){ return a.map((v,i)=>Math.round(v + (b[i]-v)*t)); }
 function rgb(c, a=1){ return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
 function makeShell(roast){
@@ -278,20 +411,15 @@ function makeShell(roast){
   const c = document.createElement("canvas"); c.width = W; c.height = Hh;
   const b = document.createElement("canvas"); b.width = W; b.height = Hh;
   const cx = c.getContext("2d"), bx = b.getContext("2d");
-  const pit = lerpColor([196,150,96],[58,34,18],roast);
-  const ridge = lerpColor([232,196,142],[104,66,38],roast);
-  let seed = 7; const rnd = ()=>((seed = (seed*16807) % 2147483647) / 2147483647);
+  const pit = lerpColor([196,150,96],[58,34,18],roast), ridge = lerpColor([232,196,142],[104,66,38],roast);
+  let seed = 7; const rnd = () => ((seed = (seed*16807) % 2147483647) / 2147483647);
   cx.fillStyle = rgb(pit); cx.fillRect(0,0,W,Hh);
   bx.fillStyle = "#5a5a5a"; bx.fillRect(0,0,W,Hh);
-  // mottling
   for (let i = 0; i < 500; i++){
-    const x = rnd()*W, y = rnd()*Hh, r = 10 + rnd()*60;
-    const g = cx.createRadialGradient(x,y,0,x,y,r);
-    const light = rnd() > 0.5;
-    g.addColorStop(0, light ? "rgba(255,230,190,.10)" : "rgba(30,15,5,.12)"); g.addColorStop(1,"rgba(0,0,0,0)");
+    const x = rnd()*W, y = rnd()*Hh, r = 10 + rnd()*60, g = cx.createRadialGradient(x,y,0,x,y,r);
+    g.addColorStop(0, rnd() > 0.5 ? "rgba(255,230,190,.10)" : "rgba(30,15,5,.12)"); g.addColorStop(1,"rgba(0,0,0,0)");
     cx.fillStyle = g; cx.fillRect(x-r,y-r,2*r,2*r);
   }
-  // ridges along the length (u = around, v = along)
   const R = 18, ridgeX = [];
   for (let i = 0; i < R; i++){
     const base = (i + 0.5) * W / R, ph = rnd()*6.28, amp = 6 + rnd()*10;
@@ -303,85 +431,118 @@ function makeShell(roast){
       bx.save(); bx.translate(off,0); bx.strokeStyle = "#e8e8e8"; bx.lineWidth = w+2; bx.lineCap = "round"; bx.stroke(path); bx.restore();
     }
   };
-  for (const fx of ridgeX){
-    const p = new Path2D(); p.moveTo(fx(0), 0);
-    for (let v = 8; v <= Hh; v += 8) p.lineTo(fx(v), v);
-    strokeBoth(p, 7);
-  }
-  // cross connectors forming the reticulated net
+  for (const fx of ridgeX){ const p = new Path2D(); p.moveTo(fx(0), 0); for (let v = 8; v <= Hh; v += 8) p.lineTo(fx(v), v); strokeBoth(p, 7); }
   for (let i = 0; i < R; i++){
     const a = ridgeX[i], bb = ridgeX[(i+1)%R], wrap = i === R-1 ? W : 0;
     let v = rnd()*40;
     while (v < Hh){
-      const v2 = v + (rnd()-0.5)*36;
-      const p = new Path2D(); p.moveTo(a(v), v); p.quadraticCurveTo((a(v)+bb(v2)+wrap)/2, (v+v2)/2 + (rnd()-0.5)*14, bb(v2)+wrap, v2);
-      strokeBoth(p, 4 + rnd()*2);
-      v += 34 + rnd()*40;
+      const v2 = v + (rnd()-0.5)*36, p = new Path2D();
+      p.moveTo(a(v), v); p.quadraticCurveTo((a(v)+bb(v2)+wrap)/2, (v+v2)/2 + (rnd()-0.5)*14, bb(v2)+wrap, v2);
+      strokeBoth(p, 4 + rnd()*2); v += 34 + rnd()*40;
     }
   }
-  // char patches, heavier toward the tips
   if (roast > 0.05){
     for (let i = 0; i < 160*roast; i++){
-      const y = rnd() < 0.5 ? rnd()*Hh*0.25 : Hh - rnd()*Hh*0.25;
-      const yy = rnd() < 0.6 ? y : rnd()*Hh;
-      const x = rnd()*W, r = 20 + rnd()*90;
-      const g = cx.createRadialGradient(x,yy,0,x,yy,r);
+      const y = rnd() < 0.5 ? rnd()*Hh*0.25 : Hh - rnd()*Hh*0.25, yy = rnd() < 0.6 ? y : rnd()*Hh;
+      const x = rnd()*W, r = 20 + rnd()*90, g = cx.createRadialGradient(x,yy,0,x,yy,r);
       g.addColorStop(0, `rgba(18,8,2,${0.35*roast})`); g.addColorStop(1,"rgba(0,0,0,0)");
       cx.fillStyle = g; cx.fillRect(x-r,yy-r,2*r,2*r);
     }
   }
   const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace; map.wrapS = THREE.RepeatWrapping; map.anisotropy = 4;
-  // soften the ridge heights once, instead of per stroke
   const b2 = document.createElement("canvas"); b2.width = W; b2.height = Hh;
   const b2x = b2.getContext("2d"); b2x.filter = "blur(2px)"; b2x.drawImage(b, 0, 0);
   const bump = new THREE.CanvasTexture(b2); bump.wrapS = THREE.RepeatWrapping;
   return {map, bump};
 }
-
 const nutMat = new THREE.MeshStandardMaterial({roughness:0.82, metalness:0, envMapIntensity:0.6});
 function applyShell(){
   const {map, bump} = makeShell(S.roast);
   nutMat.map?.dispose(); nutMat.bumpMap?.dispose();
   nutMat.map = map; nutMat.bumpMap = bump; nutMat.bumpScale = S.bump; nutMat.needsUpdate = true;
 }
-const rig = new THREE.Group();     // head pose
-const nut = new THREE.Group();     // bounce/squash
+const rig = new THREE.Group(), nut = new THREE.Group();
 rig.add(nut); scene.add(rig);
 nut.add(new THREE.Mesh(makePeanutGeometry(), nutMat));
-
-/* Floor shadow */
-const shadowTex = (()=>{ const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d");
+const shadowTex = (() => { const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d");
   const g = x.createRadialGradient(128,128,0,128,128,128); g.addColorStop(0,"rgba(0,0,0,.55)"); g.addColorStop(1,"rgba(0,0,0,0)");
   x.fillStyle = g; x.fillRect(0,0,256,256); return new THREE.CanvasTexture(c); })();
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2), new THREE.MeshBasicMaterial({map:shadowTex, transparent:true, depthWrite:false}));
-floor.rotation.x = -Math.PI/2; floor.position.y = -H - 0.12; scene.add(floor);
+floor.rotation.x = -Math.PI/2; floor.position.y = -H - 0.12; rig.add(floor);
 
-/* ---------- Face features ----------
-   Each feature is a ring mesh built from face landmarks:
-   centre -> contour -> skin rings -> feathered edge.
-   Texture coordinates come straight from the camera frame; positions come from a
-   "frontalised" copy of the landmarks (head rotation and distance removed), so a
-   feature keeps its size when you open your mouth, lean in or turn your head. */
+/* ---------- puppet (2D image, split head) ---------- */
+const PUP_H = 3.5;
+const puppet = new THREE.Group(); puppet.visible = false; scene.add(puppet);
+const pBody = new THREE.Group(); puppet.add(pBody);
+const pBottom = new THREE.Group(); pBody.add(pBottom);
+const pTopPivot = new THREE.Group(); pBody.add(pTopPivot);
+const pTop = new THREE.Group(); pTopPivot.add(pTop);
+let PUP = null;                      // {canvas, meta, s, tint, png, original, meshes}
+function planeUV(w, h, v0, v1){
+  const g = new THREE.PlaneGeometry(w, h), uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setY(i, v0 + uv.getY(i) * (v1 - v0));
+  return g;
+}
+function buildPuppet(){
+  if (PUP.meshes) for (const m of PUP.meshes){ m.parent?.remove(m); m.geometry.dispose(); m.material.map?.dispose(); m.material.dispose(); }
+  const cv = PUP.canvas, w = cv.width, h = cv.height, s = PUP_H / h, m = PUP.meta;
+  PUP.s = s;
+  m.split = clamp(m.split, h*0.08, h*0.95);
+  const W = w*s, topH = m.split*s, botH = (h - m.split)*s;
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const mat = () => new THREE.MeshBasicMaterial({map:tex, transparent:true, toneMapped:false, alphaTest:0.02});
+  const bot = new THREE.Mesh(planeUV(W, botH, 0, 1 - m.split/h), mat()); bot.position.set(0, -PUP_H/2 + botH/2, 0); bot.renderOrder = 1;
+  const top = new THREE.Mesh(planeUV(W, topH, 1 - m.split/h, 1), mat()); top.position.set(0, PUP_H/2 - topH/2, 0.004); top.renderOrder = 2;
+  // inside of the head: the top's silhouette, filled dark red fading to black
+  const ic = document.createElement("canvas"); ic.width = w; ic.height = Math.max(2, Math.round(m.split));
+  const ix = ic.getContext("2d");
+  ix.drawImage(cv, 0, 0, w, ic.height, 0, 0, w, ic.height);
+  ix.globalCompositeOperation = "source-in";
+  const gr = ix.createLinearGradient(0, ic.height, 0, 0);
+  gr.addColorStop(0, "#7a1d18"); gr.addColorStop(0.18, "#4a0f0d"); gr.addColorStop(0.6, "#1c0605"); gr.addColorStop(1, "#0d0303");
+  ix.fillStyle = gr; ix.fillRect(0, 0, w, ic.height);
+  const itex = new THREE.CanvasTexture(ic); itex.colorSpace = THREE.SRGBColorSpace;
+  const inner = new THREE.Mesh(new THREE.PlaneGeometry(W, topH), new THREE.MeshBasicMaterial({map:itex, transparent:true, toneMapped:false, alphaTest:0.02}));
+  inner.position.set(0, PUP_H/2 - topH/2, -0.03); inner.renderOrder = 0;
+  pBottom.add(bot); pTop.add(top); pBody.add(inner);
+  PUP.meshes = [bot, top, inner];
+  setPivot();
+}
+function setPivot(){
+  if (!PUP) return;
+  const m = PUP.meta, s = PUP.s, w = PUP.canvas.width, h = PUP.canvas.height;
+  const ys = (h/2 - m.split) * s;
+  let hx = 0, hz = 0;
+  if (S.pStyle === "right") hx = (m.hingeR - w/2) * s;
+  else if (S.pStyle === "left") hx = (m.hingeL - w/2) * s;
+  else hz = -0.7;
+  pTopPivot.position.set(hx, ys, hz); pTop.position.set(-hx, -ys, -hz); pTopPivot.rotation.set(0, 0, 0);
+}
+const pxToWorld = (p) => PUP ? [(p[0] - PUP.canvas.width/2) * PUP.s, (PUP.canvas.height/2 - p[1]) * PUP.s] : [0, 0];
+
+/* ---------- face features ----------
+   Each feature is a ring mesh built from face landmarks: centre -> contour -> skin rings -> feathered edge.
+   Texture coordinates come from the camera frame; positions come from a "frontalised" copy of the
+   landmarks, so a feature keeps its size when you open your mouth, lean in or turn your head. */
 const LM = {
-  eyeR: [33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246],      // subject's right eye
-  eyeL: [263,249,390,373,374,380,381,382,362,398,384,385,386,387,388,466],   // subject's left eye, index-aligned mirror of eyeR
+  eyeR: [33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246],
+  eyeL: [263,249,390,373,374,380,381,382,362,398,384,385,386,387,388,466],
   lipsOut: [61,146,91,181,84,17,314,405,321,375,291,409,270,269,267,0,37,39,40,185],
   lipsIn:  [78,95,88,178,87,14,317,402,318,324,308,415,310,311,312,13,82,81,80,191],
 };
-const LIP_MIRROR = i => (30 - i) % 20;                         // left/right partner on the lip contours
-const LIP_SIDE = i => (i === 5 || i === 15) ? 0 : (i >= 6 && i <= 14 ? 1 : -1); // +1 = subject's left half
-
+const LIP_MIRROR = i => (30 - i) % 20;
+const LIP_SIDE = i => (i === 5 || i === 15) ? 0 : (i >= 6 && i <= 14 ? 1 : -1);
 const tintU = { value: new THREE.Color(0.6, 0.45, 0.3) };
+const shellTint = new THREE.Color();
 function updateTint(){
   const t = S.roast, pit = [196,150,96].map((v,i)=>v + ([58,34,18][i]-v)*t), ridge = [232,196,142].map((v,i)=>v + ([104,66,38][i]-v)*t);
-  tintU.value.setRGB((pit[0]+ridge[0])/510, (pit[1]+ridge[1])/510, (pit[2]+ridge[2])/510);
+  shellTint.setRGB((pit[0]+ridge[0])/510, (pit[1]+ridge[1])/510, (pit[2]+ridge[2])/510);
+  if (stageMode === "peanut") tintU.value.copy(shellTint);
 }
-// each tracked camera frame is copied here, so the texture always matches the landmarks
 const frameCanvas = document.createElement("canvas"); frameCanvas.width = frameCanvas.height = 2;
 const frameCtx = frameCanvas.getContext("2d", {alpha:false});
 const videoTex = new THREE.CanvasTexture(frameCanvas);
 videoTex.minFilter = THREE.LinearFilter; videoTex.magFilter = THREE.LinearFilter; videoTex.generateMipmaps = false;
-
 const texelU = { value: new THREE.Vector2(1/1280, 1/720) };
 function featureMaterial(){
   return new THREE.ShaderMaterial({
@@ -403,15 +564,13 @@ function featureMaterial(){
       uniform sampler2D map; uniform float opacity, blend, skinMatch, relief, smoothSkin, light;
       uniform vec3 tint; uniform vec2 texel;
       varying float vA; varying float vCore; varying vec2 vUv; varying vec3 vN; varying vec3 vS; varying vec3 vV;
-      // edge-preserving skin smoothing (like a beauty/retouch pass): only blurs similar colours
       vec3 retouch(vec2 uv, float amt){
         vec3 c0 = texture2D(map, uv).rgb;
         if (amt < 0.02) return c0;
         vec3 acc = c0; float ws = 1.0;
         for (int i = 0; i < 8; i++){
           float a = float(i) * 0.7853982;
-          vec2 o = vec2(cos(a), sin(a)) * texel * 3.0;
-          vec3 c = texture2D(map, uv + o).rgb;
+          vec3 c = texture2D(map, uv + vec2(cos(a), sin(a)) * texel * 3.0).rgb;
           float w = exp(-dot(c - c0, c - c0) * 80.0);
           acc += c * w; ws += w;
         }
@@ -420,19 +579,16 @@ function featureMaterial(){
       void main(){
         float skin = 1.0 - vCore;
         vec3 c = retouch(vUv, skin * smoothSkin);
-        // grade: skin takes the shell's colour (keeping its own light and shade); lips/teeth/eyes keep theirs
         float l = dot(c, vec3(0.299, 0.587, 0.114));
         float tl = max(dot(tint, vec3(0.299, 0.587, 0.114)), 0.001);
         vec3 graded = tint * (l / tl) * 1.04;
         vec3 col = mix(c, graded, mix(blend * 0.45, skinMatch, skin));
-        // relief light: shade only the difference between the face's shape and the shell underneath
         vec3 L = normalize(vec3(0.42, 0.57, 0.71));
         vec3 s = normalize(vS), n = normalize(vN);
         if (dot(n, s) < 0.0) n = -n;
         float dn = 0.28 + 0.72 * max(dot(n, L), 0.0), ds = 0.28 + 0.72 * max(dot(s, L), 0.0);
         col *= mix(1.0, clamp(dn / ds, 0.5, 1.6), relief);
         col *= mix(1.0, ds, 0.45) * mix(1.0, light, 0.35);
-        // small wet highlight on lips and eyes
         float spec = pow(max(dot(reflect(-L, n), normalize(vV)), 0.0), 30.0);
         col += spec * 0.18 * vCore * relief;
         float inFrame = step(0.0, vUv.x) * step(vUv.x, 1.0) * step(0.0, vUv.y) * step(vUv.y, 1.0);
@@ -440,29 +596,21 @@ function featureMaterial(){
       }`
   });
 }
-
-/* ring layout: centre + N per ring; rings[] = [{alpha}] where ring 0 is the base contour */
 function makeFeatureMesh(N, ringAlphas, ringCores, order, lipStrip){
-  const nv = 1 + N * ringAlphas.length;
-  const g = new THREE.BufferGeometry();
+  const nv = 1 + N * ringAlphas.length, g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(nv*3), 3).setUsage(THREE.DynamicDrawUsage));
   g.setAttribute("normal", new THREE.BufferAttribute(new Float32Array(nv*3), 3).setUsage(THREE.DynamicDrawUsage));
   g.setAttribute("uv", new THREE.BufferAttribute(new Float32Array(nv*2), 2).setUsage(THREE.DynamicDrawUsage));
-  const al = new Float32Array(nv); al[0] = 1;
-  ringAlphas.forEach((a, r) => { for (let i = 0; i < N; i++) al[1 + r*N + i] = a; });
-  g.setAttribute("alpha", new THREE.BufferAttribute(al, 1));
-  const co = new Float32Array(nv); co[0] = 1;
-  ringCores.forEach((c, r) => { for (let i = 0; i < N; i++) co[1 + r*N + i] = c; });
-  g.setAttribute("core", new THREE.BufferAttribute(co, 1));
   g.setAttribute("snormal", new THREE.BufferAttribute(new Float32Array(nv*3), 3).setUsage(THREE.DynamicDrawUsage));
+  const al = new Float32Array(nv), co = new Float32Array(nv); al[0] = 1; co[0] = 1;
+  ringAlphas.forEach((a, r) => { for (let i = 0; i < N; i++) al[1 + r*N + i] = a; });
+  ringCores.forEach((c, r) => { for (let i = 0; i < N; i++) co[1 + r*N + i] = c; });
+  g.setAttribute("alpha", new THREE.BufferAttribute(al, 1));
+  g.setAttribute("core", new THREE.BufferAttribute(co, 1));
   const idx = [];
   if (lipStrip){
-    // mouth opening: zip the lower inner lip (0..10) to the upper inner lip (20..10) so concave smiles never fold
     const up = i => (N - i) % N;
-    for (let i = 0; i < N/2; i++){
-      const a = 1+i, b = 1+i+1, c = 1+up(i+1), d = 1+up(i);
-      idx.push(a, b, c); if (i > 0) idx.push(a, c, d);
-    }
+    for (let i = 0; i < N/2; i++){ const a = 1+i, b = 1+i+1, c = 1+up(i+1), d = 1+up(i); idx.push(a, b, c); if (i > 0) idx.push(a, c, d); }
   } else {
     for (let i = 0; i < N; i++){ const j = (i+1)%N; idx.push(0, 1+i, 1+j); }
   }
@@ -474,116 +622,97 @@ function makeFeatureMesh(N, ringAlphas, ringCores, order, lipStrip){
   }
   g.setIndex(idx);
   const mesh = new THREE.Mesh(g, featureMaterial());
-  mesh.frustumCulled = false; mesh.renderOrder = order;
+  mesh.frustumCulled = false; mesh.renderOrder = order; mesh.visible = false;
   nut.add(mesh);
   return mesh;
 }
-// eyes: contour, skin, feather edge. mouth: inner lips, outer lips, skin, feather edge.
-// "core" = 1 on the eye/lips themselves, 0 on the skin ring (skin gets retouched and graded to the shell)
 const EYE_RINGS = [1, 1, 0], EYE_CORE = [1, 0, 0], MOUTH_RINGS = [1, 1, 1, 0], MOUTH_CORE = [1, 1, 0, 0];
 const F_EYE = {
   R:{ real: makeFeatureMesh(16, EYE_RINGS, EYE_CORE, 3), alt: makeFeatureMesh(16, EYE_RINGS, EYE_CORE, 4) },
   L:{ real: makeFeatureMesh(16, EYE_RINGS, EYE_CORE, 3), alt: makeFeatureMesh(16, EYE_RINGS, EYE_CORE, 4) },
 };
 const F_MOUTH = { real: makeFeatureMesh(20, MOUTH_RINGS, MOUTH_CORE, 3, true), alt: makeFeatureMesh(20, MOUTH_RINGS, MOUTH_CORE, 4, true) };
-const FEATURE_MESHES = [F_EYE.R.real, F_EYE.R.alt, F_EYE.L.real, F_EYE.L.alt, F_MOUTH.real, F_MOUTH.alt];
+const EYE_MESHES = [F_EYE.R.real, F_EYE.R.alt, F_EYE.L.real, F_EYE.L.alt], MOUTH_MESHES = [F_MOUTH.real, F_MOUTH.alt];
 
-/* place a point on the peanut's skin, return surface normal too */
 const _n = new THREE.Vector3();
 function onSurface(x, y, out, off, nOut, nOff){
-  const r0 = radiusAt(y);
-  const phi = Math.asin(THREE.MathUtils.clamp(x / Math.max(r0, 1e-3), -1, 1));
-  const r = r0 * disp(phi, y);
+  const r0 = radiusAt(y), phi = Math.asin(clamp(x / Math.max(r0, 1e-3), -1, 1)), r = r0 * disp(phi, y);
   const z = Math.sqrt(Math.max(r*r - x*x, 1e-4)) + 0.012;
   out[off] = x; out[off+1] = y; out[off+2] = z;
-  // normal from the lathe profile: radial component plus slope along y
   const dy = 0.01, dr = (radiusAt(y+dy) - radiusAt(y-dy)) / (2*dy);
   _n.set(x, -dr * r, z).normalize();
   nOut[nOff] = _n.x; nOut[nOff+1] = _n.y; nOut[nOff+2] = _n.z;
+}
+function onFlat(x, y, out, off, nOut, nOff){
+  out[off] = x; out[off+1] = y; out[off+2] = 0.016;
+  nOut[nOff] = 0; nOut[nOff+1] = 0; nOut[nOff+2] = 1;
+}
+let SURF = onSurface;
+
+/* ---------- stage: which object is on screen ---------- */
+let mode = "menu", stageMode = "peanut";
+function showStage(which){
+  stageMode = which;
+  rig.visible = which === "peanut";
+  puppet.visible = which === "puppet";
+  if (which === "puppet"){
+    EYE_MESHES.forEach(m => pTop.add(m)); MOUTH_MESHES.forEach(m => pBottom.add(m));
+    SURF = onFlat; tintU.value.copy(PUP.tint);
+  } else {
+    [...EYE_MESHES, ...MOUTH_MESHES].forEach(m => nut.add(m));
+    SURF = onSurface; tintU.value.copy(shellTint);
+  }
+  applyBg(); resize();
 }
 
 function resize(){
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false); camera.aspect = w/h;
   const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
-  const dist = Math.max(2.45/tanV, 1.5/(tanV*camera.aspect)) / S.zoom;
-  camera.position.set(0, 0.15, dist); camera.lookAt(0, 0.05, 0); camera.updateProjectionMatrix();
+  let halfH = 2.45, halfW = 1.5, cy = 0.15, ly = 0.05;
+  if (stageMode === "puppet" && PUP){ halfH = PUP_H/2 + 0.3; halfW = PUP.canvas.width * PUP.s / 2 + 0.15; cy = 0; ly = 0; }
+  const dist = Math.max(halfH/tanV, halfW/(tanV*camera.aspect)) / S.zoom;
+  camera.position.set(0, cy, dist); camera.lookAt(0, ly, 0); camera.updateProjectionMatrix();
 }
-addEventListener("resize", resize);
+addEventListener("resize", () => { resize(); menuPose(); });
+const MENU = {y:1, s:0.7};
+function menuPose(){
+  const top = document.querySelector(".m-top")?.getBoundingClientRect().bottom ?? 0;
+  const bot = document.querySelector(".m-cards")?.getBoundingClientRect().top ?? innerHeight;
+  const gap = Math.max(60, bot - top - 16), cy = (top + bot) / 2;
+  const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov/2)), perPx = 2 * tanV * camera.position.z / innerHeight;
+  MENU.y = 0.05 - (cy - innerHeight/2) * perPx;
+  MENU.s = clamp(gap * perPx * 0.9 / (2*H), 0.25, 1);
+}
 
 /* ---------- background ---------- */
-const stage = document.getElementById("stage");
+const stage = $("#stage");
+const BGS = {
+  roastery:"radial-gradient(ellipse at 50% 32%, #8a5a33 0%, #3b2314 55%, #160c06 100%)",
+  studio:"radial-gradient(ellipse at 50% 40%, #f4efe8 0%, #cfc4b6 60%, #a99a88 100%)",
+  neon:"radial-gradient(circle at 18% 22%, rgba(255,60,172,.45), transparent 48%), radial-gradient(circle at 82% 72%, rgba(43,210,255,.45), transparent 50%), linear-gradient(160deg,#1b1035,#0b0a1a)",
+  sky:"linear-gradient(#6fbcff, #d4eeff 68%, #f6e7c6)",
+  snow:"radial-gradient(circle at 30% 20%, #fff 0 2px, transparent 3px) 0 0/38px 38px, radial-gradient(circle at 70% 60%, #fff 0 1.5px, transparent 2.5px) 0 0/52px 52px, linear-gradient(#9fc6e8, #e8f2fb 70%, #fff 70%)",
+  night:"radial-gradient(ellipse at 50% 115%, #34508f, #0a0e1f 70%)",
+  green:"#00ff00", blue:"#0047bb"
+};
+const BG_LABEL = {roastery:"Roastery",studio:"Studio",neon:"Neon",sky:"Sky",snow:"Snowy",night:"Night",green:"Green",blue:"Blue"};
+let bgImageURL = null;
 function applyBg(){
-  if (S.bg === "image" && bgImageURL){ stage.style.background = `#000 url("${bgImageURL}") center/cover no-repeat`; }
-  else if (S.bg === "custom" || (S.bg === "image" && !bgImageURL)){ stage.style.background = S.bgColor; }
+  if (S.bg === "image" && bgImageURL) stage.style.background = `#000 url("${bgImageURL}") center/cover no-repeat`;
+  else if (S.bg === "custom" || S.bg === "image") stage.style.background = S.bgColor;
   else stage.style.background = BGS[S.bg] || BGS.roastery;
   floor.visible = S.floor && !["green","blue"].includes(S.bg);
-  document.querySelectorAll("#bgChips button").forEach(b => b.setAttribute("aria-pressed", b.dataset.bg === S.bg));
 }
-const chipWrap = document.getElementById("bgChips");
-for (const k of Object.keys(BG_LABEL)){
-  const b = document.createElement("button"); b.dataset.bg = k; b.type = "button";
-  b.style.background = k === "custom" ? "conic-gradient(#e33,#ec3,#3c6,#39e,#c3e,#e33)" : BGS[k];
-  b.innerHTML = `<span>${BG_LABEL[k]}</span>`;
-  b.onclick = () => { S.bg = k; applyBg(); save(); };
-  chipWrap.append(b);
-}
-document.getElementById("bgFile").onchange = e => {
+$("#bgFile").onchange = e => {
   const f = e.target.files[0]; if (!f) return;
   if (bgImageURL) URL.revokeObjectURL(bgImageURL);
-  bgImageURL = URL.createObjectURL(f); S.bg = "image"; applyBg();
-};
-
-/* ---------- controls ---------- */
-const fmt = v => (+v).toFixed(2);
-const ranges = ["zoom","light","roast","bump","motion","wobble","eyeSize","eyeSpacing","eyeHeight","mouthSize","mouthHeight","eyeMargin","mouthMargin","feather","steady","blend","depth","skinMatch","retouch"];
-const checks = ["floor","bounce","mirror","pip_on","invYaw","invPitch","symFill"];
-function onChange(k){
-  if (k === "zoom") resize();
-  if (k === "light"){ key.intensity = 2.2*S.light; rim.intensity = 1.4*S.light; hemi.intensity = 0.6*S.light; }
-  if (k === "bump") nutMat.bumpScale = S.bump;
-  if (k === "floor") applyBg();
-  if (k === "mirror" || k === "pip_on") syncPip();
-}
-function bindControls(){
-  for (const k of ranges){
-    const el = document.getElementById(k), out = document.getElementById("o_"+k);
-    el.value = S[k]; out.textContent = fmt(S[k]);
-    el.oninput = () => { S[k] = +el.value; out.textContent = fmt(S[k]); onChange(k); };
-    el.onchange = () => { if (k === "roast"){ applyShell(); updateTint(); } save(); };
-  }
-  for (const k of checks){
-    const el = document.getElementById(k); el.checked = !!S[k];
-    el.onchange = () => { S[k] = el.checked; onChange(k); save(); };
-  }
-  const col = document.getElementById("bgColor"); col.value = S.bgColor;
-  col.oninput = () => { S.bgColor = col.value; S.bg = "custom"; applyBg(); };
-  col.onchange = save;
-}
-document.getElementById("reset").onclick = () => {
-  const keep = {deviceId:S.deviceId, facing:S.facing}; S = {...DEFAULTS, ...keep}; save();
-  bindControls(); applyShell(); updateTint(); applyBg(); resize(); onChange("light"); syncPip();
-};
-document.querySelectorAll(".tabs button").forEach(t => t.onclick = () => {
-  document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === t));
-  document.querySelectorAll(".pane").forEach(p => p.hidden = p.dataset.pane !== t.dataset.tab);
-});
-const sheet = document.getElementById("sheet");
-document.getElementById("bSettings").onclick = e => { e.stopPropagation(); sheet.classList.toggle("open"); };
-document.getElementById("bClean").onclick = e => { e.stopPropagation(); sheet.classList.remove("open"); document.body.classList.add("clean"); };
-canvas.addEventListener("click", () => {
-  if (document.body.classList.contains("clean")) document.body.classList.remove("clean");
-  else sheet.classList.remove("open");
-});
-addEventListener("keydown", e => { if (e.key === "h" || e.key === "H") document.body.classList.toggle("clean"); });
-document.getElementById("bFull").onclick = async () => {
-  try{ if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen({navigationUI:"hide"}); }catch(e){}
+  bgImageURL = URL.createObjectURL(f); S.bg = "image"; applyBg(); renderBody(); e.target.value = "";
 };
 
 /* ---------- camera ---------- */
-const video = document.getElementById("pip");
-const statusEl = document.getElementById("status");
-let stream = null;
+const video = $("#pip");
+let stream = null, camOn = false;
 function syncPip(){ video.hidden = !S.pip_on; video.classList.toggle("mirror", S.mirror); }
 async function openCamera(){
   stream?.getTracks().forEach(t => t.stop());
@@ -592,65 +721,51 @@ async function openCamera(){
   try{ stream = await navigator.mediaDevices.getUserMedia({video:v, audio:false}); }
   catch(e){ if (S.deviceId){ S.deviceId = ""; return openCamera(); } throw e; }
   video.srcObject = stream; await video.play();
-  await listCameras();
 }
-async function listCameras(){
-  const sel = document.getElementById("camSel");
-  const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
-  const cur = stream?.getVideoTracks()[0]?.getSettings().deviceId;
-  sel.innerHTML = devs.map((d,i) => `<option value="${d.deviceId}" ${d.deviceId === cur ? "selected" : ""}>${(d.label || "Camera "+(i+1)).replace(/</g,"&lt;")}</option>`).join("");
-  sel.onchange = async () => { S.deviceId = sel.value; save(); await openCamera(); };
+async function cameraList(){
+  try{ return (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput"); }catch(e){ return []; }
 }
-document.getElementById("bFlip").onclick = async e => {
-  e.stopPropagation();
-  S.deviceId = ""; S.facing = S.facing === "user" ? "environment" : "user";
-  S.mirror = S.facing === "user"; document.getElementById("mirror").checked = S.mirror; syncPip(); save();
-  try{ await openCamera(); }catch(err){}
-};
 async function wakeLock(){ try{ await navigator.wakeLock?.request("screen"); }catch(e){} }
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") wakeLock(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && camOn) wakeLock(); });
 
-/* ---------- tracking ---------- */
-let landmarker = null;
+/* ---------- MediaPipe ---------- */
+let VISION = null, FILES = null, landmarker = null, imgLandmarker = null, segmenter = null, trackerOk = false, trackerP = null;
+async function vision(){
+  if (!VISION){ VISION = await import(MP + "/vision_bundle.mjs"); FILES = await VISION.FilesetResolver.forVisionTasks(MP + "/wasm"); }
+  return VISION;
+}
+async function createTask(Cls, opts, gpu){
+  const make = d => Cls.createFromOptions(FILES, {...opts, baseOptions:{...opts.baseOptions, delegate:d}});
+  if (!gpu) return make("CPU");
+  try{ return await make("GPU"); }catch(e){ return make("CPU"); }
+}
 async function loadTracker(){
-  const { FaceLandmarker, FilesetResolver } = await import(MP + "/vision_bundle.mjs");
-  const files = await FilesetResolver.forVisionTasks(MP + "/wasm");
-  const opts = d => ({baseOptions:{modelAssetPath:MODEL, delegate:d}, runningMode:"VIDEO", numFaces:1,
-    outputFacialTransformationMatrixes:true, outputFaceBlendshapes:true});
-  try{ landmarker = await FaceLandmarker.createFromOptions(files, opts("GPU")); }
-  catch(e){ landmarker = await FaceLandmarker.createFromOptions(files, opts("CPU")); }
+  await vision();
+  landmarker = await createTask(VISION.FaceLandmarker, {baseOptions:{modelAssetPath:MODEL}, runningMode:"VIDEO", numFaces:1, outputFaceBlendshapes:true}, true);
 }
 
 /* ---------- face geometry per frame ---------- */
-const chipEl = document.getElementById("chip");
+const chipEl = $("#chip");
 let lastVideoTime = -1, lastSeen = 0, faceVis = 0, vw = 1, vh = 1;
 const V3 = THREE.Vector3;
-const P = Array.from({length:478}, () => new V3());          // landmarks in image pixels (z scaled like x)
+const P = Array.from({length:478}, () => new V3());
 const USED = [...new Set([...LM.eyeR, ...LM.eyeL, ...LM.lipsOut, ...LM.lipsIn, 2, 10])];
-const Fraw = new Map(), Fs = new Map();                        // frontal coords: raw and smoothed
+const Fraw = new Map(), Fs = new Map();
 for (const id of USED){ Fraw.set(id, new V3()); Fs.set(id, new V3()); }
 const basis = { c:new V3(), X:new V3(), Y:new V3(), Z:new V3(), s:1 };
 let fsInit = false, jawRaw = 0, yawF = 0, pitch0 = null, size0 = null;
 const mouthRest = new V3(); let mouthRestInit = false;
 const target = {pitch:0, yaw:0, roll:0, tx:0, ty:0, lean:1, jaw:0};
-
-const _d = new V3(), _q = new V3(), _a = new V3(), _b = new V3(), _t = new V3();
-function toF(p, out){
-  _d.subVectors(p, basis.c);
-  return out.set(_d.dot(basis.X)/basis.s, _d.dot(basis.Y)/basis.s, _d.dot(basis.Z)/basis.s);
-}
+const _d = new V3(), _q = new V3(), _a = new V3(), _t = new V3();
+function toF(p, out){ _d.subVectors(p, basis.c); return out.set(_d.dot(basis.X)/basis.s, _d.dot(basis.Y)/basis.s, _d.dot(basis.Z)/basis.s); }
 function fToUV(f, uv, k){
   _q.copy(basis.c).addScaledVector(basis.X, f.x*basis.s).addScaledVector(basis.Y, f.y*basis.s).addScaledVector(basis.Z, f.z*basis.s);
   uv[k] = _q.x / vw; uv[k+1] = 1 - _q.y / vh;
 }
-
-/* buffers for one feature: F (frontal positions) + uv, laid out like makeFeatureMesh */
 function featBuf(N, rings){ const nv = 1 + N*rings; return {N, nv, F:Array.from({length:nv}, () => new V3()), uv:new Float32Array(nv*2)}; }
 const B = { R:featBuf(16, 3), L:featBuf(16, 3), M:featBuf(20, 4), alt:featBuf(20, 4) };
-
 const _cR = new V3(), _cS = new V3(), _bR = new V3(), _bS = new V3(), _dir = new V3();
 function centroid(ids, map, out){ out.set(0,0,0); for (const id of ids) out.add(map.get(id)); return out.divideScalar(ids.length); }
-// outward direction at contour point i: contour normal blended with radial, in the x/y plane
 function outward(ids, map, i, cen, out){
   const n = ids.length, p = map.get(ids[(i+n-1)%n]), q = map.get(ids[(i+1)%n]), m = map.get(ids[i]);
   let nx = q.y - p.y, ny = -(q.x - p.x);
@@ -678,30 +793,23 @@ function fillFeature(buf, innerIds, baseIds, offsets){
     }
   }
 }
-
-/* write a buffer onto the peanut. ax/ay = anchor on peanut, ox/oy = feature origin in frontal space */
 function placeFeature(mesh, buf, ax, ay, ox, oy, k, flipX, cavity){
-  const g = mesh.geometry, pos = g.attributes.position.array, sn = g.attributes.snormal.array, uv = g.attributes.uv.array;
-  const al = g.attributes.alpha.array;
+  const g = mesh.geometry, pos = g.attributes.position.array, sn = g.attributes.snormal.array, uv = g.attributes.uv.array, al = g.attributes.alpha.array;
   const mx = S.mirror ? -1 : 1, N = buf.N;
-  // depth reference = the skin at the outer edge, so the edge sits flush with the shell
   let zRef = 0; for (let i = buf.nv - N; i < buf.nv; i++) zRef += buf.F[i].z; zRef /= N;
   const depth = S.depth * k * 0.42;
   for (let v = 0; v < buf.nv; v++){
     const f = buf.F[v], fx = flipX ? -f.x : f.x, o = v*3;
-    onSurface(ax + (fx - ox)*k*mx, ay - (f.y - oy)*k, pos, o, sn, o);
-    // push out (lips, eyeballs) or in (corners, open mouth) along the shell normal using the tracked depth
+    SURF(ax + (fx - ox)*k*mx, ay - (f.y - oy)*k, pos, o, sn, o);
     let h = -(f.z - zRef) * depth * al[v];
-    if (cavity && v >= 1 && v <= N) h -= cavity;      // inner lip edge rolls back into the mouth
-    h = THREE.MathUtils.clamp(h, -0.006, 0.11);       // never sink below the shell (it would be clipped)
+    if (cavity && v >= 1 && v <= N) h -= cavity;
+    h = clamp(h, -0.006, 0.11);
     pos[o] += sn[o]*h; pos[o+1] += sn[o+1]*h; pos[o+2] += sn[o+2]*h;
     uv[v*2] = buf.uv[v*2]; uv[v*2+1] = buf.uv[v*2+1];
   }
   g.computeVertexNormals();
   g.attributes.position.needsUpdate = true; g.attributes.snormal.needsUpdate = true; g.attributes.uv.needsUpdate = true;
 }
-
-/* symmetric mouth: the far half is rebuilt from the near half, mirrored */
 function symmetricMouth(src, dst, farSign){
   const N = src.N;
   dst.F[0].copy(src.F[0]); dst.F[0].x = 0; dst.uv[0] = src.uv[0]; dst.uv[1] = src.uv[1];
@@ -710,16 +818,12 @@ function symmetricMouth(src, dst, farSign){
       const v = 1 + r*N + i;
       if (LIP_SIDE(i) === farSign){
         const m = 1 + r*N + LIP_MIRROR(i);
-        dst.F[v].copy(src.F[m]); dst.F[v].x = -dst.F[v].x;
-        dst.uv[v*2] = src.uv[m*2]; dst.uv[v*2+1] = src.uv[m*2+1];
-      } else {
-        dst.F[v].copy(src.F[v]); dst.uv[v*2] = src.uv[v*2]; dst.uv[v*2+1] = src.uv[v*2+1];
-      }
+        dst.F[v].copy(src.F[m]); dst.F[v].x = -dst.F[v].x; dst.uv[v*2] = src.uv[m*2]; dst.uv[v*2+1] = src.uv[m*2+1];
+      } else { dst.F[v].copy(src.F[v]); dst.uv[v*2] = src.uv[v*2]; dst.uv[v*2+1] = src.uv[v*2+1]; }
     }
   }
 }
-
-const smooth01 = (a, b, x) => { const t = THREE.MathUtils.clamp((x - a)/(b - a), 0, 1); return t*t*(3 - 2*t); };
+const smooth01 = (a, b, x) => { const t = clamp((x - a)/(b - a), 0, 1); return t*t*(3 - 2*t); };
 const W = { eyeR:0, eyeL:0, mouth:0 };
 
 function track(now){
@@ -730,156 +834,657 @@ function track(now){
   if (!lm) return;
   lastSeen = now;
   vw = video.videoWidth; vh = video.videoHeight;
-  if (frameCanvas.width !== vw || frameCanvas.height !== vh){
-    frameCanvas.width = vw; frameCanvas.height = vh;
-    videoTex.dispose();                    // reallocate GPU storage at the new size
-  }
+  if (frameCanvas.width !== vw || frameCanvas.height !== vh){ frameCanvas.width = vw; frameCanvas.height = vh; videoTex.dispose(); }
   frameCtx.drawImage(video, 0, 0, vw, vh);
   texelU.value.set(1/vw, 1/vh);
-  videoTex.needsUpdate = true;             // texture = the exact frame the landmarks came from
+  videoTex.needsUpdate = true;
   for (let i = 0; i < 478; i++) P[i].set(lm[i].x*vw, lm[i].y*vh, lm[i].z*vw);
 
-  // head frame from rigid points: outer eye corners, forehead, base of nose
   basis.c.addVectors(P[33], P[263]).multiplyScalar(0.5);
   basis.X.subVectors(P[263], P[33]); basis.s = basis.X.length(); basis.X.divideScalar(basis.s);
   basis.Y.subVectors(P[2], P[10]); basis.Y.addScaledVector(basis.X, -basis.Y.dot(basis.X)).normalize();
   basis.Z.crossVectors(basis.X, basis.Y);
 
-  // frontalise + smooth (fast moves pass straight through, small jitter is damped)
   const base = THREE.MathUtils.lerp(0.95, 0.3, S.steady);
   for (const id of USED){
     const fr = toF(P[id], Fraw.get(id)), fs = Fs.get(id);
     if (!fsInit){ fs.copy(fr); continue; }
-    const a = Math.min(1, base + fs.distanceTo(fr) * 7);
-    fs.lerp(fr, a);
+    fs.lerp(fr, Math.min(1, base + fs.distanceTo(fr) * 7));
   }
   fsInit = true;
-
   const bs = res.faceBlendshapes?.[0]?.categories;
   if (bs){ const j = bs.find(c => c.categoryName === "jawOpen"); if (j) jawRaw = j.score; }
 
-  // build features
-  const eyeOff = [S.eyeMargin, S.eyeMargin + S.feather];
-  const lipOff = [S.mouthMargin, S.mouthMargin + S.feather];
+  const eyeOff = [S.eyeMargin, S.eyeMargin + S.feather], lipOff = [S.mouthMargin, S.mouthMargin + S.feather];
   fillFeature(B.R, null, LM.eyeR, eyeOff);
   fillFeature(B.L, null, LM.eyeL, eyeOff);
   fillFeature(B.M, LM.lipsIn, LM.lipsOut, lipOff);
-
-  // rest position of the mouth relative to the base of the nose (updated while the mouth is closed)
   centroid(LM.lipsOut, Fs, _a).sub(Fs.get(2));
-  if (!mouthRestInit){ mouthRest.copy(_a); mouthRestInit = true; }
-  else if (jawRaw < 0.12) mouthRest.lerp(_a, 0.05);
+  if (!mouthRestInit){ mouthRest.copy(_a); mouthRestInit = true; } else if (jawRaw < 0.12) mouthRest.lerp(_a, 0.05);
 
-  // head pose: nose direction is -Z
   const nx = -basis.Z.x, ny = -basis.Z.y, nz = -basis.Z.z;
   const yawImg = Math.atan2(nx, -nz), pitchImg = Math.atan2(ny, -nz), roll = Math.atan2(basis.X.y, basis.X.x);
   yawF = yawImg;
   if (pitch0 === null) pitch0 = pitchImg; else pitch0 += (pitchImg - pitch0) * 0.003;
   const sizeN = basis.s / vw; if (size0 === null) size0 = sizeN; else size0 += (sizeN - size0) * 0.004;
-
-  const mx = S.mirror ? -1 : 1, cl = THREE.MathUtils.clamp;
+  const mx = S.mirror ? -1 : 1;
   let yaw = yawImg * mx, rl = -roll * mx, pitch = pitchImg - pitch0;
   if (S.invYaw){ yaw = -yaw; rl = -rl; }
   if (S.invPitch) pitch = -pitch;
-  target.yaw = cl(yaw, -1.1, 1.1) * S.motion;
-  target.pitch = cl(pitch, -0.7, 0.7) * S.motion;
-  target.roll = cl(rl, -0.6, 0.6) * S.motion;
-  target.tx = cl((basis.c.x / vw - 0.5) * 2, -1, 1) * 0.55 * mx * S.motion;
-  target.ty = -cl((basis.c.y / vh - 0.5) * 2, -1, 1) * 0.35 * S.motion;
-  target.lean = cl(Math.pow(sizeN / size0, 0.5), 0.85, 1.18);
+  target.yaw = clamp(yaw, -1.1, 1.1) * S.motion;
+  target.pitch = clamp(pitch, -0.7, 0.7) * S.motion;
+  target.roll = clamp(rl, -0.6, 0.6) * S.motion;
+  target.tx = clamp((basis.c.x / vw - 0.5) * 2, -1, 1) * 0.55 * mx * S.motion;
+  target.ty = -clamp((basis.c.y / vh - 0.5) * 2, -1, 1) * 0.35 * S.motion;
+  target.lean = clamp(Math.pow(sizeN / size0, 0.5), 0.85, 1.18);
   target.jaw = jawRaw;
 
-  // which side is turned away, and how far
-  const far = Math.sign(yawF);
-  const wE = S.symFill ? smooth01(0.30, 0.55, Math.abs(yawF)) : 0;
+  const far = Math.sign(yawF), wE = S.symFill ? smooth01(0.30, 0.55, Math.abs(yawF)) : 0;
   W.eyeR = far < 0 ? wE : 0;  W.eyeL = far > 0 ? wE : 0;
   W.mouth = S.symFill ? smooth01(0.40, 0.70, Math.abs(yawF)) : 0;
 
-  // place on the peanut
-  const kE = 1.45 * S.eyeSize, kM = 1.2 * S.mouthSize, mxs = S.mirror ? -1 : 1;
+  // where the features go: on the peanut, or on the uploaded picture
+  let eRx, eRy, eLx, eLy, mX, mY, kE, kM;
+  if (stageMode === "puppet" && PUP){
+    const m = PUP.meta, unit = m.unit * PUP.s;
+    const scrL = pxToWorld(m.eyeR), scrR = pxToWorld(m.eyeL);   // the picture's right eye sits on the left of the image
+    const forR = S.mirror ? scrR : scrL, forL = S.mirror ? scrL : scrR;
+    [eRx, eRy] = forR; [eLx, eLy] = forL; [mX, mY] = pxToWorld(m.mouth);
+    kE = unit * S.pEyeSize; kM = unit * S.pMouthSize;
+  } else {
+    eRx = -S.eyeSpacing*mx; eLx = S.eyeSpacing*mx; eRy = eLy = S.eyeHeight; mX = 0; mY = S.mouthHeight;
+    kE = 1.45 * S.eyeSize; kM = 1.2 * S.mouthSize;
+  }
   const eyeCentre = buf => [(buf.F[1].x + buf.F[9].x)/2, (buf.F[1].y + buf.F[9].y)/2];
   const [rcx, rcy] = eyeCentre(B.R), [lcx, lcy] = eyeCentre(B.L);
-  placeFeature(F_EYE.R.real, B.R, -S.eyeSpacing*mxs, S.eyeHeight, rcx, rcy, kE, false);
-  placeFeature(F_EYE.L.real, B.L,  S.eyeSpacing*mxs, S.eyeHeight, lcx, lcy, kE, false);
-  if (W.eyeR > 0) placeFeature(F_EYE.R.alt, B.L, -S.eyeSpacing*mxs, S.eyeHeight, -lcx, lcy, kE, true);
-  if (W.eyeL > 0) placeFeature(F_EYE.L.alt, B.R,  S.eyeSpacing*mxs, S.eyeHeight, -rcx, rcy, kE, true);
-  const n2 = Fs.get(2), mox = n2.x + mouthRest.x, moy = n2.y + mouthRest.y;
-  const cav = S.depth * 0.025 * jawRaw;
-  placeFeature(F_MOUTH.real, B.M, 0, S.mouthHeight, mox, moy, kM, false, cav);
-  if (W.mouth > 0){ symmetricMouth(B.M, B.alt, far); placeFeature(F_MOUTH.alt, B.alt, 0, S.mouthHeight, 0, moy, kM, false, cav); }
+  placeFeature(F_EYE.R.real, B.R, eRx, eRy, rcx, rcy, kE, false);
+  placeFeature(F_EYE.L.real, B.L, eLx, eLy, lcx, lcy, kE, false);
+  if (W.eyeR > 0) placeFeature(F_EYE.R.alt, B.L, eRx, eRy, -lcx, lcy, kE, true);
+  if (W.eyeL > 0) placeFeature(F_EYE.L.alt, B.R, eLx, eLy, -rcx, rcy, kE, true);
+  const n2 = Fs.get(2), mox = n2.x + mouthRest.x, moy = n2.y + mouthRest.y, cav = S.depth * 0.025 * jawRaw;
+  placeFeature(F_MOUTH.real, B.M, mX, mY, mox, moy, kM, false, cav);
+  if (W.mouth > 0){ symmetricMouth(B.M, B.alt, far); placeFeature(F_MOUTH.alt, B.alt, mX, mY, 0, moy, kM, false, cav); }
 }
 
-/* ---------- physics ---------- */
-const spr = {}; for (const k of ["pitch","yaw","roll","tx","ty","lean","jaw"]) spr[k] = {p: k === "lean" ? 1 : 0, v: 0};
-function step(st, tgt, dt, k, zeta){ const c = 2*zeta*Math.sqrt(k); st.v += (k*(tgt - st.p) - c*st.v) * dt; st.p += st.v * dt; }
+/* ---------- microphone: voice level drives the flap ---------- */
+const mic = { ctx:null, an:null, buf:null, stream:null, ok:false, db:-100, floor:-55, env:0, gate:-40 };
+function audioCtx(){ // created inside a tap so the browser lets it run
+  if (!mic.ctx){ try{ mic.ctx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} }
+  mic.ctx?.resume?.();
+}
+async function startMic(){
+  if (mic.ok || !S.micOn) return mic.ok;
+  try{
+    mic.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true, autoGainControl:false}});
+    audioCtx();
+    const src = mic.ctx.createMediaStreamSource(mic.stream);
+    mic.an = mic.ctx.createAnalyser(); mic.an.fftSize = 1024; mic.buf = new Float32Array(1024);
+    src.connect(mic.an); mic.ok = true;
+  }catch(e){
+    toast("Microphone is blocked, so the head flaps when your mouth opens instead.");
+  }
+  syncMicBtn();
+  return mic.ok;
+}
+function stopMic(){ mic.stream?.getTracks().forEach(t => t.stop()); mic.ok = false; mic.env = 0; syncMicBtn(); }
+function micStep(dt){
+  if (!mic.ok || !S.micOn) { mic.env += (0 - mic.env) * Math.min(1, dt*12); return mic.env; }
+  if (mic.ctx.state === "suspended") mic.ctx.resume();
+  mic.an.getFloatTimeDomainData(mic.buf);
+  let sum = 0; for (let i = 0; i < mic.buf.length; i++) sum += mic.buf[i]*mic.buf[i];
+  mic.db = 20 * Math.log10(Math.sqrt(sum / mic.buf.length) + 1e-7);
+  // background noise level: drops fast, creeps up slowly
+  if (mic.db < mic.floor) mic.floor += (mic.db - mic.floor) * 0.3; else mic.floor = Math.min(-25, mic.floor + dt * 1.2);
+  mic.gate = mic.floor + THREE.MathUtils.lerp(20, 4, S.pSens);
+  const open = clamp((mic.db - mic.gate) / 14, 0, 1);
+  mic.env += (open - mic.env) * Math.min(1, dt * (open > mic.env ? 35 : 16));
+  return mic.env;
+}
 
-let started = false, trackerOk = false, lastT = 0;
+/* ---------- uploaded picture: cut out, find the face, work out where to split ---------- */
+const idb = {
+  db:null,
+  async open(){
+    if (!this.db) this.db = await new Promise((res, rej) => { const r = indexedDB.open("peanutcam", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    return this.db;
+  },
+  async get(k){ try{ const db = await this.open(); return await new Promise(res => { const r = db.transaction("kv").objectStore("kv").get(k); r.onsuccess = () => res(r.result); r.onerror = () => res(null); }); }catch(e){ return null; } },
+  async set(k, v){ try{ const db = await this.open(); await new Promise(res => { const tx = db.transaction("kv", "readwrite"); tx.objectStore("kv").put(v, k); tx.oncomplete = res; tx.onerror = res; }); }catch(e){} }
+};
+function mkCanvas(w, h){ const c = document.createElement("canvas"); c.width = w; c.height = h; return [c, c.getContext("2d", {willReadFrequently:true})]; }
+const avgPt = (pts) => [pts.reduce((a,p)=>a+p[0],0)/pts.length, pts.reduce((a,p)=>a+p[1],0)/pts.length];
+async function processImage(blob){
+  busy("Opening your picture…"); await nextFrame();
+  const bmp = await createImageBitmap(blob);
+  const sc = Math.min(1, 1100 / Math.max(bmp.width, bmp.height));
+  const w0 = Math.round(bmp.width*sc), h0 = Math.round(bmp.height*sc);
+  const [src, sx] = mkCanvas(w0, h0); sx.drawImage(bmp, 0, 0, w0, h0);
+  busy("Finding the face…"); await nextFrame();
+  await vision();
+  if (!imgLandmarker) imgLandmarker = await createTask(VISION.FaceLandmarker, {baseOptions:{modelAssetPath:MODEL}, runningMode:"IMAGE", numFaces:1}, false);
+  const lm = imgLandmarker.detect(src).faceLandmarks?.[0] || null;
+
+  // background: keep existing transparency, otherwise cut the person out
+  const data = sx.getImageData(0, 0, w0, h0).data;
+  let clear = 0; for (let i = 3; i < data.length; i += 16) if (data[i] < 250) clear++;
+  const hasAlpha = clear > data.length / 16 * 0.01;
+  let cut = src;
+  if (!hasAlpha && S.pBgRemove){
+    busy("Cutting out the background…"); await nextFrame();
+    try{
+      if (!segmenter) segmenter = await createTask(VISION.ImageSegmenter, {baseOptions:{modelAssetPath:PC.seg}, runningMode:"IMAGE", outputConfidenceMasks:true, outputCategoryMask:false}, false);
+      const res = segmenter.segment(src);
+      const mk = res.confidenceMasks[res.confidenceMasks.length - 1], arr = mk.getAsFloat32Array(), mw = mk.width, mh = mk.height;
+      let inv = false;
+      const fx = Math.floor((lm ? lm[1].x : 0.5) * mw), fy = Math.floor((lm ? lm[1].y : 0.4) * mh);
+      if (arr[fy*mw + fx] < 0.5) inv = true;
+      const [mc, mx] = mkCanvas(mw, mh), id = mx.createImageData(mw, mh);
+      for (let i = 0; i < arr.length; i++){ let c = inv ? 1 - arr[i] : arr[i]; c = clamp((c - 0.3) / 0.4, 0, 1); id.data[i*4+3] = (c*c*(3 - 2*c)) * 255; }
+      mx.putImageData(id, 0, 0);
+      res.close?.();
+      const [oc, ox] = mkCanvas(w0, h0);
+      ox.drawImage(src, 0, 0);
+      ox.globalCompositeOperation = "destination-in"; ox.filter = "blur(1.2px)"; ox.drawImage(mc, 0, 0, w0, h0);
+      cut = oc;
+    }catch(e){
+      console.error(e); toast("Couldn't remove the background, so the whole picture is used.");
+    }
+  }
+  // crop to the visible person
+  const cd = cut.getContext("2d", {willReadFrequently:true}).getImageData(0, 0, w0, h0).data;
+  let x0 = w0, y0 = h0, x1 = 0, y1 = 0;
+  for (let y = 0; y < h0; y += 2) for (let x = 0; x < w0; x += 2){ if (cd[(y*w0 + x)*4 + 3] > 24){ if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
+  if (x1 <= x0 || y1 <= y0){ x0 = 0; y0 = 0; x1 = w0 - 1; y1 = h0 - 1; }
+  const pad = Math.round(Math.max(x1 - x0, y1 - y0) * 0.03);
+  x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(w0 - 1, x1 + pad); y1 = Math.min(h0 - 1, y1 + pad);
+  const cw = x1 - x0 + 1, ch = y1 - y0 + 1;
+  const [out, oxx] = mkCanvas(cw, ch); oxx.drawImage(cut, x0, y0, cw, ch, 0, 0, cw, ch);
+
+  const meta = {face: !!lm};
+  if (lm){
+    const Pt = i => [lm[i].x*w0 - x0, lm[i].y*h0 - y0];
+    meta.eyeR = avgPt([Pt(33), Pt(133)]); meta.eyeL = avgPt([Pt(263), Pt(362)]);
+    meta.unit = Math.hypot(Pt(263)[0] - Pt(33)[0], Pt(263)[1] - Pt(33)[1]);
+    meta.mouth = avgPt(LM.lipsOut.map(Pt));
+    meta.split = clamp(Pt(0)[1] - 0.13*meta.unit, Pt(2)[1], Pt(0)[1]);
+    meta.tint = sampleTint(oxx, [Pt(50), Pt(280), Pt(205), Pt(425)], meta.unit*0.05, cw, ch);
+  } else {
+    meta.eyeR = [cw*0.4, ch*0.36]; meta.eyeL = [cw*0.6, ch*0.36]; meta.unit = cw*0.2/0.7;
+    meta.mouth = [cw*0.5, ch*0.6]; meta.split = ch*0.53;
+    meta.tint = sampleTint(oxx, [[cw*0.42, ch*0.48], [cw*0.58, ch*0.48]], cw*0.03, cw, ch);
+  }
+  findHinges(out, meta);
+  return {canvas: out, meta};
+}
+function sampleTint(ctx, pts, r, w, h){
+  let R = 0, G = 0, Bc = 0, n = 0;
+  for (const [px, py] of pts){
+    const x = Math.round(clamp(px - r, 0, w - 1)), y = Math.round(clamp(py - r, 0, h - 1)), s = Math.max(2, Math.round(r*2));
+    const d = ctx.getImageData(x, y, Math.min(s, w - x), Math.min(s, h - y)).data;
+    for (let i = 0; i < d.length; i += 4) if (d[i+3] > 200){ R += d[i]; G += d[i+1]; Bc += d[i+2]; n++; }
+  }
+  return n ? [R/n/255, G/n/255, Bc/n/255] : [0.75, 0.55, 0.42];
+}
+function findHinges(cv, meta){
+  const w = cv.width, y = Math.round(clamp(meta.split, 0, cv.height - 1));
+  const d = cv.getContext("2d", {willReadFrequently:true}).getImageData(0, y, w, 1).data;
+  let l = -1, r = -1;
+  for (let x = 0; x < w; x++) if (d[x*4+3] > 128){ if (l < 0) l = x; r = x; }
+  meta.hingeL = l < 0 ? w*0.15 : l; meta.hingeR = r < 0 ? w*0.85 : r;
+}
+async function usePuppet(canvas, meta, png, original){
+  PUP = {canvas, meta, png, original, tint:new THREE.Color().setRGB(...meta.tint)};
+  buildPuppet();
+  if (stageMode === "puppet") showStage("puppet");
+  const url = canvas.toDataURL("image/png");
+  $("#thumb").innerHTML = `<img alt="" src="${url}">`;
+  $("#goPuppetLbl").textContent = "Open"; $("#newPuppet").hidden = false;
+}
+async function savePuppet(){
+  if (!PUP) return;
+  if (!PUP.png) PUP.png = await new Promise(r => PUP.canvas.toBlob(r, "image/png"));
+  await idb.set("puppet", {png:PUP.png, original:PUP.original, meta:PUP.meta});
+}
+async function loadSavedPuppet(){
+  const rec = await idb.get("puppet");
+  if (!rec?.png) return;
+  try{
+    const bmp = await createImageBitmap(rec.png);
+    const [c, x] = mkCanvas(bmp.width, bmp.height); x.drawImage(bmp, 0, 0);
+    await usePuppet(c, rec.meta, rec.png, rec.original);
+  }catch(e){}
+}
+async function importImage(file){
+  try{
+    const {canvas, meta} = await processImage(file);
+    await usePuppet(canvas, meta, null, file);
+    await savePuppet();
+    busy();
+    return meta;
+  }catch(e){
+    busy(); console.error(e);
+    toast("That picture couldn't be opened. Try a JPG or PNG.");
+    return null;
+  }
+}
+async function reprocess(){
+  if (!PUP?.original){ toast("Upload the picture again to change this."); return; }
+  const meta = await importImage(PUP.original);
+  if (meta && !meta.face) openEditor();
+}
+
+/* ---------- settings sheet ---------- */
+const fmtX = v => "×" + (+v).toFixed(2), fmtP = v => Math.round(v*100) + "%", fmtN = v => (+v).toFixed(2);
+const RG = (k, label, min, max, step, fmt = fmtP) => ({t:"range", k, label, min, max, step, fmt});
+const TG = (k, label) => ({t:"toggle", k, label});
+const CH = (k, label, opts) => ({t:"chips", k, label, opts});
+const SEC = label => ({t:"sec", label});
+const faceShared = (blendLabel) => [
+  SEC("Look"), RG("depth","3D depth",0,2.5,0.05,fmtX), RG("skinMatch",blendLabel,0,1,0.01), RG("retouch","Smooth skin",0,1,0.01), RG("blend","Tint lips & eyes",0,1,0.01),
+  SEC("Cut-out"), RG("eyeMargin","Skin around eyes",0,0.25,0.005,fmtN), RG("mouthMargin","Skin around lips",0,0.2,0.005,fmtN), RG("feather","Edge softness",0.01,0.25,0.005,fmtN),
+  TG("symFill","Fill in hidden side when turning")
+];
+const motionTab = ["motion","Motion",[RG("motion","Head motion",0,1.6,0.02,fmtX), RG("wobble","Wobble",0,1,0.01), RG("steady","Steadiness",0,1,0.01), TG("bounce","Bounce when talking"), TG("invYaw","Invert left/right turning"), TG("invPitch","Invert nodding")]];
+const cameraTab = ["camera","Camera",[{t:"camsel"}, TG("mirror","Mirror view (selfie)"), TG("pip_on","Show camera preview"),
+  {t:"note", text:"On Windows, connect your phone as a webcam (Phone Link, DroidCam or Iriun), then pick it above."}, {t:"btns", items:[["Reset all settings","reset"]]}]];
+const TABS = {
+  peanut: [
+    ["look","Look",[{t:"bg"}, CH("roast","Roast",[[0.08,"Raw","#e6c08f"],[0.35,"Golden","#c8945a"],[0.6,"Roasted","#9a6337"],[0.92,"Burnt","#4b2c17"]]),
+      RG("bump","Shell texture",0,3,0.05,fmtX), RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX), TG("floor","Floor shadow")]],
+    ["face","Face",[SEC("Placement"), RG("eyeSize","Eye size",0.5,1.8,0.02,fmtX), RG("eyeSpacing","Eye spacing",0.2,0.6,0.01,fmtN), RG("eyeHeight","Eye height",0.6,1.6,0.02,fmtN),
+      RG("mouthSize","Mouth size",0.5,1.8,0.02,fmtX), RG("mouthHeight","Mouth height",0,1.2,0.02,fmtN), ...faceShared("Blend skin into shell")]],
+    motionTab, cameraTab
+  ],
+  puppet: [
+    ["puppet","Puppet",[{t:"btns", items:[["Change image","newImage"],["Edit layout","layout"]]},
+      CH("pStyle","Hinge",[["left","Left side"],["right","Right side"],["back","Flip back"]]), RG("pFlap","Flap amount",0.2,1.5,0.02,fmtX),
+      CH("pTrigger","Flap when",[["voice","I speak"],["mouth","Mouth opens"],["both","Either"]]),
+      SEC("Microphone"), {t:"meter"}, RG("pSens","Mic sensitivity",0,1,0.01), RG("pBob","Head bob",0,1,0.01),
+      SEC("Picture"), TG("pBgRemove","Remove photo background")]],
+    ["look","Look",[{t:"bg"}, RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX)]],
+    ["face","Face",[SEC("Placement"), RG("pEyeSize","Eye size",0.5,2,0.02,fmtX), RG("pMouthSize","Mouth size",0.5,2,0.02,fmtX), {t:"btns", items:[["Move eyes, mouth and flap line","layout"]]},
+      ...faceShared("Blend skin into picture")]],
+    motionTab, cameraTab
+  ]
+};
+const TAB_ICON = {look:"t-look", face:"t-face", motion:"t-motion", camera:"t-camera", puppet:"t-puppet"};
+const curTab = {peanut:"look", puppet:"puppet"};
+const tabSet = () => TABS[stageMode === "puppet" ? "puppet" : "peanut"];
+const tabKey = () => stageMode === "puppet" ? "puppet" : "peanut";
+function el(tag, cls, html){ const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+const ico = id => `<svg class="i"><use href="#${id}"/></svg>`;
+
+function renderTabs(){
+  const seg = $("#seg"); seg.innerHTML = "";
+  for (const [id, label] of tabSet()){
+    const b = el("button", "press", `${ico(TAB_ICON[id])}<span>${label}</span>`);
+    b.setAttribute("role", "tab"); b.setAttribute("aria-selected", id === curTab[tabKey()]);
+    b.onclick = () => { if (curTab[tabKey()] === id) return; buzz(6); curTab[tabKey()] = id; renderTabs(); renderBody(); };
+    seg.append(b);
+  }
+}
+function renderBody(){
+  const body = $("#shBody"), tab = tabSet().find(t => t[0] === curTab[tabKey()]) || tabSet()[0];
+  body.innerHTML = "";
+  for (const it of tab[2]) body.append(buildItem(it));
+  body.classList.remove("swap"); void body.offsetWidth; body.classList.add("swap");
+}
+function afterChange(k){
+  if (k === "roast"){ applyShell(); updateTint(); }
+  if (k === "pStyle") setPivot();
+  if (k === "pBgRemove") reprocess();
+  save();
+}
+function onChange(k){
+  if (k === "zoom") resize();
+  if (k === "light"){ key.intensity = 2.2*S.light; rim.intensity = 1.4*S.light; hemi.intensity = 0.6*S.light; }
+  if (k === "bump") nutMat.bumpScale = S.bump;
+  if (k === "floor") applyBg();
+  if (k === "mirror" || k === "pip_on") syncPip();
+}
+function buildItem(it){
+  if (it.t === "sec") return el("div", "sec", it.label);
+  if (it.t === "range") return rangeRow(it);
+  if (it.t === "toggle"){
+    const row = el("div", "srow", `<span class="slabel">${it.label}</span>`);
+    const sw = el("button", "switch"); sw.setAttribute("role", "switch"); sw.setAttribute("aria-label", it.label); sw.setAttribute("aria-checked", !!S[it.k]);
+    sw.onclick = () => { S[it.k] = !S[it.k]; sw.setAttribute("aria-checked", S[it.k]); buzz(8); onChange(it.k); afterChange(it.k); };
+    row.append(sw); return row;
+  }
+  if (it.t === "chips"){
+    const wrap = el("div"); wrap.append(el("div", "sec", it.label));
+    const chips = el("div", "chips");
+    const isOn = v => typeof v === "number" ? Math.abs(S[it.k] - v) < 0.13 : S[it.k] === v;
+    for (const [v, label, dot] of it.opts){
+      const c = el("button", "chip press", (dot ? `<i class="dot" style="background:${dot}"></i>` : "") + label);
+      c.setAttribute("aria-pressed", isOn(v));
+      c.onclick = () => { S[it.k] = v; buzz(8); chips.querySelectorAll(".chip").forEach((x, i) => x.setAttribute("aria-pressed", isOn(it.opts[i][0]))); onChange(it.k); afterChange(it.k); };
+      chips.append(c);
+    }
+    wrap.append(chips); return wrap;
+  }
+  if (it.t === "bg"){
+    const wrap = el("div"); wrap.append(el("div", "sec", "Background"));
+    const row = el("div", "swatches");
+    const mark = () => row.querySelectorAll(".sw").forEach(s => s.setAttribute("aria-pressed", s.dataset.bg === S.bg));
+    for (const k of Object.keys(BG_LABEL)){
+      const s = el("button", "sw press", `<i style="background:${BGS[k]}"></i>${BG_LABEL[k]}`); s.dataset.bg = k;
+      s.onclick = () => { S.bg = k; buzz(6); applyBg(); mark(); save(); };
+      row.append(s);
+    }
+    const cs = el("div", "sw", `<i style="background:conic-gradient(#e33,#ec3,#3c6,#39e,#c3e,#e33)"><input type="color" aria-label="Custom colour" value="${S.bgColor}"></i>Colour`); cs.dataset.bg = "custom";
+    const ci = cs.querySelector("input");
+    ci.oninput = () => { S.bgColor = ci.value; S.bg = "custom"; applyBg(); mark(); };
+    ci.onchange = save;
+    const im = el("button", "sw press", `<i style="background:var(--raise);display:grid;place-items:center">${ico("image")}</i>Photo`); im.dataset.bg = "image";
+    im.onclick = () => $("#bgFile").click();
+    row.append(cs, im); mark();
+    wrap.append(row); return wrap;
+  }
+  if (it.t === "btns"){
+    const row = el("div", "btnrow");
+    for (const [label, act] of it.items){
+      const b = el("button", "pill press" + (act === "reset" ? " danger" : ""), label);
+      b.onclick = () => { buzz(8); ACTIONS[act]?.(b); };
+      row.append(b);
+    }
+    return row;
+  }
+  if (it.t === "note") return el("p", "note", it.text);
+  if (it.t === "meter"){
+    const m = el("div", "meter", `<i class="lv"></i><b class="gate"></b>`); m.id = "micMeter";
+    return m;
+  }
+  if (it.t === "camsel"){
+    const s = el("select", "sel"); s.setAttribute("aria-label", "Camera");
+    cameraList().then(devs => {
+      const cur = stream?.getVideoTracks()[0]?.getSettings().deviceId;
+      s.innerHTML = devs.length ? devs.map((d, i) => `<option value="${d.deviceId}" ${d.deviceId === cur ? "selected" : ""}>${(d.label || "Camera " + (i+1)).replace(/</g, "&lt;")}</option>`).join("") : "<option>No camera found</option>";
+    });
+    s.onchange = async () => { S.deviceId = s.value; save(); try{ await openCamera(); }catch(e){ toast("That camera couldn't start."); } };
+    return s;
+  }
+  return el("div");
+}
+let openScrub = null;
+function rangeRow(it){
+  const row = el("div", "srow");
+  row.innerHTML = `<span class="slabel">${it.label}</span><div class="sctl"><button class="step press" aria-label="Less ${it.label}">${ico("minus")}</button><button class="sval" aria-expanded="false" aria-label="${it.label}: fine adjust"></button><button class="step press" aria-label="More ${it.label}">${ico("plus")}</button></div><div class="scrub"><div><div class="track"><div class="fill"></div><span>Slide sideways</span></div></div></div>`;
+  const [minus, val, plus] = row.querySelectorAll("button"), scrub = row.querySelector(".scrub"), track = row.querySelector(".track"), fill = row.querySelector(".fill");
+  const span = it.max - it.min, nudge = Math.max(it.step, Math.round(span / 20 / it.step) * it.step);
+  const show = () => { val.textContent = it.fmt(S[it.k]); fill.style.width = ((S[it.k] - it.min) / span * 100) + "%"; };
+  let lastBucket = null;
+  const setV = (v, tick) => {
+    v = clamp(Math.round((v - it.min) / it.step) * it.step + it.min, it.min, it.max);
+    v = +v.toFixed(4);
+    if (v === S[it.k]) return;
+    S[it.k] = v; onChange(it.k); show();
+    val.classList.remove("pop"); void val.offsetWidth; val.classList.add("pop");
+    const b = Math.round((v - it.min) / span * 20);
+    if (tick || b !== lastBucket){ buzz(3); lastBucket = b; }
+  };
+  for (const [btn, dir] of [[minus, -1], [plus, 1]]){
+    let t = null, n = 0;
+    const stop = () => { if (t !== null){ clearTimeout(t); t = null; afterChange(it.k); } };
+    btn.addEventListener("pointerdown", e => {
+      e.preventDefault(); n = 0;
+      const go = () => { setV(S[it.k] + dir*nudge, true); n++; t = setTimeout(go, n < 2 ? 420 : n < 8 ? 120 : 60); };
+      go();
+    });
+    ["pointerup","pointerleave","pointercancel"].forEach(ev => btn.addEventListener(ev, stop));
+    btn.addEventListener("contextmenu", e => e.preventDefault());
+  }
+  val.onclick = () => {
+    const open = !scrub.classList.contains("open");
+    if (openScrub && openScrub !== row) openScrub.close();
+    scrub.classList.toggle("open", open); val.setAttribute("aria-expanded", open);
+    openScrub = open ? row : null; buzz(5);
+  };
+  row.close = () => { scrub.classList.remove("open"); val.setAttribute("aria-expanded", "false"); };
+  val.ondblclick = () => { setV(DEFAULTS[it.k], true); afterChange(it.k); toast(`${it.label} reset`); };
+  // relative scrubbing: taps never jump the value, vertical drags scroll the sheet
+  let sx = 0, sy = 0, v0 = 0, active = false, pid = null;
+  track.addEventListener("pointerdown", e => { sx = e.clientX; sy = e.clientY; v0 = S[it.k]; active = false; pid = e.pointerId; });
+  track.addEventListener("pointermove", e => {
+    if (pid !== e.pointerId) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (!active){
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 1.4){ active = true; track.setPointerCapture(e.pointerId); sx = e.clientX; v0 = S[it.k]; }
+      return;
+    }
+    setV(v0 + (dx / track.clientWidth) * span);
+  });
+  const end = () => { if (active) afterChange(it.k); active = false; pid = null; };
+  track.addEventListener("pointerup", end); track.addEventListener("pointercancel", end);
+  show();
+  return row;
+}
+const sheet = $("#sheet");
+function openSheet(){ renderTabs(); renderBody(); sheet.classList.add("open"); document.body.classList.add("sheet-open"); $("#bSettings").classList.add("on"); }
+function closeSheet(){ sheet.classList.remove("open"); document.body.classList.remove("sheet-open"); $("#bSettings").classList.remove("on"); openScrub = null; }
+$("#bSettings").onclick = () => { buzz(8); sheet.classList.contains("open") ? closeSheet() : openSheet(); };
+$("#shClose").onclick = () => { buzz(6); closeSheet(); };
+(() => { // drag the handle down to close
+  const g = $("#shGrab"); let y0 = null;
+  g.addEventListener("pointerdown", e => { y0 = e.clientY; g.setPointerCapture(e.pointerId); sheet.classList.add("dragging"); });
+  g.addEventListener("pointermove", e => { if (y0 === null) return; const dy = Math.max(0, e.clientY - y0); sheet.style.transform = `translateY(${dy}px)`; });
+  const up = e => { if (y0 === null) return; const dy = e.clientY - y0; y0 = null; sheet.classList.remove("dragging"); sheet.style.transform = ""; if (dy > 70) closeSheet(); };
+  g.addEventListener("pointerup", up); g.addEventListener("pointercancel", up);
+})();
+const ACTIONS = {
+  newImage: () => pickImage(),
+  layout: () => { closeSheet(); openEditor(); },
+  reset: (b) => {
+    if (b.dataset.armed !== "1"){ b.dataset.armed = "1"; b.textContent = "Tap again to reset everything"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "Reset all settings"; }, 3000); return; }
+    const keep = {deviceId:S.deviceId, facing:S.facing}; S = {...DEFAULTS, ...keep}; save();
+    applyShell(); updateTint(); applyBg(); resize(); onChange("light"); syncPip(); setPivot(); renderBody(); toast("Settings reset");
+  }
+};
+
+/* ---------- layout editor (puppet) ---------- */
+const editor = $("#editor");
+let editing = false;
+const _p = new THREE.Vector3(), _ray = new THREE.Raycaster(), _plane = new THREE.Plane(new THREE.Vector3(0,0,1), 0), _hit = new THREE.Vector3(), _ndc = new THREE.Vector2();
+function worldToScreen(x, y){ _p.set(x, y, 0).project(camera); return [(_p.x + 1) / 2 * innerWidth, (1 - _p.y) / 2 * innerHeight]; }
+function screenToPx(sx, sy){
+  _ndc.set(sx / innerWidth * 2 - 1, -(sy / innerHeight * 2 - 1)); _ray.setFromCamera(_ndc, camera);
+  if (!_ray.ray.intersectPlane(_plane, _hit)) return null;
+  return [_hit.x / PUP.s + PUP.canvas.width/2, PUP.canvas.height/2 - _hit.y / PUP.s];
+}
+function openEditor(){ if (!PUP) return; editing = true; editor.hidden = false; buzz(10); }
+function closeEditor(){
+  if (!editing) return;
+  editing = false; editor.hidden = true;
+  findHinges(PUP.canvas, PUP.meta); buildPuppet(); savePuppet(); buzz(10);
+}
+$("#edDone").onclick = closeEditor;
+function placeEditor(){
+  const m = PUP.meta;
+  for (const h of editor.querySelectorAll(".h")){
+    const [x, y] = pxToWorld(m[h.dataset.h]); const [sx, sy] = worldToScreen(x, y);
+    h.style.left = sx + "px"; h.style.top = sy + "px";
+  }
+  const [, sy] = worldToScreen(0, pxToWorld([0, m.split])[1]); $("#edSplit").style.top = sy + "px";
+}
+for (const h of [...editor.querySelectorAll(".h"), $("#edSplit")]){
+  let on = false;
+  h.addEventListener("pointerdown", e => { on = true; h.setPointerCapture(e.pointerId); h.classList.add("grab"); buzz(6); });
+  h.addEventListener("pointermove", e => {
+    if (!on) return;
+    const p = screenToPx(e.clientX, e.clientY); if (!p) return;
+    const m = PUP.meta;
+    if (h.id === "edSplit"){ m.split = clamp(p[1], PUP.canvas.height*0.08, PUP.canvas.height*0.95); buildPuppet(); }
+    else {
+      m[h.dataset.h] = [clamp(p[0], 0, PUP.canvas.width), clamp(p[1], 0, PUP.canvas.height)];
+      if (h.dataset.h !== "mouth") m.unit = Math.hypot(m.eyeL[0] - m.eyeR[0], m.eyeL[1] - m.eyeR[1]) / 0.7;
+    }
+  });
+  const up = () => { if (!on) return; on = false; h.classList.remove("grab"); };
+  h.addEventListener("pointerup", up); h.addEventListener("pointercancel", up);
+}
+
+/* ---------- menu, modes, HUD ---------- */
+const statusEl = $("#status");
+async function ensureCamera(){
+  if (camOn) return true;
+  try{
+    if (!navigator.mediaDevices?.getUserMedia) throw new Error("Camera access needs the page opened over https://, for example the github.io link.");
+    statusEl.textContent = "Allow camera access when your phone asks…";
+    await withTimeout(openCamera(), 30000, "The camera didn't start. Close other apps using the camera and try again.");
+    camOn = true; statusEl.textContent = ""; wakeLock();
+  }catch(err){
+    statusEl.textContent = (err && err.name === "NotAllowedError")
+      ? "Camera permission is blocked. Allow it in the browser's site settings (or Android app settings), then try again."
+      : (err && err.name === "NotReadableError") ? "The camera is busy. Close other apps using it, then try again."
+      : ("Couldn't start the camera: " + (err?.message || err));
+    return false;
+  }
+  if (!trackerP){
+    chipEl.textContent = "Loading face tracker…";
+    trackerP = withTimeout(loadTracker(), 90000, "Face tracker took too long to load. Check your connection and reload.")
+      .then(() => { trackerOk = true; chipEl.textContent = "Looking for your face…"; })
+      .catch(err => { chipEl.textContent = "Face tracker failed: " + (err?.message || err); });
+  }
+  return true;
+}
+function enterMode(m){
+  mode = m; document.body.dataset.mode = m;
+  showStage(m === "puppet" ? "puppet" : "peanut");
+  closeSheet(); buzz(12);
+  if (m === "puppet") startMic();
+}
+function goMenu(){
+  closeEditor(); closeSheet();
+  mode = "menu"; document.body.dataset.mode = "menu";
+  showStage("peanut"); menuPose(); buzz(8);
+}
+$("#bHome").onclick = goMenu;
+$("#goPeanut").onclick = async () => { buzz(10); if (await ensureCamera()) enterMode("peanut"); };
+$("#goPuppet").onclick = async () => {
+  buzz(10); audioCtx();
+  if (!PUP) return pickImage();
+  if (await ensureCamera()) enterMode("puppet");
+};
+$("#newPuppet").onclick = () => { buzz(8); audioCtx(); pickImage(); };
+$("#bImage").onclick = () => { buzz(8); pickImage(); };
+$("#bLayout").onclick = () => { buzz(8); editing ? closeEditor() : openEditor(); };
+function pickImage(){ $("#pupFile").click(); }
+$("#pupFile").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  const meta = await importImage(f); if (!meta) return;
+  if (await ensureCamera()){
+    enterMode("puppet");
+    if (!meta.face){ openEditor(); toast("No face found in that picture. Drag the markers to place the eyes and mouth.", 4200); }
+    else toast("Talk to flap the head. Tap Layout to adjust.");
+  }
+};
+function syncMicBtn(){
+  const b = $("#bMic"), on = S.micOn && mic.ok;
+  b.classList.toggle("on", on);
+  b.querySelector("use").setAttribute("href", S.micOn ? "#mic" : "#micoff");
+}
+$("#bMic").onclick = async () => {
+  buzz(8); audioCtx();
+  S.micOn = !S.micOn; save();
+  if (S.micOn){ await startMic(); toast(mic.ok ? "Mic on: the head flaps when you speak" : "Mic unavailable"); }
+  else { stopMic(); toast("Mic off: the head flaps when your mouth opens"); }
+  syncMicBtn();
+};
+$("#bFlip").onclick = async () => {
+  buzz(8);
+  S.deviceId = ""; S.facing = S.facing === "user" ? "environment" : "user"; S.mirror = S.facing === "user"; syncPip(); save();
+  try{ await openCamera(); }catch(err){ toast("Couldn't switch camera."); }
+};
+$("#bClean").onclick = () => { buzz(8); closeSheet(); document.body.classList.add("clean"); toast("Tap anywhere to show controls", 1800); };
+canvas.addEventListener("click", () => {
+  if (document.body.classList.contains("clean")) document.body.classList.remove("clean");
+  else if (sheet.classList.contains("open")) closeSheet();
+});
+addEventListener("keydown", e => { if ((e.key === "h" || e.key === "H") && mode !== "menu") document.body.classList.toggle("clean"); });
+// card glow follows the finger
+for (const c of document.querySelectorAll(".card")){
+  c.addEventListener("pointermove", e => { const r = c.getBoundingClientRect(); c.style.setProperty("--mx", (e.clientX - r.left) + "px"); c.style.setProperty("--my", (e.clientY - r.top) + "px"); c.classList.add("lit"); });
+  c.addEventListener("pointerleave", () => c.classList.remove("lit"));
+}
+// title letters drop in one by one
+for (const [id, d0] of [["tw1", 0], ["tw2", 0.35]]){
+  const e = $("#" + id), t = e.textContent; e.textContent = "";
+  [...t].forEach((ch, i) => { const s = el("span", "ch", ch); s.style.animationDelay = (d0 + i*0.05) + "s"; e.append(s); });
+}
+
+/* ---------- physics + render loop ---------- */
+const spr = {}; for (const k of ["pitch","yaw","roll","tx","ty","lean","jaw","menu","flap"]) spr[k] = {p: k === "lean" || k === "menu" ? 1 : 0, v: 0};
+function step(st, tgt, dt, k, zeta){ const c = 2*zeta*Math.sqrt(k); st.v += (k*(tgt - st.p) - c*st.v) * dt; st.p += st.v * dt; }
+let lastT = 0;
 function loop(now){
   requestAnimationFrame(loop);
   try{ track(now); }catch(e){ console.error(e); }
   const dt = Math.min(0.05, Math.max(0.001, (now - lastT) / 1000)); lastT = now;
   const seen = now - lastSeen < 600;
   faceVis += ((seen ? 1 : 0) - faceVis) * Math.min(1, dt * 8);
-  chipEl.hidden = !started || (seen && trackerOk);
+  chipEl.hidden = mode === "menu" || (seen && trackerOk) || !camOn;
 
   if (!seen){ for (const k of ["pitch","yaw","roll","tx","ty","jaw"]) target[k] *= 1 - Math.min(1, dt*1.5); target.lean += (1 - target.lean) * Math.min(1, dt*1.5); }
+  const voice = stageMode === "puppet" ? micStep(dt) : 0;
+  const mouthLv = clamp(jawRaw * 1.8 - 0.06, 0, 1) * (seen ? 1 : 0);
+  const flapLv = editing ? 0 : S.pTrigger === "voice" ? (mic.ok && S.micOn ? voice : mouthLv) : S.pTrigger === "mouth" ? mouthLv : Math.max(voice, mouthLv);
   const wob = S.wobble, k = 110 + 90*(1 - wob), zeta = 1 - 0.62*wob;
   for (let i = 0; i < 2; i++){
     const h = dt/2;
     for (const key of ["pitch","yaw","roll","tx","ty"]) step(spr[key], target[key], h, k, zeta);
     step(spr.lean, target.lean, h, 70, 0.8);
     step(spr.jaw, S.bounce ? target.jaw : 0, h, 260, 0.35 + 0.4*(1 - wob));
+    step(spr.menu, mode === "menu" ? 1 : 0, h, 60, 0.85);
+    step(spr.flap, flapLv, h, 700, 0.36);
   }
-  const idle = seen ? 0 : Math.sin(now/900) * 0.05;
-  rig.rotation.set(spr.pitch.p, spr.yaw.p + idle, spr.roll.p);
-  rig.position.set(spr.tx.p, spr.ty.p, 0);
-  rig.scale.setScalar(spr.lean.p);
-  // secondary motion: the shell lags and squashes a little behind fast moves and when talking
-  const sq = spr.jaw.p * 0.06 + THREE.MathUtils.clamp(spr.ty.v * 0.03, -0.04, 0.04) * wob;
-  nut.scale.set(1 - sq*0.45, 1 + sq, 1 - sq*0.45);
-  nut.rotation.set(-spr.pitch.v * 0.025 * wob, 0, -spr.yaw.v * 0.02 * wob - spr.tx.v * 0.05 * wob);
-
-  const set = (m, o) => { m.material.uniforms.opacity.value = o; m.material.uniforms.blend.value = S.blend; m.material.uniforms.skinMatch.value = S.skinMatch; m.material.uniforms.relief.value = Math.min(1, S.depth); m.material.uniforms.smoothSkin.value = S.retouch; m.material.uniforms.light.value = S.light; m.visible = o > 0.003; };
+  const mk = spr.menu.p;
+  if (stageMode === "peanut"){
+    const idle = (seen ? 0 : Math.sin(now/900) * 0.05) + mk * Math.sin(now/1600) * 0.35 * (seen ? 0.3 : 1);
+    rig.rotation.set(spr.pitch.p, spr.yaw.p + idle, spr.roll.p);
+    rig.position.set(spr.tx.p * (1 - mk), spr.ty.p * (1 - mk) + mk * MENU.y, 0);
+    rig.scale.setScalar(spr.lean.p * (1 - mk) + MENU.s * mk);
+    const sq = spr.jaw.p * 0.06 + clamp(spr.ty.v * 0.03, -0.04, 0.04) * wob;
+    nut.scale.set(1 - sq*0.45, 1 + sq, 1 - sq*0.45);
+    nut.rotation.set(-spr.pitch.v * 0.025 * wob, 0, -spr.yaw.v * 0.02 * wob - spr.tx.v * 0.05 * wob);
+  } else if (PUP){
+    if (editing){ pBody.position.set(0, 0, 0); pBody.rotation.set(0, 0, 0); pBody.scale.set(1, 1, 1); pTopPivot.rotation.set(0, 0, 0); }
+    else {
+      const f = Math.max(-0.12, spr.flap.p), bob = S.pBob;
+      pBody.rotation.set(spr.pitch.p * 0.25, spr.yaw.p * 0.35, spr.roll.p * 0.8);
+      pBody.position.set(spr.tx.p * 0.8, spr.ty.p * 0.8 + f * 0.06 * bob, 0);
+      pBody.scale.set(spr.lean.p * (1 + f*0.015*bob), spr.lean.p * (1 - f*0.02*bob), 1);
+      const ang = f * S.pFlap * (S.pStyle === "back" ? 0.95 : 0.62);
+      pTopPivot.rotation.set(S.pStyle === "back" ? -ang : 0, 0, S.pStyle === "right" ? ang : S.pStyle === "left" ? -ang : 0);
+    }
+  }
+  const set = (m, o) => {
+    const u = m.material.uniforms;
+    u.opacity.value = o; u.blend.value = S.blend; u.skinMatch.value = S.skinMatch; u.relief.value = Math.min(1, S.depth); u.smoothSkin.value = S.retouch; u.light.value = S.light;
+    m.visible = o > 0.003;
+  };
   set(F_EYE.R.real, faceVis * (1 - W.eyeR)); set(F_EYE.R.alt, faceVis * W.eyeR);
   set(F_EYE.L.real, faceVis * (1 - W.eyeL)); set(F_EYE.L.alt, faceVis * W.eyeL);
   set(F_MOUTH.real, faceVis * (1 - W.mouth)); set(F_MOUTH.alt, faceVis * W.mouth);
+
+  if (stageMode === "puppet"){
+    $("#bMic").style.setProperty("--lv", voice.toFixed(3));
+    const mm = document.getElementById("micMeter");
+    if (mm){
+      const pct = d => clamp((d + 70) / 60, 0, 1) * 100;
+      mm.querySelector(".lv").style.width = (mic.ok ? pct(mic.db) : 0) + "%";
+      mm.querySelector(".gate").style.left = pct(mic.gate) + "%";
+    }
+  }
   renderer.render(scene, camera);
+  if (editing && PUP) placeEditor();
 }
 
 /* ---------- boot ---------- */
-bindControls(); applyShell(); updateTint(); applyBg(); resize(); onChange("light"); syncPip();
+applyShell(); updateTint(); applyBg(); resize(); menuPose(); onChange("light"); syncPip(); syncMicBtn();
+document.fonts?.ready.then(menuPose); setTimeout(menuPose, 1200);
 requestAnimationFrame(loop);
-
-const withTimeout = (p, ms, msg) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms))]);
-const goBtn = document.getElementById("go");
-goBtn.onclick = async () => {
-  goBtn.disabled = true; goBtn.textContent = "Starting…";
-  try{
-    if (!navigator.mediaDevices?.getUserMedia) throw new Error("Camera access needs the page opened over https://, for example the github.io link.");
-    statusEl.textContent = "Allow camera access when your phone asks…";
-    await withTimeout(openCamera(), 30000, "The camera didn't start. Close other apps using the camera and try again.");
-  }catch(err){
-    goBtn.disabled = false; goBtn.textContent = "Start camera";
-    statusEl.textContent = (err && err.name === "NotAllowedError")
-      ? "Camera permission is blocked. Allow it in the browser's site settings (or Android app settings), then try again."
-      : (err && err.name === "NotReadableError") ? "The camera is busy. Close other apps using it, then try again."
-      : ("Couldn't start the camera: " + (err?.message || err));
-    return;
-  }
-  // camera is live: show the peanut straight away, load tracking in the background
-  started = true; wakeLock();
-  document.getElementById("start").remove();
-  document.getElementById("dock").hidden = false;
-  chipEl.textContent = "Loading face tracker…";
-  try{
-    await withTimeout(loadTracker(), 90000, "Face tracker took too long to load. Check your connection and reload.");
-    trackerOk = true;
-    chipEl.textContent = "Looking for your face…";
-  }catch(err){
-    chipEl.textContent = "Face tracker failed: " + (err?.message || err);
-  }
-};
-window.PC.ready = true;
+loadSavedPuppet();
+PC.ready = true;
 </script>
 </body>
 </html>
