@@ -80,7 +80,7 @@ select,.file{font:400 13px var(--mono);background:var(--shell);color:var(--cream
 <script>
 /* Loader: picks bundled files inside the Android app, CDN on the web, and reports any failure on screen */
 (function(){
-  var local = location.hostname === "appassets.androidplatform.net";
+  var local = location.hostname === "appassets.androidplatform.net" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
   var abs = function(p){ return new URL(p, location.href).href; };
   var PC = window.PC = {
     local: local, ready: false,
@@ -159,6 +159,7 @@ select,.file{font:400 13px var(--mono);background:var(--shell);color:var(--cream
       <div class="row"><div class="top"><span class="lbl">Roast</span><output id="o_roast"></output></div><input type="range" id="roast" min="0" max="1" step="0.01"></div>
       <div class="row"><div class="top"><span class="lbl">Shell texture</span><output id="o_bump"></output></div><input type="range" id="bump" min="0" max="3" step="0.05"></div>
       <div class="row"><div class="top"><span class="lbl">Head motion</span><output id="o_motion"></output></div><input type="range" id="motion" min="0" max="1.6" step="0.01"></div>
+      <div class="row"><div class="top"><span class="lbl">Wobble</span><output id="o_wobble"></output></div><input type="range" id="wobble" min="0" max="1" step="0.01"></div>
       <label class="tog">Bounce when talking <input type="checkbox" id="bounce"></label>
     </div>
 
@@ -168,8 +169,11 @@ select,.file{font:400 13px var(--mono);background:var(--shell);color:var(--cream
       <div class="row"><div class="top"><span class="lbl">Eye height</span><output id="o_eyeHeight"></output></div><input type="range" id="eyeHeight" min="0.6" max="1.6" step="0.01"></div>
       <div class="row"><div class="top"><span class="lbl">Mouth size</span><output id="o_mouthSize"></output></div><input type="range" id="mouthSize" min="0.5" max="1.8" step="0.01"></div>
       <div class="row"><div class="top"><span class="lbl">Mouth height</span><output id="o_mouthHeight"></output></div><input type="range" id="mouthHeight" min="0" max="1.2" step="0.01"></div>
-      <div class="row"><div class="top"><span class="lbl">Crop tightness</span><output id="o_crop"></output></div><input type="range" id="crop" min="0.7" max="1.5" step="0.01"></div>
-      <div class="row"><div class="top"><span class="lbl">Edge softness</span><output id="o_feather"></output></div><input type="range" id="feather" min="0.05" max="0.8" step="0.01"></div>
+      <div class="row"><div class="top"><span class="lbl">Skin around eyes</span><output id="o_eyeMargin"></output></div><input type="range" id="eyeMargin" min="0" max="0.25" step="0.005"></div>
+      <div class="row"><div class="top"><span class="lbl">Skin around lips</span><output id="o_mouthMargin"></output></div><input type="range" id="mouthMargin" min="0" max="0.2" step="0.005"></div>
+      <div class="row"><div class="top"><span class="lbl">Edge softness</span><output id="o_feather"></output></div><input type="range" id="feather" min="0.01" max="0.25" step="0.005"></div>
+      <div class="row"><div class="top"><span class="lbl">Steadiness</span><output id="o_steady"></output></div><input type="range" id="steady" min="0" max="1" step="0.01"></div>
+      <label class="tog">Fill in hidden side when turning <input type="checkbox" id="symFill"></label>
       <div class="row"><div class="top"><span class="lbl">Blend into shell</span><output id="o_blend"></output></div><input type="range" id="blend" min="0" max="1" step="0.01"></div>
     </div>
 
@@ -204,7 +208,7 @@ const MODEL = window.PC.model;
 
 /* ---------- settings ---------- */
 const DEFAULTS = {bg:"roastery",bgColor:"#1f6f4a",floor:true,zoom:1,light:1,roast:0.55,bump:1.4,motion:1,bounce:true,
-  eyeSize:1,eyeSpacing:0.36,eyeHeight:1.18,mouthSize:1,mouthHeight:0.5,crop:1,feather:0.35,blend:0.25,
+  eyeSize:1,eyeSpacing:0.36,eyeHeight:1.18,mouthSize:1,mouthHeight:0.5,eyeMargin:0.055,mouthMargin:0.045,feather:0.07,steady:0.5,wobble:0.5,symFill:true,blend:0.25,
   mirror:true,pip_on:true,invYaw:false,invPitch:false,deviceId:"",facing:"user"};
 let S = {...DEFAULTS};
 try{ Object.assign(S, JSON.parse(localStorage.getItem("peanutcam")||"{}")); }catch(e){}
@@ -293,7 +297,7 @@ function makeShell(roast){
   const strokeBoth = (path, w) => {
     for (const off of [-W, 0, W]){
       cx.save(); cx.translate(off,0); cx.strokeStyle = rgb(ridge,.95); cx.lineWidth = w; cx.lineCap = "round"; cx.stroke(path); cx.restore();
-      bx.save(); bx.translate(off,0); bx.filter = "blur(2px)"; bx.strokeStyle = "#e8e8e8"; bx.lineWidth = w+2; bx.lineCap = "round"; bx.stroke(path); bx.restore();
+      bx.save(); bx.translate(off,0); bx.strokeStyle = "#e8e8e8"; bx.lineWidth = w+2; bx.lineCap = "round"; bx.stroke(path); bx.restore();
     }
   };
   for (const fx of ridgeX){
@@ -324,7 +328,10 @@ function makeShell(roast){
     }
   }
   const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace; map.wrapS = THREE.RepeatWrapping; map.anisotropy = 4;
-  const bump = new THREE.CanvasTexture(b); bump.wrapS = THREE.RepeatWrapping;
+  // soften the ridge heights once, instead of per stroke
+  const b2 = document.createElement("canvas"); b2.width = W; b2.height = Hh;
+  const b2x = b2.getContext("2d"); b2x.filter = "blur(2px)"; b2x.drawImage(b, 0, 0);
+  const bump = new THREE.CanvasTexture(b2); bump.wrapS = THREE.RepeatWrapping;
   return {map, bump};
 }
 
@@ -346,26 +353,114 @@ const shadowTex = (()=>{ const c = document.createElement("canvas"); c.width = c
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2), new THREE.MeshBasicMaterial({map:shadowTex, transparent:true, depthWrite:false}));
 floor.rotation.x = -Math.PI/2; floor.position.y = -H - 0.12; scene.add(floor);
 
-/* Face patches: live canvases mapped onto surface-hugging geometry */
-function surfaceZ(x, y){ const r = radiusAt(y) * disp(0, y); return Math.sqrt(Math.max(r*r - x*x, 0.0001)) + 0.035; }
-function patchGeom(w, h, cx, cy){
-  const g = new THREE.PlaneGeometry(w, h, 18, 12), p = g.attributes.position;
-  for (let i = 0; i < p.count; i++){ const x = p.getX(i) + cx, y = p.getY(i) + cy; p.setXYZ(i, x, y, surfaceZ(x, y)); }
-  g.computeVertexNormals(); return g;
+/* ---------- Face features ----------
+   Each feature is a ring mesh built from face landmarks:
+   centre -> contour -> skin rings -> feathered edge.
+   Texture coordinates come straight from the camera frame; positions come from a
+   "frontalised" copy of the landmarks (head rotation and distance removed), so a
+   feature keeps its size when you open your mouth, lean in or turn your head. */
+const LM = {
+  eyeR: [33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246],      // subject's right eye
+  eyeL: [263,249,390,373,374,380,381,382,362,398,384,385,386,387,388,466],   // subject's left eye, index-aligned mirror of eyeR
+  lipsOut: [61,146,91,181,84,17,314,405,321,375,291,409,270,269,267,0,37,39,40,185],
+  lipsIn:  [78,95,88,178,87,14,317,402,318,324,308,415,310,311,312,13,82,81,80,191],
+};
+const LIP_MIRROR = i => (30 - i) % 20;                         // left/right partner on the lip contours
+const LIP_SIDE = i => (i === 5 || i === 15) ? 0 : (i >= 6 && i <= 14 ? 1 : -1); // +1 = subject's left half
+
+const tintU = { value: new THREE.Color(0.6, 0.45, 0.3) };
+function updateTint(){
+  const t = S.roast, pit = [196,150,96].map((v,i)=>v + ([58,34,18][i]-v)*t), ridge = [232,196,142].map((v,i)=>v + ([104,66,38][i]-v)*t);
+  tintU.value.setRGB((pit[0]+ridge[0])/510, (pit[1]+ridge[1])/510, (pit[2]+ridge[2])/510);
 }
-function makePatch(W, Hh){
-  const c = document.createElement("canvas"); c.width = W; c.height = Hh;
-  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
-  const mat = new THREE.MeshBasicMaterial({map:tex, transparent:true, opacity:0, depthWrite:false, toneMapped:false, polygonOffset:true, polygonOffsetFactor:-2});
-  const mesh = new THREE.Mesh(new THREE.BufferGeometry(), mat); mesh.renderOrder = 2; nut.add(mesh);
-  return {c, ctx:c.getContext("2d"), tex, mat, mesh, W, H:Hh};
+// each tracked camera frame is copied here, so the texture always matches the landmarks
+const frameCanvas = document.createElement("canvas"); frameCanvas.width = frameCanvas.height = 2;
+const frameCtx = frameCanvas.getContext("2d", {alpha:false});
+const videoTex = new THREE.CanvasTexture(frameCanvas);
+videoTex.minFilter = THREE.LinearFilter; videoTex.magFilter = THREE.LinearFilter; videoTex.generateMipmaps = false;
+
+function featureMaterial(){
+  return new THREE.ShaderMaterial({
+    transparent:true, depthWrite:false, side:THREE.DoubleSide,
+    polygonOffset:true, polygonOffsetFactor:-4, polygonOffsetUnits:-4,
+    uniforms:{ map:{value:videoTex}, opacity:{value:0}, blend:{value:S.blend}, tint:tintU, light:{value:1} },
+    vertexShader:`
+      attribute float alpha; varying float vA; varying vec2 vUv; varying float vShade;
+      void main(){
+        vA = alpha; vUv = uv;
+        vec3 n = normalize(normalMatrix * normal);
+        vShade = 0.72 + 0.34 * max(dot(n, normalize(vec3(0.35, 0.55, 0.85))), 0.0);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }`,
+    fragmentShader:`
+      uniform sampler2D map; uniform float opacity, blend, light; uniform vec3 tint;
+      varying float vA; varying vec2 vUv; varying float vShade;
+      void main(){
+        vec3 c = texture2D(map, vUv).rgb;
+        vec3 warm = c * (tint / max(dot(tint, vec3(0.3333)), 0.001));
+        vec3 col = mix(c, warm, blend * 0.6) * (1.0 - blend * 0.12);
+        col *= mix(1.0, vShade, 0.6) * mix(1.0, light, 0.35);
+        float inFrame = step(0.0, vUv.x) * step(vUv.x, 1.0) * step(0.0, vUv.y) * step(vUv.y, 1.0);
+        float a = smoothstep(0.0, 1.0, vA) * opacity * inFrame;
+        gl_FragColor = vec4(col, a);
+      }`
+  });
 }
-const eyeL = makePatch(256, 160), eyeR = makePatch(256, 160), mouth = makePatch(320, 176);
-function layoutPatches(){
-  const ew = 0.56*S.eyeSize, eh = ew*160/256, mw = 0.78*S.mouthSize, mh = mw*176/320;
-  for (const [p, g] of [[eyeL, patchGeom(ew, eh, -S.eyeSpacing, S.eyeHeight)], [eyeR, patchGeom(ew, eh, S.eyeSpacing, S.eyeHeight)], [mouth, patchGeom(mw, mh, 0, S.mouthHeight)]]){
-    p.mesh.geometry.dispose(); p.mesh.geometry = g;
+
+/* ring layout: centre + N per ring; rings[] = [{alpha}] where ring 0 is the base contour */
+function makeFeatureMesh(N, ringAlphas, order, lipStrip){
+  const nv = 1 + N * ringAlphas.length;
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(nv*3), 3).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute("normal", new THREE.BufferAttribute(new Float32Array(nv*3), 3).setUsage(THREE.DynamicDrawUsage));
+  g.setAttribute("uv", new THREE.BufferAttribute(new Float32Array(nv*2), 2).setUsage(THREE.DynamicDrawUsage));
+  const al = new Float32Array(nv); al[0] = 1;
+  ringAlphas.forEach((a, r) => { for (let i = 0; i < N; i++) al[1 + r*N + i] = a; });
+  g.setAttribute("alpha", new THREE.BufferAttribute(al, 1));
+  const idx = [];
+  if (lipStrip){
+    // mouth opening: zip the lower inner lip (0..10) to the upper inner lip (20..10) so concave smiles never fold
+    const up = i => (N - i) % N;
+    for (let i = 0; i < N/2; i++){
+      const a = 1+i, b = 1+i+1, c = 1+up(i+1), d = 1+up(i);
+      idx.push(a, b, c); if (i > 0) idx.push(a, c, d);
+    }
+  } else {
+    for (let i = 0; i < N; i++){ const j = (i+1)%N; idx.push(0, 1+i, 1+j); }
   }
+  for (let r = 0; r < ringAlphas.length - 1; r++){
+    for (let i = 0; i < N; i++){
+      const j = (i+1)%N, a = 1 + r*N + i, b = 1 + r*N + j, c = 1 + (r+1)*N + i, d = 1 + (r+1)*N + j;
+      idx.push(a, c, b, b, c, d);
+    }
+  }
+  g.setIndex(idx);
+  const mesh = new THREE.Mesh(g, featureMaterial());
+  mesh.frustumCulled = false; mesh.renderOrder = order;
+  nut.add(mesh);
+  return mesh;
+}
+// eyes: contour, skin, feather edge. mouth: inner lips, outer lips, skin, feather edge.
+const EYE_RINGS = [1, 1, 0], MOUTH_RINGS = [1, 1, 1, 0];
+const F_EYE = {
+  R:{ real: makeFeatureMesh(16, EYE_RINGS, 3), alt: makeFeatureMesh(16, EYE_RINGS, 4) },
+  L:{ real: makeFeatureMesh(16, EYE_RINGS, 3), alt: makeFeatureMesh(16, EYE_RINGS, 4) },
+};
+const F_MOUTH = { real: makeFeatureMesh(20, MOUTH_RINGS, 3, true), alt: makeFeatureMesh(20, MOUTH_RINGS, 4, true) };
+const FEATURE_MESHES = [F_EYE.R.real, F_EYE.R.alt, F_EYE.L.real, F_EYE.L.alt, F_MOUTH.real, F_MOUTH.alt];
+
+/* place a point on the peanut's skin, return surface normal too */
+const _n = new THREE.Vector3();
+function onSurface(x, y, out, off, nOut, nOff){
+  const r0 = radiusAt(y);
+  const phi = Math.asin(THREE.MathUtils.clamp(x / Math.max(r0, 1e-3), -1, 1));
+  const r = r0 * disp(phi, y);
+  const z = Math.sqrt(Math.max(r*r - x*x, 1e-4)) + 0.012;
+  out[off] = x; out[off+1] = y; out[off+2] = z;
+  // normal from the lathe profile: radial component plus slope along y
+  const dy = 0.01, dr = (radiusAt(y+dy) - radiusAt(y-dy)) / (2*dy);
+  _n.set(x, -dr * r, z).normalize();
+  nOut[nOff] = _n.x; nOut[nOff+1] = _n.y; nOut[nOff+2] = _n.z;
 }
 
 function resize(){
@@ -402,13 +497,12 @@ document.getElementById("bgFile").onchange = e => {
 
 /* ---------- controls ---------- */
 const fmt = v => (+v).toFixed(2);
-const ranges = ["zoom","light","roast","bump","motion","eyeSize","eyeSpacing","eyeHeight","mouthSize","mouthHeight","crop","feather","blend"];
-const checks = ["floor","bounce","mirror","pip_on","invYaw","invPitch"];
+const ranges = ["zoom","light","roast","bump","motion","wobble","eyeSize","eyeSpacing","eyeHeight","mouthSize","mouthHeight","eyeMargin","mouthMargin","feather","steady","blend"];
+const checks = ["floor","bounce","mirror","pip_on","invYaw","invPitch","symFill"];
 function onChange(k){
   if (k === "zoom") resize();
   if (k === "light"){ key.intensity = 2.2*S.light; rim.intensity = 1.4*S.light; hemi.intensity = 0.6*S.light; }
   if (k === "bump") nutMat.bumpScale = S.bump;
-  if (["eyeSize","eyeSpacing","eyeHeight","mouthSize","mouthHeight"].includes(k)) layoutPatches();
   if (k === "floor") applyBg();
   if (k === "mirror" || k === "pip_on") syncPip();
 }
@@ -417,7 +511,7 @@ function bindControls(){
     const el = document.getElementById(k), out = document.getElementById("o_"+k);
     el.value = S[k]; out.textContent = fmt(S[k]);
     el.oninput = () => { S[k] = +el.value; out.textContent = fmt(S[k]); onChange(k); };
-    el.onchange = () => { if (k === "roast") applyShell(); save(); };
+    el.onchange = () => { if (k === "roast"){ applyShell(); updateTint(); } save(); };
   }
   for (const k of checks){
     const el = document.getElementById(k); el.checked = !!S[k];
@@ -429,7 +523,7 @@ function bindControls(){
 }
 document.getElementById("reset").onclick = () => {
   const keep = {deviceId:S.deviceId, facing:S.facing}; S = {...DEFAULTS, ...keep}; save();
-  bindControls(); applyShell(); layoutPatches(); applyBg(); resize(); onChange("light"); syncPip();
+  bindControls(); applyShell(); updateTint(); applyBg(); resize(); onChange("light"); syncPip();
 };
 document.querySelectorAll(".tabs button").forEach(t => t.onclick = () => {
   document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === t));
@@ -488,25 +582,96 @@ async function loadTracker(){
   catch(e){ landmarker = await FaceLandmarker.createFromOptions(files, opts("CPU")); }
 }
 
-function drawFeature(p, cx, cy, cw, ch, angle, flip){
-  const {ctx, W, H:Hh} = p, vw = video.videoWidth, vh = video.videoHeight;
-  ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.globalCompositeOperation = "source-over"; ctx.clearRect(0,0,W,Hh);
-  ctx.filter = S.blend > 0 ? `sepia(${S.blend*0.55}) saturate(${1 + S.blend*0.35}) contrast(${1 + S.blend*0.08})` : "none";
-  ctx.translate(W/2, Hh/2); if (flip) ctx.scale(-1, 1);
-  ctx.scale(W/cw, Hh/ch); ctx.rotate(-angle); ctx.translate(-cx, -cy);
-  ctx.drawImage(video, 0, 0, vw, vh);
-  ctx.restore();
-  ctx.save(); ctx.globalCompositeOperation = "destination-in";
-  ctx.translate(W/2, Hh/2); ctx.scale(W/2, Hh/2);
-  const g = ctx.createRadialGradient(0,0,0,0,0,1);
-  g.addColorStop(0, "#000"); g.addColorStop(Math.max(0.02, 1 - S.feather), "#000"); g.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0,0,1,0,Math.PI*2); ctx.fill(); ctx.restore();
-  p.tex.needsUpdate = true;
+/* ---------- face geometry per frame ---------- */
+const chipEl = document.getElementById("chip");
+let lastVideoTime = -1, lastSeen = 0, faceVis = 0, vw = 1, vh = 1;
+const V3 = THREE.Vector3;
+const P = Array.from({length:478}, () => new V3());          // landmarks in image pixels (z scaled like x)
+const USED = [...new Set([...LM.eyeR, ...LM.eyeL, ...LM.lipsOut, ...LM.lipsIn, 2, 10])];
+const Fraw = new Map(), Fs = new Map();                        // frontal coords: raw and smoothed
+for (const id of USED){ Fraw.set(id, new V3()); Fs.set(id, new V3()); }
+const basis = { c:new V3(), X:new V3(), Y:new V3(), Z:new V3(), s:1 };
+let fsInit = false, jawRaw = 0, yawF = 0, pitch0 = null, size0 = null;
+const mouthRest = new V3(); let mouthRestInit = false;
+const target = {pitch:0, yaw:0, roll:0, tx:0, ty:0, lean:1, jaw:0};
+
+const _d = new V3(), _q = new V3(), _a = new V3(), _b = new V3(), _t = new V3();
+function toF(p, out){
+  _d.subVectors(p, basis.c);
+  return out.set(_d.dot(basis.X)/basis.s, _d.dot(basis.Y)/basis.s, _d.dot(basis.Z)/basis.s);
+}
+function fToUV(f, uv, k){
+  _q.copy(basis.c).addScaledVector(basis.X, f.x*basis.s).addScaledVector(basis.Y, f.y*basis.s).addScaledVector(basis.Z, f.z*basis.s);
+  uv[k] = _q.x / vw; uv[k+1] = 1 - _q.y / vh;
 }
 
-const tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), tmpE = new THREE.Euler(0,0,0,"YXZ"), tmpV = new THREE.Vector3(), tmpS = new THREE.Vector3();
-const pose = {x:0, y:0, z:0, tx:0, ty:0}, chipEl = document.getElementById("chip");
-let lastVideoTime = -1, lastSeen = 0, jaw = 0, faceVis = 0;
+/* buffers for one feature: F (frontal positions) + uv, laid out like makeFeatureMesh */
+function featBuf(N, rings){ const nv = 1 + N*rings; return {N, nv, F:Array.from({length:nv}, () => new V3()), uv:new Float32Array(nv*2)}; }
+const B = { R:featBuf(16, 3), L:featBuf(16, 3), M:featBuf(20, 4), alt:featBuf(20, 4) };
+
+const _cR = new V3(), _cS = new V3(), _bR = new V3(), _bS = new V3(), _dir = new V3();
+function centroid(ids, map, out){ out.set(0,0,0); for (const id of ids) out.add(map.get(id)); return out.divideScalar(ids.length); }
+// outward direction at contour point i: contour normal blended with radial, in the x/y plane
+function outward(ids, map, i, cen, out){
+  const n = ids.length, p = map.get(ids[(i+n-1)%n]), q = map.get(ids[(i+1)%n]), m = map.get(ids[i]);
+  let nx = q.y - p.y, ny = -(q.x - p.x);
+  const rx = m.x - cen.x, ry = m.y - cen.y;
+  if (nx*rx + ny*ry < 0){ nx = -nx; ny = -ny; }
+  const nl = Math.hypot(nx, ny) || 1, rl = Math.hypot(rx, ry) || 1;
+  nx = nx/nl + 0.6*rx/rl; ny = ny/nl + 0.6*ry/rl;
+  const l = Math.hypot(nx, ny) || 1;
+  return out.set(nx/l, ny/l, 0);
+}
+function fillFeature(buf, innerIds, baseIds, offsets){
+  const fanIds = innerIds || baseIds;
+  centroid(fanIds, Fraw, _cR); centroid(fanIds, Fs, _cS);
+  buf.F[0].copy(_cS); fToUV(_cR, buf.uv, 0);
+  let v = 1;
+  for (const ids of (innerIds ? [innerIds, baseIds] : [baseIds])){
+    for (const id of ids){ buf.F[v].copy(Fs.get(id)); buf.uv[v*2] = P[id].x / vw; buf.uv[v*2+1] = 1 - P[id].y / vh; v++; }
+  }
+  centroid(baseIds, Fraw, _bR); centroid(baseIds, Fs, _bS);
+  for (const d of offsets){
+    for (let i = 0; i < baseIds.length; i++){
+      outward(baseIds, Fraw, i, _bR, _dir); _t.copy(Fraw.get(baseIds[i])).addScaledVector(_dir, d); fToUV(_t, buf.uv, v*2);
+      outward(baseIds, Fs, i, _bS, _dir); buf.F[v].copy(Fs.get(baseIds[i])).addScaledVector(_dir, d);
+      v++;
+    }
+  }
+}
+
+/* write a buffer onto the peanut. ax/ay = anchor on peanut, ox/oy = feature origin in frontal space */
+function placeFeature(mesh, buf, ax, ay, ox, oy, k, flipX){
+  const g = mesh.geometry, pos = g.attributes.position.array, nrm = g.attributes.normal.array, uv = g.attributes.uv.array;
+  const mx = S.mirror ? -1 : 1;
+  for (let v = 0; v < buf.nv; v++){
+    const f = buf.F[v], fx = flipX ? -f.x : f.x;
+    onSurface(ax + (fx - ox)*k*mx, ay - (f.y - oy)*k, pos, v*3, nrm, v*3);
+    uv[v*2] = buf.uv[v*2]; uv[v*2+1] = buf.uv[v*2+1];
+  }
+  g.attributes.position.needsUpdate = true; g.attributes.normal.needsUpdate = true; g.attributes.uv.needsUpdate = true;
+}
+
+/* symmetric mouth: the far half is rebuilt from the near half, mirrored */
+function symmetricMouth(src, dst, farSign){
+  const N = src.N;
+  dst.F[0].copy(src.F[0]); dst.F[0].x = 0; dst.uv[0] = src.uv[0]; dst.uv[1] = src.uv[1];
+  for (let r = 0; r < 4; r++){
+    for (let i = 0; i < N; i++){
+      const v = 1 + r*N + i;
+      if (LIP_SIDE(i) === farSign){
+        const m = 1 + r*N + LIP_MIRROR(i);
+        dst.F[v].copy(src.F[m]); dst.F[v].x = -dst.F[v].x;
+        dst.uv[v*2] = src.uv[m*2]; dst.uv[v*2+1] = src.uv[m*2+1];
+      } else {
+        dst.F[v].copy(src.F[v]); dst.uv[v*2] = src.uv[v*2]; dst.uv[v*2+1] = src.uv[v*2+1];
+      }
+    }
+  }
+}
+
+const smooth01 = (a, b, x) => { const t = THREE.MathUtils.clamp((x - a)/(b - a), 0, 1); return t*t*(3 - 2*t); };
+const W = { eyeR:0, eyeL:0, mouth:0 };
 
 function track(now){
   if (!landmarker || video.readyState < 2 || video.currentTime === lastVideoTime) return;
@@ -515,56 +680,123 @@ function track(now){
   const lm = res.faceLandmarks?.[0];
   if (!lm) return;
   lastSeen = now;
-  const vw = video.videoWidth, vh = video.videoHeight, P = i => ({x: lm[i].x*vw, y: lm[i].y*vh});
-  const a = P(33), b = P(263);
-  const angle = Math.atan2(b.y - a.y, b.x - a.x);
-  const flip = S.mirror, k = S.crop;
-  // raw image-left eye is the subject's right eye; in a mirrored view it lands on screen right
-  const eyeBox = (o, i) => { const p1 = P(o), p2 = P(i); const w = Math.hypot(p2.x-p1.x, p2.y-p1.y) * 1.9 * k; const h = w*160/256;
-    return {cx:(p1.x+p2.x)/2 + Math.sin(angle)*h*0.12, cy:(p1.y+p2.y)/2 - Math.cos(angle)*h*0.12, w, h}; };
-  const imgLeft = eyeBox(33, 133), imgRight = eyeBox(263, 362);
-  const [forL, forR] = flip ? [imgRight, imgLeft] : [imgLeft, imgRight];
-  drawFeature(eyeL, forL.cx, forL.cy, forL.w, forL.h, angle, flip);
-  drawFeature(eyeR, forR.cx, forR.cy, forR.w, forR.h, angle, flip);
-  const m1 = P(61), m2 = P(291), mt = P(0), mb = P(17);
-  const mw = Math.hypot(m2.x-m1.x, m2.y-m1.y) * 1.55 * k, mh = Math.max(mw*176/320, Math.hypot(mb.x-mt.x, mb.y-mt.y)*1.5);
-  drawFeature(mouth, (m1.x+m2.x+mt.x+mb.x)/4, (m1.y+m2.y+mt.y+mb.y)/4, mh*320/176, mh, angle, flip);
-
-  const mat = res.facialTransformationMatrixes?.[0];
-  if (mat){
-    tmpM.fromArray(mat.data); tmpM.decompose(tmpV, tmpQ, tmpS); tmpE.setFromQuaternion(tmpQ, "YXZ");
-    let yaw = tmpE.y, pitch = tmpE.x, roll = tmpE.z;
-    if (S.mirror){ yaw = -yaw; roll = -roll; }
-    if (S.invYaw){ yaw = -yaw; roll = -roll; }
-    if (S.invPitch) pitch = -pitch;
-    const c = v => THREE.MathUtils.clamp(v, -0.9, 0.9);
-    const s = 0.4;
-    pose.x += (c(pitch)*S.motion - pose.x)*s; pose.y += (c(yaw)*S.motion - pose.y)*s; pose.z += (c(roll)*S.motion - pose.z)*s;
-    const tx = THREE.MathUtils.clamp(tmpV.x*0.025*(S.mirror ? -1 : 1), -0.6, 0.6), ty = THREE.MathUtils.clamp(tmpV.y*0.02, -0.4, 0.4);
-    pose.tx += (tx*S.motion - pose.tx)*0.25; pose.ty += (ty*S.motion - pose.ty)*0.25;
+  vw = video.videoWidth; vh = video.videoHeight;
+  if (frameCanvas.width !== vw || frameCanvas.height !== vh){
+    frameCanvas.width = vw; frameCanvas.height = vh;
+    videoTex.dispose();                    // reallocate GPU storage at the new size
   }
+  frameCtx.drawImage(video, 0, 0, vw, vh);
+  videoTex.needsUpdate = true;             // texture = the exact frame the landmarks came from
+  for (let i = 0; i < 478; i++) P[i].set(lm[i].x*vw, lm[i].y*vh, lm[i].z*vw);
+
+  // head frame from rigid points: outer eye corners, forehead, base of nose
+  basis.c.addVectors(P[33], P[263]).multiplyScalar(0.5);
+  basis.X.subVectors(P[263], P[33]); basis.s = basis.X.length(); basis.X.divideScalar(basis.s);
+  basis.Y.subVectors(P[2], P[10]); basis.Y.addScaledVector(basis.X, -basis.Y.dot(basis.X)).normalize();
+  basis.Z.crossVectors(basis.X, basis.Y);
+
+  // frontalise + smooth (fast moves pass straight through, small jitter is damped)
+  const base = THREE.MathUtils.lerp(0.95, 0.3, S.steady);
+  for (const id of USED){
+    const fr = toF(P[id], Fraw.get(id)), fs = Fs.get(id);
+    if (!fsInit){ fs.copy(fr); continue; }
+    const a = Math.min(1, base + fs.distanceTo(fr) * 7);
+    fs.lerp(fr, a);
+  }
+  fsInit = true;
+
   const bs = res.faceBlendshapes?.[0]?.categories;
-  if (bs){ const j = bs.find(c => c.categoryName === "jawOpen"); if (j) jaw += (j.score - jaw)*0.5; }
+  if (bs){ const j = bs.find(c => c.categoryName === "jawOpen"); if (j) jawRaw = j.score; }
+
+  // build features
+  const eyeOff = [S.eyeMargin, S.eyeMargin + S.feather];
+  const lipOff = [S.mouthMargin, S.mouthMargin + S.feather];
+  fillFeature(B.R, null, LM.eyeR, eyeOff);
+  fillFeature(B.L, null, LM.eyeL, eyeOff);
+  fillFeature(B.M, LM.lipsIn, LM.lipsOut, lipOff);
+
+  // rest position of the mouth relative to the base of the nose (updated while the mouth is closed)
+  centroid(LM.lipsOut, Fs, _a).sub(Fs.get(2));
+  if (!mouthRestInit){ mouthRest.copy(_a); mouthRestInit = true; }
+  else if (jawRaw < 0.12) mouthRest.lerp(_a, 0.05);
+
+  // head pose: nose direction is -Z
+  const nx = -basis.Z.x, ny = -basis.Z.y, nz = -basis.Z.z;
+  const yawImg = Math.atan2(nx, -nz), pitchImg = Math.atan2(ny, -nz), roll = Math.atan2(basis.X.y, basis.X.x);
+  yawF = yawImg;
+  if (pitch0 === null) pitch0 = pitchImg; else pitch0 += (pitchImg - pitch0) * 0.003;
+  const sizeN = basis.s / vw; if (size0 === null) size0 = sizeN; else size0 += (sizeN - size0) * 0.004;
+
+  const mx = S.mirror ? -1 : 1, cl = THREE.MathUtils.clamp;
+  let yaw = yawImg * mx, rl = -roll * mx, pitch = pitchImg - pitch0;
+  if (S.invYaw){ yaw = -yaw; rl = -rl; }
+  if (S.invPitch) pitch = -pitch;
+  target.yaw = cl(yaw, -1.1, 1.1) * S.motion;
+  target.pitch = cl(pitch, -0.7, 0.7) * S.motion;
+  target.roll = cl(rl, -0.6, 0.6) * S.motion;
+  target.tx = cl((basis.c.x / vw - 0.5) * 2, -1, 1) * 0.55 * mx * S.motion;
+  target.ty = -cl((basis.c.y / vh - 0.5) * 2, -1, 1) * 0.35 * S.motion;
+  target.lean = cl(Math.pow(sizeN / size0, 0.5), 0.85, 1.18);
+  target.jaw = jawRaw;
+
+  // which side is turned away, and how far
+  const far = Math.sign(yawF);
+  const wE = S.symFill ? smooth01(0.30, 0.55, Math.abs(yawF)) : 0;
+  W.eyeR = far < 0 ? wE : 0;  W.eyeL = far > 0 ? wE : 0;
+  W.mouth = S.symFill ? smooth01(0.40, 0.70, Math.abs(yawF)) : 0;
+
+  // place on the peanut
+  const kE = 1.45 * S.eyeSize, kM = 1.2 * S.mouthSize, mxs = S.mirror ? -1 : 1;
+  const eyeCentre = buf => [(buf.F[1].x + buf.F[9].x)/2, (buf.F[1].y + buf.F[9].y)/2];
+  const [rcx, rcy] = eyeCentre(B.R), [lcx, lcy] = eyeCentre(B.L);
+  placeFeature(F_EYE.R.real, B.R, -S.eyeSpacing*mxs, S.eyeHeight, rcx, rcy, kE, false);
+  placeFeature(F_EYE.L.real, B.L,  S.eyeSpacing*mxs, S.eyeHeight, lcx, lcy, kE, false);
+  if (W.eyeR > 0) placeFeature(F_EYE.R.alt, B.L, -S.eyeSpacing*mxs, S.eyeHeight, -lcx, lcy, kE, true);
+  if (W.eyeL > 0) placeFeature(F_EYE.L.alt, B.R,  S.eyeSpacing*mxs, S.eyeHeight, -rcx, rcy, kE, true);
+  const n2 = Fs.get(2), mox = n2.x + mouthRest.x, moy = n2.y + mouthRest.y;
+  placeFeature(F_MOUTH.real, B.M, 0, S.mouthHeight, mox, moy, kM, false);
+  if (W.mouth > 0){ symmetricMouth(B.M, B.alt, far); placeFeature(F_MOUTH.alt, B.alt, 0, S.mouthHeight, 0, moy, kM, false); }
 }
 
-let started = false, trackerOk = false;
+/* ---------- physics ---------- */
+const spr = {}; for (const k of ["pitch","yaw","roll","tx","ty","lean","jaw"]) spr[k] = {p: k === "lean" ? 1 : 0, v: 0};
+function step(st, tgt, dt, k, zeta){ const c = 2*zeta*Math.sqrt(k); st.v += (k*(tgt - st.p) - c*st.v) * dt; st.p += st.v * dt; }
+
+let started = false, trackerOk = false, lastT = 0;
 function loop(now){
   requestAnimationFrame(loop);
-  try{ track(now); }catch(e){}
-  const seen = now - lastSeen < 700;
-  faceVis += ((seen ? 1 : 0) - faceVis) * 0.15;
-  for (const p of [eyeL, eyeR, mouth]) p.mat.opacity = faceVis;
+  try{ track(now); }catch(e){ console.error(e); }
+  const dt = Math.min(0.05, Math.max(0.001, (now - lastT) / 1000)); lastT = now;
+  const seen = now - lastSeen < 600;
+  faceVis += ((seen ? 1 : 0) - faceVis) * Math.min(1, dt * 8);
   chipEl.hidden = !started || (seen && trackerOk);
-  const idle = seen ? 0 : Math.sin(now/900)*0.05;
-  rig.rotation.set(pose.x, pose.y + idle, pose.z);
-  rig.position.set(pose.tx, pose.ty, 0);
-  const sq = S.bounce ? jaw*0.05 : 0;
-  nut.scale.set(1 - sq*0.4, 1 + sq, 1 - sq*0.4);
+
+  if (!seen){ for (const k of ["pitch","yaw","roll","tx","ty","jaw"]) target[k] *= 1 - Math.min(1, dt*1.5); target.lean += (1 - target.lean) * Math.min(1, dt*1.5); }
+  const wob = S.wobble, k = 110 + 90*(1 - wob), zeta = 1 - 0.62*wob;
+  for (let i = 0; i < 2; i++){
+    const h = dt/2;
+    for (const key of ["pitch","yaw","roll","tx","ty"]) step(spr[key], target[key], h, k, zeta);
+    step(spr.lean, target.lean, h, 70, 0.8);
+    step(spr.jaw, S.bounce ? target.jaw : 0, h, 260, 0.35 + 0.4*(1 - wob));
+  }
+  const idle = seen ? 0 : Math.sin(now/900) * 0.05;
+  rig.rotation.set(spr.pitch.p, spr.yaw.p + idle, spr.roll.p);
+  rig.position.set(spr.tx.p, spr.ty.p, 0);
+  rig.scale.setScalar(spr.lean.p);
+  // secondary motion: the shell lags and squashes a little behind fast moves and when talking
+  const sq = spr.jaw.p * 0.06 + THREE.MathUtils.clamp(spr.ty.v * 0.03, -0.04, 0.04) * wob;
+  nut.scale.set(1 - sq*0.45, 1 + sq, 1 - sq*0.45);
+  nut.rotation.set(-spr.pitch.v * 0.025 * wob, 0, -spr.yaw.v * 0.02 * wob - spr.tx.v * 0.05 * wob);
+
+  const set = (m, o) => { m.material.uniforms.opacity.value = o; m.material.uniforms.blend.value = S.blend; m.material.uniforms.light.value = S.light; m.visible = o > 0.003; };
+  set(F_EYE.R.real, faceVis * (1 - W.eyeR)); set(F_EYE.R.alt, faceVis * W.eyeR);
+  set(F_EYE.L.real, faceVis * (1 - W.eyeL)); set(F_EYE.L.alt, faceVis * W.eyeL);
+  set(F_MOUTH.real, faceVis * (1 - W.mouth)); set(F_MOUTH.alt, faceVis * W.mouth);
   renderer.render(scene, camera);
 }
 
 /* ---------- boot ---------- */
-bindControls(); applyShell(); layoutPatches(); applyBg(); resize(); onChange("light"); syncPip();
+bindControls(); applyShell(); updateTint(); applyBg(); resize(); onChange("light"); syncPip();
 requestAnimationFrame(loop);
 
 const withTimeout = (p, ms, msg) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms))]);
