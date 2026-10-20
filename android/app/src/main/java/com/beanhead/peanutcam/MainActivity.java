@@ -2,6 +2,13 @@ package com.beanhead.peanutcam;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ContentValues;
+import android.media.MediaScannerConnection;
+import android.os.Build;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.Base64;
+import android.webkit.JavascriptInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -18,6 +25,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -36,6 +46,7 @@ public class MainActivity extends Activity {
     private static final String START_URL = "https://" + HOST + "/index.html";
     private static final int REQ_CAMERA = 1;
     private static final int REQ_FILE = 2;
+    private static final int REQ_STORAGE = 3;
 
     private WebView web;
     private PermissionRequest pendingRequest;
@@ -59,6 +70,8 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(true);
         WebView.setWebContentsDebuggingEnabled(true);
+
+        web.addJavascriptInterface(new NativeBridge(), "PeanutNative");
 
         web.setWebViewClient(new WebViewClient() {
             @Override
@@ -236,5 +249,79 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         if (web != null) web.destroy();
         super.onDestroy();
+    }
+
+    /** Lets the page save a finished recording into the phone's gallery, in pieces. */
+    private class NativeBridge {
+        private OutputStream out;
+        private Uri uri;
+        private File file;
+
+        @JavascriptInterface
+        public void prepare() {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && !has(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                runOnUiThread(() -> requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQ_STORAGE));
+            }
+        }
+
+        @JavascriptInterface
+        public synchronized boolean begin(String name, String mime) {
+            try {
+                closeQuietly();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    ContentValues v = new ContentValues();
+                    v.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
+                    v.put(MediaStore.MediaColumns.MIME_TYPE, mime);
+                    v.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/PeanutCam");
+                    v.put(MediaStore.MediaColumns.IS_PENDING, 1);
+                    uri = getContentResolver().insert(MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), v);
+                    if (uri == null) return false;
+                    out = getContentResolver().openOutputStream(uri);
+                } else {
+                    File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "PeanutCam");
+                    if (!dir.exists() && !dir.mkdirs()) return false;
+                    file = new File(dir, name);
+                    out = new FileOutputStream(file);
+                }
+                return out != null;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public synchronized boolean append(String b64) {
+            try {
+                out.write(Base64.decode(b64, Base64.DEFAULT));
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public synchronized boolean finish() {
+            try {
+                out.close();
+                out = null;
+                if (uri != null) {
+                    ContentValues v = new ContentValues();
+                    v.put(MediaStore.MediaColumns.IS_PENDING, 0);
+                    getContentResolver().update(uri, v, null, null);
+                    uri = null;
+                } else if (file != null) {
+                    MediaScannerConnection.scanFile(MainActivity.this, new String[]{file.getAbsolutePath()}, null, null);
+                    file = null;
+                }
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        private void closeQuietly() {
+            try { if (out != null) out.close(); } catch (Exception ignored) { }
+            out = null;
+        }
     }
 }

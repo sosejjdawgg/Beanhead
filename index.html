@@ -37,7 +37,9 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .press:active{transform:scale(.93)}
 
 #stage{position:fixed;inset:0;background:var(--bg);transition:background .5s}
-#gl{position:absolute;inset:0;width:100%;height:100%;display:block}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+body[data-mode=puppet] #gl{cursor:grab}
+body[data-mode=puppet].holding #gl{cursor:grabbing}
 
 /* ---------- menu ---------- */
 #menu{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;justify-content:space-between;
@@ -112,6 +114,23 @@ body.sheet-open #bar{transform:translate(-50%,140%);opacity:0}
 .bb{width:60px;height:56px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:600;color:var(--mute);position:relative}
 .bb:hover{color:var(--ink)}
 .bb.on{color:var(--nut2);background:rgba(227,173,107,.13)}
+#rec{position:absolute;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(98px + env(safe-area-inset-bottom,0px));width:70px;height:70px;border-radius:50%;
+  display:grid;place-items:center;background:rgba(24,15,10,.55);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 3px rgba(247,236,220,.9),0 12px 30px rgba(0,0,0,.45);transition:transform .35s var(--spring),box-shadow .3s}
+#rec i{width:46px;height:46px;border-radius:50%;background:#ff3b30;transition:width .4s var(--spring),height .4s var(--spring),border-radius .4s var(--spring)}
+#rec:active{transform:scale(.9)}
+#rec.on{box-shadow:inset 0 0 0 3px #ff3b30,0 12px 30px rgba(0,0,0,.45);animation:recpulse 1.6s infinite}
+#rec.on i{width:24px;height:24px;border-radius:7px}
+#micBtn{position:absolute;right:calc(27px + env(safe-area-inset-right,0px));bottom:calc(180px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:16px;
+  display:grid;place-items:center;background:var(--panel);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px var(--line),0 8px 20px rgba(0,0,0,.35);color:var(--ink)}
+#micBtn.off{color:var(--mute)}
+#micBtn.off svg{opacity:.7}
+#recChip{position:absolute;left:50%;top:calc(18px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:99px;
+  background:#ff3b30;color:#fff;font:500 13px var(--mono);letter-spacing:.06em;box-shadow:0 8px 24px rgba(255,59,48,.35)}
+#recChip b{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s steps(2) infinite}
+body.sheet-open #rec,body.sheet-open #micBtn{transform:translateY(calc(100% + 140px));opacity:0}
+#rec,#micBtn{transition:transform .45s var(--spring),opacity .3s,box-shadow .3s}
+@keyframes recpulse{0%{box-shadow:inset 0 0 0 3px #ff3b30,0 0 0 0 rgba(255,59,48,.5)}70%{box-shadow:inset 0 0 0 3px #ff3b30,0 0 0 16px rgba(255,59,48,0)}100%{box-shadow:inset 0 0 0 3px #ff3b30,0 0 0 0 rgba(255,59,48,0)}}
+@keyframes blink{to{opacity:.2}}
 .puppet-only{display:none!important}
 body[data-mode=puppet] .puppet-only{display:flex!important}
 .clean #hud{opacity:0!important}
@@ -253,6 +272,8 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
   <symbol id="eye" viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/><path d="M4 20 20 4"/></symbol>
   <symbol id="image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M20 16l-5-5-8 8"/></symbol>
   <symbol id="move" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></symbol>
+  <symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+  <symbol id="micoff" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M4 4l16 16"/></symbol>
   <symbol id="x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="minus" viewBox="0 0 24 24"><path d="M6 12h12"/></symbol>
   <symbol id="plus" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></symbol>
@@ -297,6 +318,9 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
   <button class="fab press" id="bHome"><svg class="i"><use href="#back"/></svg>Menu</button>
   <video id="pip" playsinline muted autoplay></video>
   <div id="chip" hidden>Loading face tracker…</div>
+  <div id="recChip" hidden><b></b><span id="recTime">0:00</span></div>
+  <button class="press" id="micBtn" aria-label="Record sound: on"><svg class="i"><use href="#mic"/></svg></button>
+  <button id="rec" aria-label="Start recording"><i></i></button>
   <nav id="bar" aria-label="Controls">
     <button class="bb press" id="bSettings"><svg class="i"><use href="#sliders"/></svg>Settings</button>
     <button class="bb press puppet-only" id="bLayout"><svg class="i"><use href="#move"/></svg>Layout</button>
@@ -342,6 +366,7 @@ const DEFAULTS = {
   eyeSize:1, eyeSpacing:0.36, eyeHeight:1.18, mouthSize:1, mouthHeight:0.5,
   eyeMargin:0.055, mouthMargin:0.045, feather:0.07, symFill:true, blend:0.15, depth:1.3, skinMatch:0.8, retouch:0.8,
   pEyeSize:1.15, pMouthSize:1.15, pBgRemove:true,
+  pX:0, pY:0.55, pScale:1, pMove:0.4, pStick:true, pShadow:true, recMic:true,
   mirror:true, pip_on:true, deviceId:"", facing:"user"
 };
 let S = {...DEFAULTS};
@@ -462,17 +487,56 @@ floor.rotation.x = -Math.PI/2; floor.position.y = -H - 0.12; rig.add(floor);
 /* ---------- puppet (2D picture) ---------- */
 const PUP_H = 3.5;
 const puppet = new THREE.Group(); puppet.visible = false; scene.add(puppet);
-const pBody = new THREE.Group(); puppet.add(pBody);
+// puppet -> pGrip (the hand holding the stick: position, tilt, size) -> pBody (picture, stick, shadow, features)
+const pGrip = new THREE.Group(); puppet.add(pGrip);
+const pBody = new THREE.Group(); pGrip.add(pBody);
+const STICK = {top:-0.95, len:3.1, w:0.17};          // relative to the picture's centre
+const GRIP_Y = STICK.top - STICK.len + 0.8;           // where the hand holds the stick
+pBody.position.y = -GRIP_Y;
 let PUP = null;                      // {canvas, meta, s, tint, png, original, meshes}
+function stickTexture(){
+  const c = document.createElement("canvas"); c.width = 64; c.height = 1024;
+  const x = c.getContext("2d");
+  x.beginPath(); x.roundRect(0, 0, 64, 1024, 32); x.clip();
+  const g = x.createLinearGradient(0, 0, 64, 0);
+  g.addColorStop(0, "#6e4826"); g.addColorStop(0.22, "#b98652"); g.addColorStop(0.42, "#e4bd88"); g.addColorStop(0.62, "#c79763"); g.addColorStop(1, "#5e3c1f");
+  x.fillStyle = g; x.fillRect(0, 0, 64, 1024);
+  let seed = 3; const rnd = () => ((seed = (seed*16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < 26; i++){                       // wood grain
+    const gx = 6 + rnd()*52, ph = rnd()*6;
+    x.strokeStyle = `rgba(80,48,20,${0.08 + rnd()*0.14})`; x.lineWidth = 0.6 + rnd()*1.4;
+    x.beginPath(); for (let y = 0; y <= 1024; y += 16) x.lineTo(gx + Math.sin(y*0.01 + ph)*2.5, y); x.stroke();
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return t;
+}
+function shadowTexture(cv, Wd){
+  const pad = 0.45, x0 = -Wd/2 - pad, x1 = Wd/2 + pad, y1 = PUP_H/2 + pad, y0 = STICK.top - STICK.len - pad;
+  const k = Math.min(160, 700 / (y1 - y0));          // canvas pixels per world unit
+  const c = document.createElement("canvas"); c.width = Math.round((x1 - x0)*k); c.height = Math.round((y1 - y0)*k);
+  const x = c.getContext("2d");
+  x.drawImage(cv, (-Wd/2 - x0)*k, (y1 - PUP_H/2)*k, Wd*k, PUP_H*k);
+  x.beginPath(); x.roundRect((-STICK.w/2 - x0)*k, (y1 - STICK.top)*k, STICK.w*k, STICK.len*k, STICK.w*k/2); x.fillStyle = "#000"; if (S.pStick) x.fill();
+  x.globalCompositeOperation = "source-in"; x.fillStyle = "#000"; x.fillRect(0, 0, c.width, c.height);
+  const b = document.createElement("canvas"); b.width = c.width; b.height = c.height;
+  const bx = b.getContext("2d"); bx.filter = `blur(${Math.round(k*0.09)}px)`; bx.drawImage(c, 0, 0);
+  const t = new THREE.CanvasTexture(b);
+  return {t, w:x1 - x0, h:y1 - y0, cx:(x0 + x1)/2, cy:(y0 + y1)/2};
+}
 function buildPuppet(){
   if (PUP.meshes) for (const m of PUP.meshes){ m.parent?.remove(m); m.geometry.dispose(); m.material.map?.dispose(); m.material.dispose(); }
-  const cv = PUP.canvas, w = cv.width, h = cv.height, s = PUP_H / h;
+  const cv = PUP.canvas, w = cv.width, h = cv.height, s = PUP_H / h, Wd = w*s;
   PUP.s = s;
   const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
-  const pic = new THREE.Mesh(new THREE.PlaneGeometry(w*s, PUP_H), new THREE.MeshBasicMaterial({map:tex, transparent:true, toneMapped:false, alphaTest:0.02}));
-  pic.renderOrder = 1;
-  pBody.add(pic);
-  PUP.meshes = [pic];
+  const pic = new THREE.Mesh(new THREE.PlaneGeometry(Wd, PUP_H), new THREE.MeshBasicMaterial({map:tex, transparent:true, toneMapped:false, alphaTest:0.02}));
+  pic.renderOrder = 2;
+  const stick = new THREE.Mesh(new THREE.PlaneGeometry(STICK.w, STICK.len), new THREE.MeshBasicMaterial({map:stickTexture(), transparent:true, toneMapped:false, alphaTest:0.02}));
+  stick.position.set(0, STICK.top - STICK.len/2, -0.03); stick.renderOrder = 1; stick.visible = S.pStick;
+  const sh = shadowTexture(cv, Wd);
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(sh.w, sh.h), new THREE.MeshBasicMaterial({map:sh.t, transparent:true, opacity:0.42, depthWrite:false, toneMapped:false}));
+  shadow.position.set(sh.cx + 0.13, sh.cy - 0.16, -0.22); shadow.renderOrder = 0; shadow.visible = S.pShadow;
+  pBody.add(shadow, stick, pic);
+  PUP.meshes = [pic, stick, shadow]; PUP.stick = stick; PUP.shadow = shadow;
 }
 const pxToWorld = (p) => PUP ? [(p[0] - PUP.canvas.width/2) * PUP.s, (PUP.canvas.height/2 - p[1]) * PUP.s] : [0, 0];
 
@@ -626,7 +690,7 @@ function resize(){
   renderer.setSize(w, h, false); camera.aspect = w/h;
   const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
   let halfH = 2.45, halfW = 1.5, cy = 0.15, ly = 0.05;
-  if (stageMode === "puppet" && PUP){ halfH = PUP_H/2 + 0.3; halfW = PUP.canvas.width * PUP.s / 2 + 0.15; cy = 0; ly = 0; }
+  if (stageMode === "puppet" && PUP){ halfH = PUP_H/2 + 1.0; halfW = PUP.canvas.width * PUP.s / 2 + 0.4; cy = 0; ly = 0; }
   const dist = Math.max(halfH/tanV, halfW/(tanV*camera.aspect)) / S.zoom;
   camera.position.set(0, cy, dist); camera.lookAt(0, ly, 0); camera.updateProjectionMatrix();
 }
@@ -653,7 +717,7 @@ const BGS = {
   green:"#00ff00", blue:"#0047bb"
 };
 const BG_LABEL = {roastery:"Roastery",studio:"Studio",neon:"Neon",sky:"Sky",snow:"Snowy",night:"Night",green:"Green",blue:"Blue"};
-let bgImageURL = null;
+let bgImageURL = null, bgImg = null;
 function applyBg(){
   if (S.bg === "image" && bgImageURL) stage.style.background = `#000 url("${bgImageURL}") center/cover no-repeat`;
   else if (S.bg === "custom" || S.bg === "image") stage.style.background = S.bgColor;
@@ -663,7 +727,7 @@ function applyBg(){
 $("#bgFile").onchange = e => {
   const f = e.target.files[0]; if (!f) return;
   if (bgImageURL) URL.revokeObjectURL(bgImageURL);
-  bgImageURL = URL.createObjectURL(f); S.bg = "image"; applyBg(); renderBody(); e.target.value = "";
+  bgImageURL = URL.createObjectURL(f); bgImg = new Image(); bgImg.src = bgImageURL; S.bg = "image"; applyBg(); renderBody(); e.target.value = "";
 };
 
 /* ---------- camera ---------- */
@@ -1009,6 +1073,9 @@ const TABS = {
   ],
   puppet: [
     ["puppet","Puppet",[{t:"btns", items:[["Change image","newImage"],["Edit layout","layout"]]},
+      {t:"note", text:"Drag the picture or its stick to move it. Pinch to resize."},
+      SEC("Lollipop"), RG("pScale","Size",0.4,2.2,0.02,fmtX), RG("pMove","Movement",0,1,0.01), TG("pStick","Show stick"), TG("pShadow","Shadow"),
+      {t:"btns", items:[["Put it back in the middle","centre"]]},
       SEC("Picture"), TG("pBgRemove","Remove photo background")]],
     ["look","Look",[{t:"bg"}, RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX)]],
     ["face","Face",[SEC("Placement"), RG("pEyeSize","Eye size",0.5,2,0.02,fmtX), RG("pMouthSize","Mouth size",0.5,2,0.02,fmtX), {t:"btns", items:[["Move eyes and mouth","layout"]]},
@@ -1049,6 +1116,8 @@ function onChange(k){
   if (k === "bump") nutMat.bumpScale = S.bump;
   if (k === "floor") applyBg();
   if (k === "mirror" || k === "pip_on") syncPip();
+  if (k === "pStick" && PUP){ PUP.stick.visible = S.pStick; buildPuppet(); }
+  if (k === "pShadow" && PUP) PUP.shadow.visible = S.pShadow;
 }
 function buildItem(it){
   if (it.t === "sec") return el("div", "sec", it.label);
@@ -1177,6 +1246,7 @@ $("#shClose").onclick = () => { buzz(6); closeSheet(); };
 })();
 const ACTIONS = {
   newImage: () => pickImage(),
+  centre: () => { S.pX = DEFAULTS.pX; S.pY = DEFAULTS.pY; S.pScale = DEFAULTS.pScale; save(); renderBody(); },
   layout: () => { closeSheet(); openEditor(); },
   reset: (b) => {
     if (b.dataset.armed !== "1"){ b.dataset.armed = "1"; b.textContent = "Tap again to reset everything"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "Reset all settings"; }, 3000); return; }
@@ -1189,10 +1259,13 @@ const ACTIONS = {
 const editor = $("#editor");
 let editing = false;
 const _p = new THREE.Vector3(), _ray = new THREE.Raycaster(), _plane = new THREE.Plane(new THREE.Vector3(0,0,1), 0), _hit = new THREE.Vector3(), _ndc = new THREE.Vector2();
-function worldToScreen(x, y){ _p.set(x, y, 0).project(camera); return [(_p.x + 1) / 2 * innerWidth, (1 - _p.y) / 2 * innerHeight]; }
+function worldToScreen(x, y){ pBody.updateWorldMatrix(true, false); _p.set(x, y, 0); pBody.localToWorld(_p); _p.project(camera); return [(_p.x + 1) / 2 * innerWidth, (1 - _p.y) / 2 * innerHeight]; }
 function screenToPx(sx, sy){
   _ndc.set(sx / innerWidth * 2 - 1, -(sy / innerHeight * 2 - 1)); _ray.setFromCamera(_ndc, camera);
+  pBody.updateWorldMatrix(true, false);
+  _plane.set(new THREE.Vector3(0, 0, 1), -pBody.getWorldPosition(new THREE.Vector3()).z);
   if (!_ray.ray.intersectPlane(_plane, _hit)) return null;
+  pBody.worldToLocal(_hit);
   return [_hit.x / PUP.s + PUP.canvas.width/2, PUP.canvas.height/2 - _hit.y / PUP.s];
 }
 function openEditor(){ if (!PUP) return; editing = true; editor.hidden = false; buzz(10); }
@@ -1253,7 +1326,7 @@ function enterMode(m){
   closeSheet(); buzz(12);
 }
 function goMenu(){
-  closeEditor(); closeSheet();
+  closeEditor(); closeSheet(); stopRec();
   mode = "menu"; document.body.dataset.mode = "menu";
   showStage("peanut"); menuPose(); buzz(8);
 }
@@ -1283,7 +1356,48 @@ $("#bFlip").onclick = async () => {
   try{ await openCamera(); }catch(err){ toast("Couldn't switch camera."); }
 };
 $("#bClean").onclick = () => { buzz(8); closeSheet(); document.body.classList.add("clean"); toast("Tap anywhere to show controls", 1800); };
+const ptrs = new Map(); let drag = null, suppressClick = false, holding = false;
+const perPx = () => 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov/2)) * camera.position.z / innerHeight;
+const canDrag = () => mode === "puppet" && stageMode === "puppet" && PUP && !editing;
+canvas.addEventListener("pointerdown", e => {
+  if (!canDrag()) return;
+  ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
+  const pts = [...ptrs.values()];
+  if (pts.length === 1) drag = {x:e.clientX, y:e.clientY, px:S.pX, py:S.pY, moved:false};
+  else if (pts.length === 2){
+    const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    drag = {pinch:true, d0:Math.max(20, d), s0:S.pScale, mx:(pts[0].x + pts[1].x)/2, my:(pts[0].y + pts[1].y)/2, px:S.pX, py:S.pY, moved:true};
+  }
+});
+canvas.addEventListener("pointermove", e => {
+  if (!drag || !ptrs.has(e.pointerId)) return;
+  ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  const pts = [...ptrs.values()], k = perPx();
+  if (drag.pinch && pts.length >= 2){
+    const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y), mx = (pts[0].x + pts[1].x)/2, my = (pts[0].y + pts[1].y)/2;
+    S.pScale = clamp(drag.s0 * d / drag.d0, 0.4, 2.2);
+    S.pX = drag.px + (mx - drag.mx) * k; S.pY = drag.py - (my - drag.my) * k;
+    return;
+  }
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.moved && Math.hypot(dx, dy) > 6){ drag.moved = true; holding = true; document.body.classList.add("holding"); buzz(6); }
+  if (drag.moved){
+    const lim = camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+    S.pX = clamp(drag.px + dx * k, -lim * camera.aspect, lim * camera.aspect);
+    S.pY = clamp(drag.py - dy * k, -lim, lim);
+  }
+});
+const endPtr = e => {
+  if (!ptrs.delete(e.pointerId)) return;
+  if (drag?.moved){ suppressClick = true; save(); }
+  if (ptrs.size === 0){ drag = null; if (holding){ buzz(4); } holding = false; document.body.classList.remove("holding"); }
+  else if (drag?.pinch){ const p = [...ptrs.values()][0]; drag = {x:p.x, y:p.y, px:S.pX, py:S.pY, moved:true}; }
+};
+canvas.addEventListener("pointerup", endPtr); canvas.addEventListener("pointercancel", endPtr);
+canvas.addEventListener("wheel", e => { if (!canDrag()) return; e.preventDefault(); S.pScale = clamp(S.pScale * Math.exp(-e.deltaY * 0.0012), 0.4, 2.2); clearTimeout(canvas._wt); canvas._wt = setTimeout(save, 400); }, {passive:false});
 canvas.addEventListener("click", () => {
+  if (suppressClick){ suppressClick = false; return; }
   if (document.body.classList.contains("clean")) document.body.classList.remove("clean");
   else if (sheet.classList.contains("open")) closeSheet();
 });
@@ -1299,8 +1413,117 @@ for (const [id, d0] of [["tw1", 0], ["tw2", 0.35]]){
   [...t].forEach((ch, i) => { const s = el("span", "ch", ch); s.style.animationDelay = (d0 + i*0.05) + "s"; e.append(s); });
 }
 
+/* ---------- recording: scene (background + 3D) and optional microphone -> video in the gallery ---------- */
+const REC = {on:false, mr:null, chunks:[], c:null, x:null, bg:null, bgKey:"", t0:0, mic:null, mime:"", ext:""};
+function pickMime(){
+  if (!window.MediaRecorder) return null;
+  for (const [m, e] of [["video/mp4;codecs=avc1.42E01E,mp4a.40.2","mp4"],["video/mp4;codecs=avc1,opus","mp4"],["video/mp4","mp4"],
+                        ["video/webm;codecs=vp9,opus","webm"],["video/webm;codecs=vp8,opus","webm"],["video/webm","webm"]])
+    if (MediaRecorder.isTypeSupported(m)) return [m, e];
+  return null;
+}
+// the backgrounds are CSS on the page, so recordings repaint them onto the video frame
+function paintBg(x, w, h){
+  const lin = (stops, x0, y0, x1, y1) => { const g = x.createLinearGradient(x0, y0, x1, y1); stops.forEach(([o, c]) => g.addColorStop(o, c)); return g; };
+  const rad = (stops, cx, cy, r) => { const g = x.createRadialGradient(cx, cy, 0, cx, cy, r); stops.forEach(([o, c]) => g.addColorStop(o, c)); return g; };
+  const R = Math.hypot(w, h) * 0.62;
+  const fill = f => { x.fillStyle = f; x.fillRect(0, 0, w, h); };
+  switch (S.bg){
+    case "roastery": fill(rad([[0,"#8a5a33"],[0.55,"#3b2314"],[1,"#160c06"]], w*0.5, h*0.32, R)); break;
+    case "studio": fill(rad([[0,"#f4efe8"],[0.6,"#cfc4b6"],[1,"#a99a88"]], w*0.5, h*0.4, R)); break;
+    case "neon": fill(lin([[0,"#1b1035"],[1,"#0b0a1a"]], 0, 0, w*0.35, h));
+      fill(rad([[0,"rgba(255,60,172,.45)"],[1,"rgba(255,60,172,0)"]], w*0.18, h*0.22, R*0.55));
+      fill(rad([[0,"rgba(43,210,255,.45)"],[1,"rgba(43,210,255,0)"]], w*0.82, h*0.72, R*0.55)); break;
+    case "sky": fill(lin([[0,"#6fbcff"],[0.68,"#d4eeff"],[1,"#f6e7c6"]], 0, 0, 0, h)); break;
+    case "snow": fill(lin([[0,"#9fc6e8"],[0.7,"#e8f2fb"],[0.7,"#ffffff"],[1,"#ffffff"]], 0, 0, 0, h));
+      x.fillStyle = "#fff"; for (let i = 0; i < 160; i++){ const a = Math.sin(i*12.9898)*43758.5453; x.beginPath(); x.arc((a - Math.floor(a))*w, ((a*7.13) % 1 + 1) % 1 * h*0.7, 1.5 + (i % 3), 0, 7); x.fill(); } break;
+    case "night": fill(rad([[0,"#34508f"],[0.7,"#0a0e1f"],[1,"#0a0e1f"]], w*0.5, h*1.15, R*1.1)); break;
+    case "green": fill("#00ff00"); break;
+    case "blue": fill("#0047bb"); break;
+    case "image":
+      if (bgImg?.complete && bgImg.naturalWidth){ const k = Math.max(w / bgImg.naturalWidth, h / bgImg.naturalHeight), iw = bgImg.naturalWidth*k, ih = bgImg.naturalHeight*k; fill("#000"); x.drawImage(bgImg, (w - iw)/2, (h - ih)/2, iw, ih); }
+      else fill(S.bgColor); break;
+    default: fill(S.bgColor);
+  }
+}
+function recFrame(){
+  if (!REC.on) return;
+  const w = REC.c.width, h = REC.c.height, k = `${S.bg}|${S.bgColor}|${bgImg?.src || ""}|${w}x${h}`;
+  if (k !== REC.bgKey){ paintBg(REC.bg.getContext("2d"), w, h); REC.bgKey = k; }
+  REC.x.drawImage(REC.bg, 0, 0);
+  REC.x.drawImage(canvas, 0, 0, w, h);
+  const t = Math.floor((performance.now() - REC.t0) / 1000);
+  $("#recTime").textContent = `${Math.floor(t/60)}:${String(t % 60).padStart(2, "0")}`;
+}
+async function startRec(){
+  const mm = pickMime();
+  if (!mm || !HTMLCanvasElement.prototype.captureStream){ toast("This device can't record video here."); return; }
+  [REC.mime, REC.ext] = mm;
+  const sc = Math.min(1, 1280 / Math.max(canvas.width, canvas.height));
+  const w = Math.round(canvas.width*sc/2)*2, h = Math.round(canvas.height*sc/2)*2;
+  REC.c = document.createElement("canvas"); REC.c.width = w; REC.c.height = h; REC.x = REC.c.getContext("2d");
+  REC.bg = document.createElement("canvas"); REC.bg.width = w; REC.bg.height = h; REC.bgKey = "";
+  const tracks = [...REC.c.captureStream(30).getVideoTracks()];
+  if (S.recMic){
+    try{ REC.mic = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}}); tracks.push(...REC.mic.getAudioTracks()); }
+    catch(e){ REC.mic = null; toast("Microphone is blocked, so this recording has no sound."); }
+  }
+  try{ window.PeanutNative?.prepare?.(); }catch(e){}
+  try{ REC.mr = new MediaRecorder(new MediaStream(tracks), {mimeType:REC.mime, videoBitsPerSecond:6_000_000}); }
+  catch(e){ REC.mic?.getTracks().forEach(t => t.stop()); toast("Couldn't start recording."); return; }
+  REC.chunks = [];
+  REC.mr.ondataavailable = e => { if (e.data?.size) REC.chunks.push(e.data); };
+  REC.mr.onstop = finishRec;
+  REC.on = true; REC.t0 = performance.now(); recFrame();
+  REC.mr.start(1000);
+  $("#rec").classList.add("on"); $("#rec").setAttribute("aria-label", "Stop recording"); $("#recChip").hidden = false; $("#recTime").textContent = "0:00";
+  buzz(25);
+}
+function stopRec(){
+  if (!REC.on) return;
+  REC.on = false; REC.mr.stop(); REC.mic?.getTracks().forEach(t => t.stop()); REC.mic = null;
+  $("#rec").classList.remove("on"); $("#rec").setAttribute("aria-label", "Start recording"); $("#recChip").hidden = true;
+  buzz([15, 60, 15]);
+}
+async function finishRec(){
+  const type = REC.mime.split(";")[0], blob = new Blob(REC.chunks, {type}); REC.chunks = [];
+  if (!blob.size){ toast("Nothing was recorded."); return; }
+  busy("Saving video…");
+  try{ toast(await saveVideo(blob, REC.ext, type), 3600); }
+  catch(e){ console.error(e); toast("Couldn't save the video: " + (e?.message || e)); }
+  busy();
+}
+const toB64 = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] || ""); r.onerror = () => rej(r.error); r.readAsDataURL(b); });
+async function saveVideo(blob, ext, type){
+  const d = new Date(), z = n => String(n).padStart(2, "0");
+  const name = `PeanutCam_${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.${ext}`;
+  const N = window.PeanutNative;
+  if (N?.begin){                                   // Android app: stream into the gallery (Movies/PeanutCam)
+    if (!N.begin(name, type)) throw new Error("the gallery refused the file");
+    const CH = 3 * 262144;                         // multiple of 3 so each piece is valid base64 on its own
+    for (let o = 0; o < blob.size; o += CH){ if (!N.append(await toB64(blob.slice(o, o + CH)))) throw new Error("writing failed"); }
+    if (!N.finish()) throw new Error("finishing failed");
+    return "Saved to your gallery (Movies › PeanutCam)";
+  }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  return "Video downloaded: " + name;
+}
+$("#rec").onclick = () => { REC.on ? stopRec() : startRec(); };
+function syncMicBtn(){
+  const b = $("#micBtn");
+  b.classList.toggle("off", !S.recMic);
+  b.querySelector("use").setAttribute("href", S.recMic ? "#mic" : "#micoff");
+  b.setAttribute("aria-label", "Record sound: " + (S.recMic ? "on" : "off"));
+}
+$("#micBtn").onclick = () => {
+  if (REC.on){ toast("Change this before you start recording."); return; }
+  S.recMic = !S.recMic; save(); syncMicBtn(); buzz(8);
+  toast(S.recMic ? "Recordings include your voice" : "Recordings are silent");
+};
+
 /* ---------- physics + render loop ---------- */
-const spr = {}; for (const k of ["pitch","yaw","roll","tx","ty","lean","jaw","menu"]) spr[k] = {p: k === "lean" || k === "menu" ? 1 : 0, v: 0};
+const spr = {}; for (const k of ["pitch","yaw","roll","tx","ty","lean","jaw","menu","gx","gy","gs","tilt","talk"]) spr[k] = {p: k === "lean" || k === "menu" ? 1 : 0, v: 0};
 function step(st, tgt, dt, k, zeta){ const c = 2*zeta*Math.sqrt(k); st.v += (k*(tgt - st.p) - c*st.v) * dt; st.p += st.v * dt; }
 let lastT = 0;
 function loop(now){
@@ -1319,6 +1542,14 @@ function loop(now){
     step(spr.lean, target.lean, h, 70, 0.8);
     step(spr.jaw, S.bounce ? target.jaw : 0, h, 260, 0.35 + 0.4*(1 - wob));
     step(spr.menu, mode === "menu" ? 1 : 0, h, 60, 0.85);
+    if (stageMode === "puppet"){
+      // the hand: follows your drag closely; the stick tilts against fast moves and settles with a little wobble
+      step(spr.gx, S.pX, h, 320, 0.8); step(spr.gy, S.pY, h, 320, 0.8);
+      step(spr.gs, S.pScale * (holding ? 1.035 : 1), h, 260, 0.55);
+      const tiltT = editing ? 0 : clamp(spr.gx.v * 0.05, -0.16, 0.16) + spr.roll.p * 0.3 * S.pMove + Math.sin(now / 1150) * 0.014 * S.pMove;
+      step(spr.tilt, tiltT, h, 150, 0.3);
+      step(spr.talk, editing || !seen ? 0 : clamp(jawRaw * 1.6, 0, 1), h, 300, 0.4);
+    }
   }
   const mk = spr.menu.p;
   if (stageMode === "peanut"){
@@ -1330,12 +1561,10 @@ function loop(now){
     nut.scale.set(1 - sq*0.45, 1 + sq, 1 - sq*0.45);
     nut.rotation.set(-spr.pitch.v * 0.025 * wob, 0, -spr.yaw.v * 0.02 * wob - spr.tx.v * 0.05 * wob);
   } else if (PUP){
-    if (editing){ pBody.position.set(0, 0, 0); pBody.rotation.set(0, 0, 0); pBody.scale.set(1, 1, 1); }
-    else {
-      pBody.rotation.set(spr.pitch.p * 0.25, spr.yaw.p * 0.35, spr.roll.p * 0.8);
-      pBody.position.set(spr.tx.p * 0.8, spr.ty.p * 0.8, 0);
-      pBody.scale.set(spr.lean.p, spr.lean.p, 1);
-    }
+    const sc = spr.gs.p, bob = (spr.talk.p * 0.07 + Math.sin(now / 1500) * 0.012) * S.pMove * (editing ? 0 : 1);
+    pGrip.position.set(spr.gx.p, spr.gy.p + GRIP_Y * sc + bob, 0);
+    pGrip.scale.setScalar(sc);
+    pGrip.rotation.set(0, editing ? 0 : spr.yaw.p * 0.18 * S.pMove, spr.tilt.p);
   }
   const set = (m, o) => {
     const u = m.material.uniforms;
@@ -1347,11 +1576,12 @@ function loop(now){
   set(F_MOUTH.real, faceVis * (1 - W.mouth)); set(F_MOUTH.alt, faceVis * W.mouth);
 
   renderer.render(scene, camera);
+  recFrame();
   if (editing && PUP) placeEditor();
 }
 
 /* ---------- boot ---------- */
-applyShell(); updateTint(); applyBg(); resize(); menuPose(); onChange("light"); syncPip();
+applyShell(); updateTint(); applyBg(); resize(); menuPose(); onChange("light"); syncPip(); syncMicBtn();
 document.fonts?.ready.then(menuPose); setTimeout(menuPose, 1200);
 requestAnimationFrame(loop);
 loadSavedPuppet();
