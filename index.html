@@ -112,7 +112,6 @@ body.sheet-open #bar{transform:translate(-50%,140%);opacity:0}
 .bb{width:60px;height:56px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:600;color:var(--mute);position:relative}
 .bb:hover{color:var(--ink)}
 .bb.on{color:var(--nut2);background:rgba(227,173,107,.13)}
-.bb .ring{position:absolute;inset:6px 12px 20px;border-radius:12px;box-shadow:0 0 0 calc(var(--lv,0) * 6px) rgba(255,138,76,.35);transition:box-shadow .08s;pointer-events:none}
 .puppet-only{display:none!important}
 body[data-mode=puppet] .puppet-only{display:flex!important}
 .clean #hud{opacity:0!important}
@@ -175,9 +174,6 @@ body[data-mode=puppet] .puppet-only{display:flex!important}
 .btnrow .pill{height:48px}
 select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;padding:0 14px;background:var(--raise);color:var(--ink);font:500 14px var(--display)}
 .note{color:var(--mute);font-size:13px;line-height:1.5;margin:12px 0 4px}
-.meter{grid-column:1/-1;position:relative;height:14px;border-radius:8px;background:var(--raise);overflow:hidden;margin:2px 0 14px}
-.meter .lv{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#b8642e,var(--ember));transition:width .06s}
-.meter .gate{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.7}
 .danger{color:#ffb39a}
 
 /* ---------- layout editor ---------- */
@@ -188,9 +184,6 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
 #editor .h::after{content:attr(data-label);position:absolute;left:50%;top:100%;transform:translate(-50%,4px);padding:2px 7px;border-radius:99px;background:rgba(14,9,6,.8);font:600 10.5px var(--display);color:var(--ink);white-space:nowrap}
 #editor .h.mouth{border-color:var(--ember);background:rgba(255,138,76,.18)}
 #editor .h.grab{transform:scale(1.25)}
-#editor .split{position:absolute;left:0;right:0;height:44px;margin-top:-22px;pointer-events:auto;touch-action:none;cursor:ns-resize}
-#editor .split::before{content:"";position:absolute;left:8%;right:8%;top:21px;border-top:2px dashed var(--ember)}
-#editor .split b{position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:6px;height:32px;padding:0 12px;border-radius:99px;background:var(--ember);color:#1d1109;font-size:12px;display:flex;align-items:center;gap:6px;white-space:nowrap}
 #editor .edbar{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(520px,calc(100% - 32px));pointer-events:auto;
   display:flex;gap:12px;align-items:center;padding:12px 12px 12px 18px;border-radius:22px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line),0 14px 40px rgba(0,0,0,.5);font-size:13.5px;line-height:1.4;color:var(--mute)}
 #editor .edbar .pill{flex:none;padding:0 22px}
@@ -260,8 +253,6 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
   <symbol id="eye" viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/><path d="M4 20 20 4"/></symbol>
   <symbol id="image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M20 16l-5-5-8 8"/></symbol>
   <symbol id="move" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></symbol>
-  <symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
-  <symbol id="micoff" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M4 4l16 16"/></symbol>
   <symbol id="x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="minus" viewBox="0 0 24 24"><path d="M6 12h12"/></symbol>
   <symbol id="plus" viewBox="0 0 24 24"><path d="M6 12h12M12 6v12"/></symbol>
@@ -290,14 +281,14 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
     <div class="card second">
       <div class="thumb" id="thumb"><svg class="i" style="width:30px;height:30px"><use href="#image"/></svg></div>
       <div class="ttl">Your Image</div>
-      <div class="dsc">Any head-and-shoulders picture. The head flaps open when you talk.</div>
+      <div class="dsc">Any head-and-shoulders picture, wearing your real eyes and mouth.</div>
       <div class="acts">
         <button class="pill hot press" id="goPuppet"><svg class="i"><use href="#t-puppet"/></svg><span id="goPuppetLbl">Upload</span></button>
         <button class="pill small press" id="newPuppet" hidden>New image</button>
       </div>
     </div>
     <div id="status" role="status"></div>
-    <p class="m-foot"><svg class="i" style="width:15px;height:15px"><use href="#t-camera"/></svg>Camera and microphone stay on this device.</p>
+    <p class="m-foot"><svg class="i" style="width:15px;height:15px"><use href="#t-camera"/></svg>Your camera stays on this device.</p>
   </div>
 </div>
 
@@ -308,7 +299,6 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
   <div id="chip" hidden>Loading face tracker…</div>
   <nav id="bar" aria-label="Controls">
     <button class="bb press" id="bSettings"><svg class="i"><use href="#sliders"/></svg>Settings</button>
-    <button class="bb press puppet-only" id="bMic"><span class="ring"></span><svg class="i"><use href="#mic"/></svg><span>Mic</span></button>
     <button class="bb press puppet-only" id="bLayout"><svg class="i"><use href="#move"/></svg>Layout</button>
     <button class="bb press puppet-only" id="bImage"><svg class="i"><use href="#image"/></svg>Image</button>
     <button class="bb press" id="bFlip"><svg class="i"><use href="#flip"/></svg>Flip</button>
@@ -326,11 +316,10 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
 </section>
 
 <div id="editor" hidden>
-  <div class="split" id="edSplit"><b><svg class="i" style="width:14px;height:14px"><use href="#move"/></svg>Flap line</b></div>
   <div class="h" data-h="eyeR" data-label="Eye"></div>
   <div class="h" data-h="eyeL" data-label="Eye"></div>
   <div class="h mouth" data-h="mouth" data-label="Mouth"></div>
-  <div class="edbar"><span>Drag the markers onto the picture's eyes and mouth. The head opens along the flap line.</span><button class="pill hot press" id="edDone">Done</button></div>
+  <div class="edbar"><span>Drag the markers onto the picture's eyes and mouth.</span><button class="pill hot press" id="edDone">Done</button></div>
 </div>
 
 <div id="toast" role="status"></div>
@@ -352,7 +341,7 @@ const DEFAULTS = {
   motion:1, wobble:0.5, steady:0.5, bounce:true, invYaw:false, invPitch:false,
   eyeSize:1, eyeSpacing:0.36, eyeHeight:1.18, mouthSize:1, mouthHeight:0.5,
   eyeMargin:0.055, mouthMargin:0.045, feather:0.07, symFill:true, blend:0.15, depth:1.3, skinMatch:0.8, retouch:0.8,
-  pEyeSize:1.15, pMouthSize:1.15, pFlap:0.85, pStyle:"right", pTrigger:"both", pSens:0.6, pBob:0.5, pBgRemove:true, micOn:true,
+  pEyeSize:1.15, pMouthSize:1.15, pBgRemove:true,
   mirror:true, pip_on:true, deviceId:"", facing:"user"
 };
 let S = {...DEFAULTS};
@@ -470,53 +459,20 @@ const shadowTex = (() => { const c = document.createElement("canvas"); c.width =
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2), new THREE.MeshBasicMaterial({map:shadowTex, transparent:true, depthWrite:false}));
 floor.rotation.x = -Math.PI/2; floor.position.y = -H - 0.12; rig.add(floor);
 
-/* ---------- puppet (2D image, split head) ---------- */
+/* ---------- puppet (2D picture) ---------- */
 const PUP_H = 3.5;
 const puppet = new THREE.Group(); puppet.visible = false; scene.add(puppet);
 const pBody = new THREE.Group(); puppet.add(pBody);
-const pBottom = new THREE.Group(); pBody.add(pBottom);
-const pTopPivot = new THREE.Group(); pBody.add(pTopPivot);
-const pTop = new THREE.Group(); pTopPivot.add(pTop);
 let PUP = null;                      // {canvas, meta, s, tint, png, original, meshes}
-function planeUV(w, h, v0, v1){
-  const g = new THREE.PlaneGeometry(w, h), uv = g.attributes.uv;
-  for (let i = 0; i < uv.count; i++) uv.setY(i, v0 + uv.getY(i) * (v1 - v0));
-  return g;
-}
 function buildPuppet(){
   if (PUP.meshes) for (const m of PUP.meshes){ m.parent?.remove(m); m.geometry.dispose(); m.material.map?.dispose(); m.material.dispose(); }
-  const cv = PUP.canvas, w = cv.width, h = cv.height, s = PUP_H / h, m = PUP.meta;
+  const cv = PUP.canvas, w = cv.width, h = cv.height, s = PUP_H / h;
   PUP.s = s;
-  m.split = clamp(m.split, h*0.08, h*0.95);
-  const W = w*s, topH = m.split*s, botH = (h - m.split)*s;
   const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
-  const mat = () => new THREE.MeshBasicMaterial({map:tex, transparent:true, toneMapped:false, alphaTest:0.02});
-  const bot = new THREE.Mesh(planeUV(W, botH, 0, 1 - m.split/h), mat()); bot.position.set(0, -PUP_H/2 + botH/2, 0); bot.renderOrder = 1;
-  const top = new THREE.Mesh(planeUV(W, topH, 1 - m.split/h, 1), mat()); top.position.set(0, PUP_H/2 - topH/2, 0.004); top.renderOrder = 2;
-  // inside of the head: the top's silhouette, filled dark red fading to black
-  const ic = document.createElement("canvas"); ic.width = w; ic.height = Math.max(2, Math.round(m.split));
-  const ix = ic.getContext("2d");
-  ix.drawImage(cv, 0, 0, w, ic.height, 0, 0, w, ic.height);
-  ix.globalCompositeOperation = "source-in";
-  const gr = ix.createLinearGradient(0, ic.height, 0, 0);
-  gr.addColorStop(0, "#7a1d18"); gr.addColorStop(0.18, "#4a0f0d"); gr.addColorStop(0.6, "#1c0605"); gr.addColorStop(1, "#0d0303");
-  ix.fillStyle = gr; ix.fillRect(0, 0, w, ic.height);
-  const itex = new THREE.CanvasTexture(ic); itex.colorSpace = THREE.SRGBColorSpace;
-  const inner = new THREE.Mesh(new THREE.PlaneGeometry(W, topH), new THREE.MeshBasicMaterial({map:itex, transparent:true, toneMapped:false, alphaTest:0.02}));
-  inner.position.set(0, PUP_H/2 - topH/2, -0.03); inner.renderOrder = 0;
-  pBottom.add(bot); pTop.add(top); pBody.add(inner);
-  PUP.meshes = [bot, top, inner];
-  setPivot();
-}
-function setPivot(){
-  if (!PUP) return;
-  const m = PUP.meta, s = PUP.s, w = PUP.canvas.width, h = PUP.canvas.height;
-  const ys = (h/2 - m.split) * s;
-  let hx = 0, hz = 0;
-  if (S.pStyle === "right") hx = (m.hingeR - w/2) * s;
-  else if (S.pStyle === "left") hx = (m.hingeL - w/2) * s;
-  else hz = -0.7;
-  pTopPivot.position.set(hx, ys, hz); pTop.position.set(-hx, -ys, -hz); pTopPivot.rotation.set(0, 0, 0);
+  const pic = new THREE.Mesh(new THREE.PlaneGeometry(w*s, PUP_H), new THREE.MeshBasicMaterial({map:tex, transparent:true, toneMapped:false, alphaTest:0.02}));
+  pic.renderOrder = 1;
+  pBody.add(pic);
+  PUP.meshes = [pic];
 }
 const pxToWorld = (p) => PUP ? [(p[0] - PUP.canvas.width/2) * PUP.s, (PUP.canvas.height/2 - p[1]) * PUP.s] : [0, 0];
 
@@ -656,7 +612,7 @@ function showStage(which){
   rig.visible = which === "peanut";
   puppet.visible = which === "puppet";
   if (which === "puppet"){
-    EYE_MESHES.forEach(m => pTop.add(m)); MOUTH_MESHES.forEach(m => pBottom.add(m));
+    [...EYE_MESHES, ...MOUTH_MESHES].forEach(m => pBody.add(m));
     SURF = onFlat; tintU.value.copy(PUP.tint);
   } else {
     [...EYE_MESHES, ...MOUTH_MESHES].forEach(m => nut.add(m));
@@ -906,42 +862,7 @@ function track(now){
   if (W.mouth > 0){ symmetricMouth(B.M, B.alt, far); placeFeature(F_MOUTH.alt, B.alt, mX, mY, 0, moy, kM, false, cav); }
 }
 
-/* ---------- microphone: voice level drives the flap ---------- */
-const mic = { ctx:null, an:null, buf:null, stream:null, ok:false, db:-100, floor:-55, env:0, gate:-40 };
-function audioCtx(){ // created inside a tap so the browser lets it run
-  if (!mic.ctx){ try{ mic.ctx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} }
-  mic.ctx?.resume?.();
-}
-async function startMic(){
-  if (mic.ok || !S.micOn) return mic.ok;
-  try{
-    mic.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true, autoGainControl:false}});
-    audioCtx();
-    const src = mic.ctx.createMediaStreamSource(mic.stream);
-    mic.an = mic.ctx.createAnalyser(); mic.an.fftSize = 1024; mic.buf = new Float32Array(1024);
-    src.connect(mic.an); mic.ok = true;
-  }catch(e){
-    toast("Microphone is blocked, so the head flaps when your mouth opens instead.");
-  }
-  syncMicBtn();
-  return mic.ok;
-}
-function stopMic(){ mic.stream?.getTracks().forEach(t => t.stop()); mic.ok = false; mic.env = 0; syncMicBtn(); }
-function micStep(dt){
-  if (!mic.ok || !S.micOn) { mic.env += (0 - mic.env) * Math.min(1, dt*12); return mic.env; }
-  if (mic.ctx.state === "suspended") mic.ctx.resume();
-  mic.an.getFloatTimeDomainData(mic.buf);
-  let sum = 0; for (let i = 0; i < mic.buf.length; i++) sum += mic.buf[i]*mic.buf[i];
-  mic.db = 20 * Math.log10(Math.sqrt(sum / mic.buf.length) + 1e-7);
-  // background noise level: drops fast, creeps up slowly
-  if (mic.db < mic.floor) mic.floor += (mic.db - mic.floor) * 0.3; else mic.floor = Math.min(-25, mic.floor + dt * 1.2);
-  mic.gate = mic.floor + THREE.MathUtils.lerp(20, 4, S.pSens);
-  const open = clamp((mic.db - mic.gate) / 14, 0, 1);
-  mic.env += (open - mic.env) * Math.min(1, dt * (open > mic.env ? 35 : 16));
-  return mic.env;
-}
-
-/* ---------- uploaded picture: cut out, find the face, work out where to split ---------- */
+/* ---------- uploaded picture: cut out and find the face ---------- */
 const idb = {
   db:null,
   async open(){
@@ -1006,14 +927,12 @@ async function processImage(blob){
     meta.eyeR = avgPt([Pt(33), Pt(133)]); meta.eyeL = avgPt([Pt(263), Pt(362)]);
     meta.unit = Math.hypot(Pt(263)[0] - Pt(33)[0], Pt(263)[1] - Pt(33)[1]);
     meta.mouth = avgPt(LM.lipsOut.map(Pt));
-    meta.split = clamp(Pt(0)[1] - 0.13*meta.unit, Pt(2)[1], Pt(0)[1]);
     meta.tint = sampleTint(oxx, [Pt(50), Pt(280), Pt(205), Pt(425)], meta.unit*0.05, cw, ch);
   } else {
     meta.eyeR = [cw*0.4, ch*0.36]; meta.eyeL = [cw*0.6, ch*0.36]; meta.unit = cw*0.2/0.7;
-    meta.mouth = [cw*0.5, ch*0.6]; meta.split = ch*0.53;
+    meta.mouth = [cw*0.5, ch*0.6];
     meta.tint = sampleTint(oxx, [[cw*0.42, ch*0.48], [cw*0.58, ch*0.48]], cw*0.03, cw, ch);
   }
-  findHinges(out, meta);
   return {canvas: out, meta};
 }
 function sampleTint(ctx, pts, r, w, h){
@@ -1024,13 +943,6 @@ function sampleTint(ctx, pts, r, w, h){
     for (let i = 0; i < d.length; i += 4) if (d[i+3] > 200){ R += d[i]; G += d[i+1]; Bc += d[i+2]; n++; }
   }
   return n ? [R/n/255, G/n/255, Bc/n/255] : [0.75, 0.55, 0.42];
-}
-function findHinges(cv, meta){
-  const w = cv.width, y = Math.round(clamp(meta.split, 0, cv.height - 1));
-  const d = cv.getContext("2d", {willReadFrequently:true}).getImageData(0, y, w, 1).data;
-  let l = -1, r = -1;
-  for (let x = 0; x < w; x++) if (d[x*4+3] > 128){ if (l < 0) l = x; r = x; }
-  meta.hingeL = l < 0 ? w*0.15 : l; meta.hingeR = r < 0 ? w*0.85 : r;
 }
 async function usePuppet(canvas, meta, png, original){
   PUP = {canvas, meta, png, original, tint:new THREE.Color().setRGB(...meta.tint)};
@@ -1097,12 +1009,9 @@ const TABS = {
   ],
   puppet: [
     ["puppet","Puppet",[{t:"btns", items:[["Change image","newImage"],["Edit layout","layout"]]},
-      CH("pStyle","Hinge",[["left","Left side"],["right","Right side"],["back","Flip back"]]), RG("pFlap","Flap amount",0.2,1.5,0.02,fmtX),
-      CH("pTrigger","Flap when",[["voice","I speak"],["mouth","Mouth opens"],["both","Either"]]),
-      SEC("Microphone"), {t:"meter"}, RG("pSens","Mic sensitivity",0,1,0.01), RG("pBob","Head bob",0,1,0.01),
       SEC("Picture"), TG("pBgRemove","Remove photo background")]],
     ["look","Look",[{t:"bg"}, RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX)]],
-    ["face","Face",[SEC("Placement"), RG("pEyeSize","Eye size",0.5,2,0.02,fmtX), RG("pMouthSize","Mouth size",0.5,2,0.02,fmtX), {t:"btns", items:[["Move eyes, mouth and flap line","layout"]]},
+    ["face","Face",[SEC("Placement"), RG("pEyeSize","Eye size",0.5,2,0.02,fmtX), RG("pMouthSize","Mouth size",0.5,2,0.02,fmtX), {t:"btns", items:[["Move eyes and mouth","layout"]]},
       ...faceShared("Blend skin into picture")]],
     motionTab, cameraTab
   ]
@@ -1131,7 +1040,6 @@ function renderBody(){
 }
 function afterChange(k){
   if (k === "roast"){ applyShell(); updateTint(); }
-  if (k === "pStyle") setPivot();
   if (k === "pBgRemove") reprocess();
   save();
 }
@@ -1191,10 +1099,6 @@ function buildItem(it){
     return row;
   }
   if (it.t === "note") return el("p", "note", it.text);
-  if (it.t === "meter"){
-    const m = el("div", "meter", `<i class="lv"></i><b class="gate"></b>`); m.id = "micMeter";
-    return m;
-  }
   if (it.t === "camsel"){
     const s = el("select", "sel"); s.setAttribute("aria-label", "Camera");
     cameraList().then(devs => {
@@ -1277,7 +1181,7 @@ const ACTIONS = {
   reset: (b) => {
     if (b.dataset.armed !== "1"){ b.dataset.armed = "1"; b.textContent = "Tap again to reset everything"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "Reset all settings"; }, 3000); return; }
     const keep = {deviceId:S.deviceId, facing:S.facing}; S = {...DEFAULTS, ...keep}; save();
-    applyShell(); updateTint(); applyBg(); resize(); onChange("light"); syncPip(); setPivot(); renderBody(); toast("Settings reset");
+    applyShell(); updateTint(); applyBg(); resize(); onChange("light"); syncPip(); renderBody(); toast("Settings reset");
   }
 };
 
@@ -1295,7 +1199,7 @@ function openEditor(){ if (!PUP) return; editing = true; editor.hidden = false; 
 function closeEditor(){
   if (!editing) return;
   editing = false; editor.hidden = true;
-  findHinges(PUP.canvas, PUP.meta); buildPuppet(); savePuppet(); buzz(10);
+  savePuppet(); buzz(10);
 }
 $("#edDone").onclick = closeEditor;
 function placeEditor(){
@@ -1304,20 +1208,16 @@ function placeEditor(){
     const [x, y] = pxToWorld(m[h.dataset.h]); const [sx, sy] = worldToScreen(x, y);
     h.style.left = sx + "px"; h.style.top = sy + "px";
   }
-  const [, sy] = worldToScreen(0, pxToWorld([0, m.split])[1]); $("#edSplit").style.top = sy + "px";
 }
-for (const h of [...editor.querySelectorAll(".h"), $("#edSplit")]){
+for (const h of editor.querySelectorAll(".h")){
   let on = false;
   h.addEventListener("pointerdown", e => { on = true; h.setPointerCapture(e.pointerId); h.classList.add("grab"); buzz(6); });
   h.addEventListener("pointermove", e => {
     if (!on) return;
     const p = screenToPx(e.clientX, e.clientY); if (!p) return;
     const m = PUP.meta;
-    if (h.id === "edSplit"){ m.split = clamp(p[1], PUP.canvas.height*0.08, PUP.canvas.height*0.95); buildPuppet(); }
-    else {
-      m[h.dataset.h] = [clamp(p[0], 0, PUP.canvas.width), clamp(p[1], 0, PUP.canvas.height)];
-      if (h.dataset.h !== "mouth") m.unit = Math.hypot(m.eyeL[0] - m.eyeR[0], m.eyeL[1] - m.eyeR[1]) / 0.7;
-    }
+    m[h.dataset.h] = [clamp(p[0], 0, PUP.canvas.width), clamp(p[1], 0, PUP.canvas.height)];
+    if (h.dataset.h !== "mouth") m.unit = Math.hypot(m.eyeL[0] - m.eyeR[0], m.eyeL[1] - m.eyeR[1]) / 0.7;
   });
   const up = () => { if (!on) return; on = false; h.classList.remove("grab"); };
   h.addEventListener("pointerup", up); h.addEventListener("pointercancel", up);
@@ -1351,7 +1251,6 @@ function enterMode(m){
   mode = m; document.body.dataset.mode = m;
   showStage(m === "puppet" ? "puppet" : "peanut");
   closeSheet(); buzz(12);
-  if (m === "puppet") startMic();
 }
 function goMenu(){
   closeEditor(); closeSheet();
@@ -1361,11 +1260,11 @@ function goMenu(){
 $("#bHome").onclick = goMenu;
 $("#goPeanut").onclick = async () => { buzz(10); if (await ensureCamera()) enterMode("peanut"); };
 $("#goPuppet").onclick = async () => {
-  buzz(10); audioCtx();
+  buzz(10);
   if (!PUP) return pickImage();
   if (await ensureCamera()) enterMode("puppet");
 };
-$("#newPuppet").onclick = () => { buzz(8); audioCtx(); pickImage(); };
+$("#newPuppet").onclick = () => { buzz(8); pickImage(); };
 $("#bImage").onclick = () => { buzz(8); pickImage(); };
 $("#bLayout").onclick = () => { buzz(8); editing ? closeEditor() : openEditor(); };
 function pickImage(){ $("#pupFile").click(); }
@@ -1375,20 +1274,8 @@ $("#pupFile").onchange = async e => {
   if (await ensureCamera()){
     enterMode("puppet");
     if (!meta.face){ openEditor(); toast("No face found in that picture. Drag the markers to place the eyes and mouth.", 4200); }
-    else toast("Talk to flap the head. Tap Layout to adjust.");
+    else toast("Tap Layout to adjust where your eyes and mouth go.");
   }
-};
-function syncMicBtn(){
-  const b = $("#bMic"), on = S.micOn && mic.ok;
-  b.classList.toggle("on", on);
-  b.querySelector("use").setAttribute("href", S.micOn ? "#mic" : "#micoff");
-}
-$("#bMic").onclick = async () => {
-  buzz(8); audioCtx();
-  S.micOn = !S.micOn; save();
-  if (S.micOn){ await startMic(); toast(mic.ok ? "Mic on: the head flaps when you speak" : "Mic unavailable"); }
-  else { stopMic(); toast("Mic off: the head flaps when your mouth opens"); }
-  syncMicBtn();
 };
 $("#bFlip").onclick = async () => {
   buzz(8);
@@ -1413,7 +1300,7 @@ for (const [id, d0] of [["tw1", 0], ["tw2", 0.35]]){
 }
 
 /* ---------- physics + render loop ---------- */
-const spr = {}; for (const k of ["pitch","yaw","roll","tx","ty","lean","jaw","menu","flap"]) spr[k] = {p: k === "lean" || k === "menu" ? 1 : 0, v: 0};
+const spr = {}; for (const k of ["pitch","yaw","roll","tx","ty","lean","jaw","menu"]) spr[k] = {p: k === "lean" || k === "menu" ? 1 : 0, v: 0};
 function step(st, tgt, dt, k, zeta){ const c = 2*zeta*Math.sqrt(k); st.v += (k*(tgt - st.p) - c*st.v) * dt; st.p += st.v * dt; }
 let lastT = 0;
 function loop(now){
@@ -1425,9 +1312,6 @@ function loop(now){
   chipEl.hidden = mode === "menu" || (seen && trackerOk) || !camOn;
 
   if (!seen){ for (const k of ["pitch","yaw","roll","tx","ty","jaw"]) target[k] *= 1 - Math.min(1, dt*1.5); target.lean += (1 - target.lean) * Math.min(1, dt*1.5); }
-  const voice = stageMode === "puppet" ? micStep(dt) : 0;
-  const mouthLv = clamp(jawRaw * 1.8 - 0.06, 0, 1) * (seen ? 1 : 0);
-  const flapLv = editing ? 0 : S.pTrigger === "voice" ? (mic.ok && S.micOn ? voice : mouthLv) : S.pTrigger === "mouth" ? mouthLv : Math.max(voice, mouthLv);
   const wob = S.wobble, k = 110 + 90*(1 - wob), zeta = 1 - 0.62*wob;
   for (let i = 0; i < 2; i++){
     const h = dt/2;
@@ -1435,7 +1319,6 @@ function loop(now){
     step(spr.lean, target.lean, h, 70, 0.8);
     step(spr.jaw, S.bounce ? target.jaw : 0, h, 260, 0.35 + 0.4*(1 - wob));
     step(spr.menu, mode === "menu" ? 1 : 0, h, 60, 0.85);
-    step(spr.flap, flapLv, h, 700, 0.36);
   }
   const mk = spr.menu.p;
   if (stageMode === "peanut"){
@@ -1447,14 +1330,11 @@ function loop(now){
     nut.scale.set(1 - sq*0.45, 1 + sq, 1 - sq*0.45);
     nut.rotation.set(-spr.pitch.v * 0.025 * wob, 0, -spr.yaw.v * 0.02 * wob - spr.tx.v * 0.05 * wob);
   } else if (PUP){
-    if (editing){ pBody.position.set(0, 0, 0); pBody.rotation.set(0, 0, 0); pBody.scale.set(1, 1, 1); pTopPivot.rotation.set(0, 0, 0); }
+    if (editing){ pBody.position.set(0, 0, 0); pBody.rotation.set(0, 0, 0); pBody.scale.set(1, 1, 1); }
     else {
-      const f = Math.max(-0.12, spr.flap.p), bob = S.pBob;
       pBody.rotation.set(spr.pitch.p * 0.25, spr.yaw.p * 0.35, spr.roll.p * 0.8);
-      pBody.position.set(spr.tx.p * 0.8, spr.ty.p * 0.8 + f * 0.06 * bob, 0);
-      pBody.scale.set(spr.lean.p * (1 + f*0.015*bob), spr.lean.p * (1 - f*0.02*bob), 1);
-      const ang = f * S.pFlap * (S.pStyle === "back" ? 0.95 : 0.62);
-      pTopPivot.rotation.set(S.pStyle === "back" ? -ang : 0, 0, S.pStyle === "right" ? ang : S.pStyle === "left" ? -ang : 0);
+      pBody.position.set(spr.tx.p * 0.8, spr.ty.p * 0.8, 0);
+      pBody.scale.set(spr.lean.p, spr.lean.p, 1);
     }
   }
   const set = (m, o) => {
@@ -1466,21 +1346,12 @@ function loop(now){
   set(F_EYE.L.real, faceVis * (1 - W.eyeL)); set(F_EYE.L.alt, faceVis * W.eyeL);
   set(F_MOUTH.real, faceVis * (1 - W.mouth)); set(F_MOUTH.alt, faceVis * W.mouth);
 
-  if (stageMode === "puppet"){
-    $("#bMic").style.setProperty("--lv", voice.toFixed(3));
-    const mm = document.getElementById("micMeter");
-    if (mm){
-      const pct = d => clamp((d + 70) / 60, 0, 1) * 100;
-      mm.querySelector(".lv").style.width = (mic.ok ? pct(mic.db) : 0) + "%";
-      mm.querySelector(".gate").style.left = pct(mic.gate) + "%";
-    }
-  }
   renderer.render(scene, camera);
   if (editing && PUP) placeEditor();
 }
 
 /* ---------- boot ---------- */
-applyShell(); updateTint(); applyBg(); resize(); menuPose(); onChange("light"); syncPip(); syncMicBtn();
+applyShell(); updateTint(); applyBg(); resize(); menuPose(); onChange("light"); syncPip();
 document.fonts?.ready.then(menuPose); setTimeout(menuPose, 1200);
 requestAnimationFrame(loop);
 loadSavedPuppet();

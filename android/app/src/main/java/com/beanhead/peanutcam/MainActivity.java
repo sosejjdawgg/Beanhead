@@ -97,10 +97,9 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Ask for the camera and microphone up front so the menu buttons work on the first tap.
+        // Ask for the camera up front so the menu buttons work on the first tap.
         List<String> missing = new ArrayList<>();
         if (!has(Manifest.permission.CAMERA)) missing.add(Manifest.permission.CAMERA);
-        if (!has(Manifest.permission.RECORD_AUDIO)) missing.add(Manifest.permission.RECORD_AUDIO);
         if (!missing.isEmpty()) requestPermissions(missing.toArray(new String[0]), REQ_CAMERA);
 
         if (savedInstanceState != null) {
