@@ -1,0 +1,77 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Bundle the page, 3D engine, face tracker and model into the app
+        run: |
+          set -euo pipefail
+          W=android/app/src/main/assets/www
+          rm -rf "$W"
+          mkdir -p "$W/lib/three/examples/jsm" "$W/lib/tasks-vision" "$W/models"
+          cp index.html "$W/index.html"
+
+          mkdir -p /tmp/deps && cd /tmp/deps
+          npm init -y >/dev/null
+          npm install --no-audit --no-fund three@0.160.0 @mediapipe/tasks-vision@0.10.14
+          cd "$GITHUB_WORKSPACE"
+
+          cp -r /tmp/deps/node_modules/three/build "$W/lib/three/build"
+          cp -r /tmp/deps/node_modules/three/examples/jsm/environments "$W/lib/three/examples/jsm/environments"
+          cp /tmp/deps/node_modules/@mediapipe/tasks-vision/vision_bundle.mjs "$W/lib/tasks-vision/"
+          cp -r /tmp/deps/node_modules/@mediapipe/tasks-vision/wasm "$W/lib/tasks-vision/wasm"
+
+          curl -fsSL --retry 3 -o "$W/models/face_landmarker.task" \
+            https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task
+
+          find "$W" -type f -exec ls -la {} \;
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Build APK
+        working-directory: android
+        run: gradle assembleDebug --no-daemon --stacktrace
+
+      - name: Name the APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk PeanutCam.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PeanutCam-apk
+          path: PeanutCam.apk
+
+      - name: Publish to Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest PeanutCam.apk \
+            --title "Peanut Cam (latest build)" \
+            --notes "Built from commit ${GITHUB_SHA::7}. On your Android phone, download PeanutCam.apk and open it to install." \
+            --latest
