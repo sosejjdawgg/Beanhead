@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#140c07">
+<title>Peanut Cam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: full-bleed stage, floating control dock, bottom sheet for settings */
+:root{
+  --husk:#140c07;      /* panel ground */
+  --shell:#2a1a10;     /* raised surface */
+  --skin:#d9a86a;      /* accent: raw peanut */
+  --char:#0b0705;      /* deepest */
+  --cream:#f3e6d2;     /* text */
+  --dust:#b59a7c;      /* muted text */
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--char);color:var(--cream);font-family:var(--display);-webkit-tap-highlight-color:transparent}
+#stage{position:fixed;inset:0;background:var(--char);background-size:cover;background-position:center}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block}
+#pip{position:absolute;width:min(26vw,170px);aspect-ratio:3/4;object-fit:cover;border-radius:14px;border:2px solid rgba(243,230,210,.35);
+  top:calc(14px + env(safe-area-inset-top,0px));left:calc(14px + env(safe-area-inset-left,0px));box-shadow:0 8px 24px rgba(0,0,0,.4);background:#000}
+#pip.mirror{transform:scaleX(-1)}
+#chip{position:absolute;left:50%;transform:translateX(-50%);top:calc(16px + env(safe-area-inset-top,0px));
+  font:500 12px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:9px 13px;border-radius:99px;background:rgba(11,7,5,.72);color:var(--skin);backdrop-filter:blur(6px)}
+#dock{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
+.btn{appearance:none;border:0;cursor:pointer;width:52px;height:52px;border-radius:16px;background:rgba(20,12,7,.82);color:var(--cream);
+  display:grid;place-items:center;backdrop-filter:blur(8px);box-shadow:0 4px 16px rgba(0,0,0,.35)}
+.btn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--skin);outline-offset:2px}
+.btn svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.clean #dock,.clean #pip,.clean #chip,.clean #sheet{display:none}
+
+/* Start screen */
+#start{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,#4a2c17,#140c07 70%);
+  padding:24px max(20px,env(safe-area-inset-right,0px)) 24px max(20px,env(safe-area-inset-left,0px))}
+#start .card{max-width:440px;display:flex;flex-direction:column;gap:18px}
+#start h1{font-weight:800;font-size:clamp(44px,13vw,76px);line-height:.9;margin:0;letter-spacing:-.02em;text-wrap:balance}
+#start h1 span{color:var(--skin)}
+#start p{margin:0;color:var(--dust);line-height:1.5;font-size:15px}
+.go{appearance:none;border:0;cursor:pointer;font:800 18px var(--display);padding:16px 22px;border-radius:16px;background:var(--skin);color:var(--char);align-self:flex-start}
+.go[disabled]{opacity:.6;cursor:progress}
+#status{font:400 12px/1.5 var(--mono);color:var(--skin);min-height:18px}
+
+/* Settings sheet */
+#sheet{position:absolute;left:0;right:0;bottom:0;max-height:62vh;overflow:auto;background:rgba(20,12,7,.94);backdrop-filter:blur(14px);
+  border-radius:22px 22px 0 0;padding:6px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  transform:translateY(105%);transition:transform .28s ease;z-index:10}
+#sheet.open{transform:none}
+@media (min-width:820px){#sheet{left:auto;right:84px;bottom:16px;width:380px;border-radius:20px;max-height:calc(100vh - 32px)}}
+@media (prefers-reduced-motion:reduce){#sheet{transition:none}}
+.grab{width:42px;height:4px;border-radius:4px;background:var(--dust);opacity:.5;margin:8px auto 4px}
+.tabs{display:flex;gap:6px;position:sticky;top:0;background:rgba(20,12,7,.96);padding:8px 0 10px;z-index:1}
+.tabs button{flex:1;appearance:none;border:0;cursor:pointer;padding:10px 6px;border-radius:12px;background:var(--shell);color:var(--dust);font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.tabs button[aria-selected="true"]{background:var(--skin);color:var(--char)}
+.pane{display:flex;flex-direction:column;gap:14px;padding-top:4px}
+.lbl{font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dust)}
+.row{display:flex;flex-direction:column;gap:6px}
+.row .top{display:flex;justify-content:space-between;align-items:baseline}
+.row output{font:400 12px var(--mono);color:var(--cream);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--skin);height:28px}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.chips button{appearance:none;cursor:pointer;border:2px solid transparent;border-radius:12px;height:58px;padding:0;display:flex;align-items:flex-end;overflow:hidden}
+.chips button span{width:100%;font:500 10px var(--mono);letter-spacing:.04em;text-transform:uppercase;background:rgba(11,7,5,.7);color:var(--cream);padding:4px 0}
+.chips button[aria-pressed="true"]{border-color:var(--skin)}
+.tog{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;font-size:15px}
+.tog input{width:22px;height:22px;accent-color:var(--skin)}
+.inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+input[type=color]{width:52px;height:38px;border:0;border-radius:10px;background:none;padding:0}
+select,.file{font:400 13px var(--mono);background:var(--shell);color:var(--cream);border:0;border-radius:10px;padding:10px;width:100%}
+.file{cursor:pointer;text-align:center}
+.hint{font-size:13px;line-height:1.45;color:var(--dust);margin:0}
+.reset{appearance:none;border:1px solid var(--dust);background:none;color:var(--dust);border-radius:10px;padding:10px;font:500 12px var(--mono);cursor:pointer}
+</style>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+
+<div id="stage">
+  <canvas id="gl"></canvas>
+  <video id="pip" playsinline muted autoplay hidden></video>
+  <div id="chip" hidden>Looking for your face…</div>
+  <div id="dock" hidden>
+    <button class="btn" id="bSettings" aria-label="Settings"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+    <button class="btn" id="bFlip" aria-label="Switch camera"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><path d="M9 13a3 3 0 0 1 5.5-1.6M15 13a3 3 0 0 1-5.5 1.6"/><path d="M14.5 9.5v2h-2M9.5 16.5v-2h2"/></svg></button>
+    <button class="btn" id="bFull" aria-label="Fullscreen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    <button class="btn" id="bClean" aria-label="Hide controls (tap screen to bring back)"><svg viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/><path d="M4 20 20 4"/></svg></button>
+  </div>
+
+  <section id="sheet" aria-label="Settings">
+    <div class="grab"></div>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="scene" aria-selected="true">Scene</button>
+      <button role="tab" data-tab="nut" aria-selected="false">Peanut</button>
+      <button role="tab" data-tab="face" aria-selected="false">Face</button>
+      <button role="tab" data-tab="cam" aria-selected="false">Camera</button>
+    </div>
+
+    <div class="pane" data-pane="scene">
+      <div class="lbl">Background</div>
+      <div class="chips" id="bgChips"></div>
+      <div class="inline">
+        <input type="color" id="bgColor" value="#1f6f4a" aria-label="Custom colour">
+        <span class="hint">Custom colour</span>
+      </div>
+      <label class="file" for="bgFile">Use your own image…</label>
+      <input type="file" id="bgFile" accept="image/*" hidden>
+      <label class="tog">Floor shadow <input type="checkbox" id="floor"></label>
+      <div class="row"><div class="top"><span class="lbl">Zoom</span><output id="o_zoom"></output></div><input type="range" id="zoom" min="0.6" max="1.8" step="0.01"></div>
+      <div class="row"><div class="top"><span class="lbl">Light</span><output id="o_light"></output></div><input type="range" id="light" min="0.3" max="2" step="0.01"></div>
+      <p class="hint">Green or blue screen lets you key the background out in OBS. Press H on a keyboard to hide the controls.</p>
+    </div>
+
+    <div class="pane" data-pane="nut" hidden>
+      <div class="row"><div class="top"><span class="lbl">Roast</span><output id="o_roast"></output></div><input type="range" id="roast" min="0" max="1" step="0.01"></div>
+      <div class="row"><div class="top"><span class="lbl">Shell texture</span><output id="o_bump"></output></div><input type="range" id="bump" min="0" max="3" step="0.05"></div>
+      <div class="row"><div class="top"><span class="lbl">Head motion</span><output id="o_motion"></output></div><input type="range" id="motion" min="0" max="1.6" step="0.01"></div>
+      <label class="tog">Bounce when talking <input type="checkbox" id="bounce"></label>
+    </div>
+
+    <div class="pane" data-pane="face" hidden>
+      <div class="row"><div class="top"><span class="lbl">Eye size</span><output id="o_eyeSize"></output></div><input type="range" id="eyeSize" min="0.5" max="1.8" step="0.01"></div>
+      <div class="row"><div class="top"><span class="lbl">Eye spacing</span><output id="o_eyeSpacing"></output></div><input type="range" id="eyeSpacing" min="0.2" max="0.6" step="0.005"></div>
+      <div class="row"><div class="top"><span class="lbl">Eye height</span><output id="o_eyeHeight"></output></div><input type="range" id="eyeHeight" min="0.6" max="1.6" step="0.01"></div>
+      <div class="row"><div class="top"><span class="lbl">Mouth size</span><output id="o_mouthSize"></output></div><input type="range" id="mouthSize" min="0.5" max="1.8" step="0.01"></div>
+      <div class="row"><div class="top"><span class="lbl">Mouth height</span><output id="o_mouthHeight"></output></div><input type="range" id="mouthHeight" min="0" max="1.2" step="0.01"></div>
+      <div class="row"><div class="top"><span class="lbl">Crop tightness</span><output id="o_crop"></output></div><input type="range" id="crop" min="0.7" max="1.5" step="0.01"></div>
+      <div class="row"><div class="top"><span class="lbl">Edge softness</span><output id="o_feather"></output></div><input type="range" id="feather" min="0.05" max="0.8" step="0.01"></div>
+      <div class="row"><div class="top"><span class="lbl">Blend into shell</span><output id="o_blend"></output></div><input type="range" id="blend" min="0" max="1" step="0.01"></div>
+    </div>
+
+    <div class="pane" data-pane="cam" hidden>
+      <div class="lbl">Camera source</div>
+      <select id="camSel" aria-label="Camera source"></select>
+      <label class="tog">Mirror view (selfie) <input type="checkbox" id="mirror"></label>
+      <label class="tog">Show camera preview <input type="checkbox" id="pip_on"></label>
+      <label class="tog">Invert left/right turning <input type="checkbox" id="invYaw"></label>
+      <label class="tog">Invert nodding <input type="checkbox" id="invPitch"></label>
+      <p class="hint">On Windows, pick your phone here once it's connected as a webcam (Phone Link, DroidCam or Iriun).</p>
+      <button class="reset" id="reset">Reset all settings</button>
+    </div>
+  </section>
+</div>
+
+<div id="start">
+  <div class="card">
+    <h1>Peanut <span>Cam</span></h1>
+    <p>Your real eyes and mouth, live on a roasted 3D peanut. Nothing leaves your device: tracking runs in the browser.</p>
+    <button class="go" id="go">Start camera</button>
+    <div id="status"></div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+
+const MP = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+const MODEL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+
+/* ---------- settings ---------- */
+const DEFAULTS = {bg:"roastery",bgColor:"#1f6f4a",floor:true,zoom:1,light:1,roast:0.55,bump:1.4,motion:1,bounce:true,
+  eyeSize:1,eyeSpacing:0.36,eyeHeight:1.18,mouthSize:1,mouthHeight:0.5,crop:1,feather:0.35,blend:0.25,
+  mirror:true,pip_on:true,invYaw:false,invPitch:false,deviceId:"",facing:"user"};
+let S = {...DEFAULTS};
+try{ Object.assign(S, JSON.parse(localStorage.getItem("peanutcam")||"{}")); }catch(e){}
+const save = ()=>{ try{ localStorage.setItem("peanutcam", JSON.stringify(S)); }catch(e){} };
+
+const BGS = {
+  roastery:"radial-gradient(ellipse at 50% 32%, #8a5a33 0%, #3b2314 55%, #160c06 100%)",
+  counter:"linear-gradient(#efe6d8 0 63%, #b07a4f 63% 64.5%, #8b5a3c 64.5% 100%)",
+  neon:"radial-gradient(circle at 18% 22%, rgba(255,60,172,.45), transparent 48%), radial-gradient(circle at 82% 72%, rgba(43,210,255,.45), transparent 50%), linear-gradient(160deg,#1b1035,#0b0a1a)",
+  sky:"linear-gradient(#6fbcff, #d4eeff 68%, #f6e7c6)",
+  night:"radial-gradient(ellipse at 50% 115%, #34508f, #0a0e1f 70%)",
+  green:"#00ff00", blue:"#0047bb", custom:null, image:null
+};
+const BG_LABEL = {roastery:"Roastery",counter:"Counter",neon:"Neon",sky:"Sky",night:"Night",green:"Green",blue:"Blue",custom:"Colour"};
+let bgImageURL = null;
+
+/* ---------- three.js scene ---------- */
+const canvas = document.getElementById("gl");
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, preserveDrawingBuffer:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.setClearColor(0x000000, 0);
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+
+const hemi = new THREE.HemisphereLight(0xfff1dc, 0x3a2514, 0.6);
+const key = new THREE.DirectionalLight(0xffe2b8, 2.2); key.position.set(3, 4, 5);
+const rim = new THREE.DirectionalLight(0xffb070, 1.4); rim.position.set(-4, 2, -3);
+scene.add(hemi, key, rim);
+
+/* Peanut profile: two lobes with a pinched waist, upright */
+const H = 1.95;
+function radiusAt(y){
+  const t = y / H; if (Math.abs(t) >= 1) return 0;
+  const base = Math.pow(1 - t*t, 0.42);
+  const waist = 1 - 0.28 * Math.exp(-(y*y) / 0.25);
+  return base * waist * (y > 0 ? 0.95 : 1.0);
+}
+function disp(phi, y){ return 1 + 0.022*Math.sin(3*phi + 2.1*y) + 0.018*Math.sin(5*y + 1.3)*Math.cos(2*phi); }
+
+function makePeanutGeometry(){
+  const pts = [];
+  const N = 140;
+  for (let i = 0; i <= N; i++){ const y = -H + 2*H*i/N; pts.push(new THREE.Vector2(Math.max(radiusAt(y), 0.0001), y)); }
+  const g = new THREE.LatheGeometry(pts, 120, Math.PI, Math.PI*2); // seam at the back
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++){
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const phi = Math.atan2(x, z), f = disp(phi, y);
+    p.setXYZ(i, x*f, y, z*f);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+
+/* Procedural shell: raised net of ridges over pitted husk, darkened by roast */
+function lerpColor(a, b, t){ return a.map((v,i)=>Math.round(v + (b[i]-v)*t)); }
+function rgb(c, a=1){ return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+function makeShell(roast){
+  const W = 1024, Hh = 1024;
+  const c = document.createElement("canvas"); c.width = W; c.height = Hh;
+  const b = document.createElement("canvas"); b.width = W; b.height = Hh;
+  const cx = c.getContext("2d"), bx = b.getContext("2d");
+  const pit = lerpColor([196,150,96],[58,34,18],roast);
+  const ridge = lerpColor([232,196,142],[104,66,38],roast);
+  let seed = 7; const rnd = ()=>((seed = (seed*16807) % 2147483647) / 2147483647);
+  cx.fillStyle = rgb(pit); cx.fillRect(0,0,W,Hh);
+  bx.fillStyle = "#5a5a5a"; bx.fillRect(0,0,W,Hh);
+  // mottling
+  for (let i = 0; i < 500; i++){
+    const x = rnd()*W, y = rnd()*Hh, r = 10 + rnd()*60;
+    const g = cx.createRadialGradient(x,y,0,x,y,r);
+    const light = rnd() > 0.5;
+    g.addColorStop(0, light ? "rgba(255,230,190,.10)" : "rgba(30,15,5,.12)"); g.addColorStop(1,"rgba(0,0,0,0)");
+    cx.fillStyle = g; cx.fillRect(x-r,y-r,2*r,2*r);
+  }
+  // ridges along the length (u = around, v = along)
+  const R = 18, ridgeX = [];
+  for (let i = 0; i < R; i++){
+    const base = (i + 0.5) * W / R, ph = rnd()*6.28, amp = 6 + rnd()*10;
+    ridgeX.push(v => base + Math.sin(v*0.018 + ph)*amp + Math.sin(v*0.05 + ph*2)*3);
+  }
+  const strokeBoth = (path, w) => {
+    for (const off of [-W, 0, W]){
+      cx.save(); cx.translate(off,0); cx.strokeStyle = rgb(ridge,.95); cx.lineWidth = w; cx.lineCap = "round"; cx.stroke(path); cx.restore();
+      bx.save(); bx.translate(off,0); bx.filter = "blur(2px)"; bx.strokeStyle = "#e8e8e8"; bx.lineWidth = w+2; bx.lineCap = "round"; bx.stroke(path); bx.restore();
+    }
+  };
+  for (const fx of ridgeX){
+    const p = new Path2D(); p.moveTo(fx(0), 0);
+    for (let v = 8; v <= Hh; v += 8) p.lineTo(fx(v), v);
+    strokeBoth(p, 7);
+  }
+  // cross connectors forming the reticulated net
+  for (let i = 0; i < R; i++){
+    const a = ridgeX[i], bb = ridgeX[(i+1)%R], wrap = i === R-1 ? W : 0;
+    let v = rnd()*40;
+    while (v < Hh){
+      const v2 = v + (rnd()-0.5)*36;
+      const p = new Path2D(); p.moveTo(a(v), v); p.quadraticCurveTo((a(v)+bb(v2)+wrap)/2, (v+v2)/2 + (rnd()-0.5)*14, bb(v2)+wrap, v2);
+      strokeBoth(p, 4 + rnd()*2);
+      v += 34 + rnd()*40;
+    }
+  }
+  // char patches, heavier toward the tips
+  if (roast > 0.05){
+    for (let i = 0; i < 160*roast; i++){
+      const y = rnd() < 0.5 ? rnd()*Hh*0.25 : Hh - rnd()*Hh*0.25;
+      const yy = rnd() < 0.6 ? y : rnd()*Hh;
+      const x = rnd()*W, r = 20 + rnd()*90;
+      const g = cx.createRadialGradient(x,yy,0,x,yy,r);
+      g.addColorStop(0, `rgba(18,8,2,${0.35*roast})`); g.addColorStop(1,"rgba(0,0,0,0)");
+      cx.fillStyle = g; cx.fillRect(x-r,yy-r,2*r,2*r);
+    }
+  }
+  const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace; map.wrapS = THREE.RepeatWrapping; map.anisotropy = 4;
+  const bump = new THREE.CanvasTexture(b); bump.wrapS = THREE.RepeatWrapping;
+  return {map, bump};
+}
+
+const nutMat = new THREE.MeshStandardMaterial({roughness:0.82, metalness:0, envMapIntensity:0.6});
+function applyShell(){
+  const {map, bump} = makeShell(S.roast);
+  nutMat.map?.dispose(); nutMat.bumpMap?.dispose();
+  nutMat.map = map; nutMat.bumpMap = bump; nutMat.bumpScale = S.bump; nutMat.needsUpdate = true;
+}
+const rig = new THREE.Group();     // head pose
+const nut = new THREE.Group();     // bounce/squash
+rig.add(nut); scene.add(rig);
+nut.add(new THREE.Mesh(makePeanutGeometry(), nutMat));
+
+/* Floor shadow */
+const shadowTex = (()=>{ const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d");
+  const g = x.createRadialGradient(128,128,0,128,128,128); g.addColorStop(0,"rgba(0,0,0,.55)"); g.addColorStop(1,"rgba(0,0,0,0)");
+  x.fillStyle = g; x.fillRect(0,0,256,256); return new THREE.CanvasTexture(c); })();
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2), new THREE.MeshBasicMaterial({map:shadowTex, transparent:true, depthWrite:false}));
+floor.rotation.x = -Math.PI/2; floor.position.y = -H - 0.12; scene.add(floor);
+
+/* Face patches: live canvases mapped onto surface-hugging geometry */
+function surfaceZ(x, y){ const r = radiusAt(y) * disp(0, y); return Math.sqrt(Math.max(r*r - x*x, 0.0001)) + 0.035; }
+function patchGeom(w, h, cx, cy){
+  const g = new THREE.PlaneGeometry(w, h, 18, 12), p = g.attributes.position;
+  for (let i = 0; i < p.count; i++){ const x = p.getX(i) + cx, y = p.getY(i) + cy; p.setXYZ(i, x, y, surfaceZ(x, y)); }
+  g.computeVertexNormals(); return g;
+}
+function makePatch(W, Hh){
+  const c = document.createElement("canvas"); c.width = W; c.height = Hh;
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const mat = new THREE.MeshBasicMaterial({map:tex, transparent:true, opacity:0, depthWrite:false, toneMapped:false, polygonOffset:true, polygonOffsetFactor:-2});
+  const mesh = new THREE.Mesh(new THREE.BufferGeometry(), mat); mesh.renderOrder = 2; nut.add(mesh);
+  return {c, ctx:c.getContext("2d"), tex, mat, mesh, W, H:Hh};
+}
+const eyeL = makePatch(256, 160), eyeR = makePatch(256, 160), mouth = makePatch(320, 176);
+function layoutPatches(){
+  const ew = 0.56*S.eyeSize, eh = ew*160/256, mw = 0.78*S.mouthSize, mh = mw*176/320;
+  for (const [p, g] of [[eyeL, patchGeom(ew, eh, -S.eyeSpacing, S.eyeHeight)], [eyeR, patchGeom(ew, eh, S.eyeSpacing, S.eyeHeight)], [mouth, patchGeom(mw, mh, 0, S.mouthHeight)]]){
+    p.mesh.geometry.dispose(); p.mesh.geometry = g;
+  }
+}
+
+function resize(){
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false); camera.aspect = w/h;
+  const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+  const dist = Math.max(2.45/tanV, 1.5/(tanV*camera.aspect)) / S.zoom;
+  camera.position.set(0, 0.15, dist); camera.lookAt(0, 0.05, 0); camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize);
+
+/* ---------- background ---------- */
+const stage = document.getElementById("stage");
+function applyBg(){
+  if (S.bg === "image" && bgImageURL){ stage.style.background = `#000 url("${bgImageURL}") center/cover no-repeat`; }
+  else if (S.bg === "custom" || (S.bg === "image" && !bgImageURL)){ stage.style.background = S.bgColor; }
+  else stage.style.background = BGS[S.bg] || BGS.roastery;
+  floor.visible = S.floor && !["green","blue"].includes(S.bg);
+  document.querySelectorAll("#bgChips button").forEach(b => b.setAttribute("aria-pressed", b.dataset.bg === S.bg));
+}
+const chipWrap = document.getElementById("bgChips");
+for (const k of Object.keys(BG_LABEL)){
+  const b = document.createElement("button"); b.dataset.bg = k; b.type = "button";
+  b.style.background = k === "custom" ? "conic-gradient(#e33,#ec3,#3c6,#39e,#c3e,#e33)" : BGS[k];
+  b.innerHTML = `<span>${BG_LABEL[k]}</span>`;
+  b.onclick = () => { S.bg = k; applyBg(); save(); };
+  chipWrap.append(b);
+}
+document.getElementById("bgFile").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  if (bgImageURL) URL.revokeObjectURL(bgImageURL);
+  bgImageURL = URL.createObjectURL(f); S.bg = "image"; applyBg();
+};
+
+/* ---------- controls ---------- */
+const fmt = v => (+v).toFixed(2);
+const ranges = ["zoom","light","roast","bump","motion","eyeSize","eyeSpacing","eyeHeight","mouthSize","mouthHeight","crop","feather","blend"];
+const checks = ["floor","bounce","mirror","pip_on","invYaw","invPitch"];
+function onChange(k){
+  if (k === "zoom") resize();
+  if (k === "light"){ key.intensity = 2.2*S.light; rim.intensity = 1.4*S.light; hemi.intensity = 0.6*S.light; }
+  if (k === "bump") nutMat.bumpScale = S.bump;
+  if (["eyeSize","eyeSpacing","eyeHeight","mouthSize","mouthHeight"].includes(k)) layoutPatches();
+  if (k === "floor") applyBg();
+  if (k === "mirror" || k === "pip_on") syncPip();
+}
+function bindControls(){
+  for (const k of ranges){
+    const el = document.getElementById(k), out = document.getElementById("o_"+k);
+    el.value = S[k]; out.textContent = fmt(S[k]);
+    el.oninput = () => { S[k] = +el.value; out.textContent = fmt(S[k]); onChange(k); };
+    el.onchange = () => { if (k === "roast") applyShell(); save(); };
+  }
+  for (const k of checks){
+    const el = document.getElementById(k); el.checked = !!S[k];
+    el.onchange = () => { S[k] = el.checked; onChange(k); save(); };
+  }
+  const col = document.getElementById("bgColor"); col.value = S.bgColor;
+  col.oninput = () => { S.bgColor = col.value; S.bg = "custom"; applyBg(); };
+  col.onchange = save;
+}
+document.getElementById("reset").onclick = () => {
+  const keep = {deviceId:S.deviceId, facing:S.facing}; S = {...DEFAULTS, ...keep}; save();
+  bindControls(); applyShell(); layoutPatches(); applyBg(); resize(); onChange("light"); syncPip();
+};
+document.querySelectorAll(".tabs button").forEach(t => t.onclick = () => {
+  document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === t));
+  document.querySelectorAll(".pane").forEach(p => p.hidden = p.dataset.pane !== t.dataset.tab);
+});
+const sheet = document.getElementById("sheet");
+document.getElementById("bSettings").onclick = e => { e.stopPropagation(); sheet.classList.toggle("open"); };
+document.getElementById("bClean").onclick = e => { e.stopPropagation(); sheet.classList.remove("open"); document.body.classList.add("clean"); };
+canvas.addEventListener("click", () => {
+  if (document.body.classList.contains("clean")) document.body.classList.remove("clean");
+  else sheet.classList.remove("open");
+});
+addEventListener("keydown", e => { if (e.key === "h" || e.key === "H") document.body.classList.toggle("clean"); });
+document.getElementById("bFull").onclick = async () => {
+  try{ if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen({navigationUI:"hide"}); }catch(e){}
+};
+
+/* ---------- camera ---------- */
+const video = document.getElementById("pip");
+const statusEl = document.getElementById("status");
+let stream = null;
+function syncPip(){ video.hidden = !S.pip_on; video.classList.toggle("mirror", S.mirror); }
+async function openCamera(){
+  stream?.getTracks().forEach(t => t.stop());
+  const v = {width:{ideal:1280}, height:{ideal:720}, frameRate:{ideal:30}};
+  if (S.deviceId) v.deviceId = {exact:S.deviceId}; else v.facingMode = S.facing;
+  try{ stream = await navigator.mediaDevices.getUserMedia({video:v, audio:false}); }
+  catch(e){ if (S.deviceId){ S.deviceId = ""; return openCamera(); } throw e; }
+  video.srcObject = stream; await video.play();
+  await listCameras();
+}
+async function listCameras(){
+  const sel = document.getElementById("camSel");
+  const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
+  const cur = stream?.getVideoTracks()[0]?.getSettings().deviceId;
+  sel.innerHTML = devs.map((d,i) => `<option value="${d.deviceId}" ${d.deviceId === cur ? "selected" : ""}>${(d.label || "Camera "+(i+1)).replace(/</g,"&lt;")}</option>`).join("");
+  sel.onchange = async () => { S.deviceId = sel.value; save(); await openCamera(); };
+}
+document.getElementById("bFlip").onclick = async e => {
+  e.stopPropagation();
+  S.deviceId = ""; S.facing = S.facing === "user" ? "environment" : "user";
+  S.mirror = S.facing === "user"; document.getElementById("mirror").checked = S.mirror; syncPip(); save();
+  try{ await openCamera(); }catch(err){}
+};
+async function wakeLock(){ try{ await navigator.wakeLock?.request("screen"); }catch(e){} }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") wakeLock(); });
+
+/* ---------- tracking ---------- */
+let landmarker = null;
+async function loadTracker(){
+  statusEl.textContent = "Loading face tracker…";
+  const { FaceLandmarker, FilesetResolver } = await import(MP + "/vision_bundle.mjs");
+  const files = await FilesetResolver.forVisionTasks(MP + "/wasm");
+  const opts = d => ({baseOptions:{modelAssetPath:MODEL, delegate:d}, runningMode:"VIDEO", numFaces:1,
+    outputFacialTransformationMatrixes:true, outputFaceBlendshapes:true});
+  try{ landmarker = await FaceLandmarker.createFromOptions(files, opts("GPU")); }
+  catch(e){ landmarker = await FaceLandmarker.createFromOptions(files, opts("CPU")); }
+}
+
+function drawFeature(p, cx, cy, cw, ch, angle, flip){
+  const {ctx, W, H:Hh} = p, vw = video.videoWidth, vh = video.videoHeight;
+  ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.globalCompositeOperation = "source-over"; ctx.clearRect(0,0,W,Hh);
+  ctx.filter = S.blend > 0 ? `sepia(${S.blend*0.55}) saturate(${1 + S.blend*0.35}) contrast(${1 + S.blend*0.08})` : "none";
+  ctx.translate(W/2, Hh/2); if (flip) ctx.scale(-1, 1);
+  ctx.scale(W/cw, Hh/ch); ctx.rotate(-angle); ctx.translate(-cx, -cy);
+  ctx.drawImage(video, 0, 0, vw, vh);
+  ctx.restore();
+  ctx.save(); ctx.globalCompositeOperation = "destination-in";
+  ctx.translate(W/2, Hh/2); ctx.scale(W/2, Hh/2);
+  const g = ctx.createRadialGradient(0,0,0,0,0,1);
+  g.addColorStop(0, "#000"); g.addColorStop(Math.max(0.02, 1 - S.feather), "#000"); g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0,0,1,0,Math.PI*2); ctx.fill(); ctx.restore();
+  p.tex.needsUpdate = true;
+}
+
+const tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), tmpE = new THREE.Euler(0,0,0,"YXZ"), tmpV = new THREE.Vector3(), tmpS = new THREE.Vector3();
+const pose = {x:0, y:0, z:0, tx:0, ty:0}, chipEl = document.getElementById("chip");
+let lastVideoTime = -1, lastSeen = 0, jaw = 0, faceVis = 0;
+
+function track(now){
+  if (!landmarker || video.readyState < 2 || video.currentTime === lastVideoTime) return;
+  lastVideoTime = video.currentTime;
+  const res = landmarker.detectForVideo(video, now);
+  const lm = res.faceLandmarks?.[0];
+  if (!lm) return;
+  lastSeen = now;
+  const vw = video.videoWidth, vh = video.videoHeight, P = i => ({x: lm[i].x*vw, y: lm[i].y*vh});
+  const a = P(33), b = P(263);
+  const angle = Math.atan2(b.y - a.y, b.x - a.x);
+  const flip = S.mirror, k = S.crop;
+  // raw image-left eye is the subject's right eye; in a mirrored view it lands on screen right
+  const eyeBox = (o, i) => { const p1 = P(o), p2 = P(i); const w = Math.hypot(p2.x-p1.x, p2.y-p1.y) * 1.9 * k; const h = w*160/256;
+    return {cx:(p1.x+p2.x)/2 + Math.sin(angle)*h*0.12, cy:(p1.y+p2.y)/2 - Math.cos(angle)*h*0.12, w, h}; };
+  const imgLeft = eyeBox(33, 133), imgRight = eyeBox(263, 362);
+  const [forL, forR] = flip ? [imgRight, imgLeft] : [imgLeft, imgRight];
+  drawFeature(eyeL, forL.cx, forL.cy, forL.w, forL.h, angle, flip);
+  drawFeature(eyeR, forR.cx, forR.cy, forR.w, forR.h, angle, flip);
+  const m1 = P(61), m2 = P(291), mt = P(0), mb = P(17);
+  const mw = Math.hypot(m2.x-m1.x, m2.y-m1.y) * 1.55 * k, mh = Math.max(mw*176/320, Math.hypot(mb.x-mt.x, mb.y-mt.y)*1.5);
+  drawFeature(mouth, (m1.x+m2.x+mt.x+mb.x)/4, (m1.y+m2.y+mt.y+mb.y)/4, mh*320/176, mh, angle, flip);
+
+  const mat = res.facialTransformationMatrixes?.[0];
+  if (mat){
+    tmpM.fromArray(mat.data); tmpM.decompose(tmpV, tmpQ, tmpS); tmpE.setFromQuaternion(tmpQ, "YXZ");
+    let yaw = tmpE.y, pitch = tmpE.x, roll = tmpE.z;
+    if (S.mirror){ yaw = -yaw; roll = -roll; }
+    if (S.invYaw){ yaw = -yaw; roll = -roll; }
+    if (S.invPitch) pitch = -pitch;
+    const c = v => THREE.MathUtils.clamp(v, -0.9, 0.9);
+    const s = 0.4;
+    pose.x += (c(pitch)*S.motion - pose.x)*s; pose.y += (c(yaw)*S.motion - pose.y)*s; pose.z += (c(roll)*S.motion - pose.z)*s;
+    const tx = THREE.MathUtils.clamp(tmpV.x*0.025*(S.mirror ? -1 : 1), -0.6, 0.6), ty = THREE.MathUtils.clamp(tmpV.y*0.02, -0.4, 0.4);
+    pose.tx += (tx*S.motion - pose.tx)*0.25; pose.ty += (ty*S.motion - pose.ty)*0.25;
+  }
+  const bs = res.faceBlendshapes?.[0]?.categories;
+  if (bs){ const j = bs.find(c => c.categoryName === "jawOpen"); if (j) jaw += (j.score - jaw)*0.5; }
+}
+
+let started = false;
+function loop(now){
+  requestAnimationFrame(loop);
+  try{ track(now); }catch(e){}
+  const seen = now - lastSeen < 700;
+  faceVis += ((seen ? 1 : 0) - faceVis) * 0.15;
+  for (const p of [eyeL, eyeR, mouth]) p.mat.opacity = faceVis;
+  chipEl.hidden = !started || seen;
+  const idle = seen ? 0 : Math.sin(now/900)*0.05;
+  rig.rotation.set(pose.x, pose.y + idle, pose.z);
+  rig.position.set(pose.tx, pose.ty, 0);
+  const sq = S.bounce ? jaw*0.05 : 0;
+  nut.scale.set(1 - sq*0.4, 1 + sq, 1 - sq*0.4);
+  renderer.render(scene, camera);
+}
+
+/* ---------- boot ---------- */
+bindControls(); applyShell(); layoutPatches(); applyBg(); resize(); onChange("light"); syncPip();
+requestAnimationFrame(loop);
+
+document.getElementById("go").onclick = async (e) => {
+  const btn = e.currentTarget; btn.disabled = true;
+  try{
+    if (!navigator.mediaDevices?.getUserMedia) throw new Error("This page needs to be opened over https:// (or as a local file on a PC) for camera access.");
+    statusEl.textContent = "Asking for camera…";
+    await openCamera();
+    await loadTracker();
+    started = true; wakeLock();
+    document.getElementById("start").remove();
+    document.getElementById("dock").hidden = false;
+  }catch(err){
+    btn.disabled = false;
+    statusEl.textContent = (err && err.name === "NotAllowedError") ? "Camera permission was blocked. Allow it in the browser's site settings, then try again." : ("Couldn't start: " + (err?.message || err));
+  }
+};
+</script>
+</body>
+</html>
