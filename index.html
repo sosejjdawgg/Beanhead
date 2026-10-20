@@ -174,7 +174,10 @@ select,.file{font:400 13px var(--mono);background:var(--shell);color:var(--cream
       <div class="row"><div class="top"><span class="lbl">Edge softness</span><output id="o_feather"></output></div><input type="range" id="feather" min="0.01" max="0.25" step="0.005"></div>
       <div class="row"><div class="top"><span class="lbl">Steadiness</span><output id="o_steady"></output></div><input type="range" id="steady" min="0" max="1" step="0.01"></div>
       <label class="tog">Fill in hidden side when turning <input type="checkbox" id="symFill"></label>
-      <div class="row"><div class="top"><span class="lbl">Blend into shell</span><output id="o_blend"></output></div><input type="range" id="blend" min="0" max="1" step="0.01"></div>
+      <div class="row"><div class="top"><span class="lbl">3D depth</span><output id="o_depth"></output></div><input type="range" id="depth" min="0" max="2.5" step="0.01"></div>
+      <div class="row"><div class="top"><span class="lbl">Blend skin into shell</span><output id="o_skinMatch"></output></div><input type="range" id="skinMatch" min="0" max="1" step="0.01"></div>
+      <div class="row"><div class="top"><span class="lbl">Smooth skin</span><output id="o_retouch"></output></div><input type="range" id="retouch" min="0" max="1" step="0.01"></div>
+      <div class="row"><div class="top"><span class="lbl">Tint lips &amp; eyes</span><output id="o_blend"></output></div><input type="range" id="blend" min="0" max="1" step="0.01"></div>
     </div>
 
     <div class="pane" data-pane="cam" hidden>
@@ -208,7 +211,7 @@ const MODEL = window.PC.model;
 
 /* ---------- settings ---------- */
 const DEFAULTS = {bg:"roastery",bgColor:"#1f6f4a",floor:true,zoom:1,light:1,roast:0.55,bump:1.4,motion:1,bounce:true,
-  eyeSize:1,eyeSpacing:0.36,eyeHeight:1.18,mouthSize:1,mouthHeight:0.5,eyeMargin:0.055,mouthMargin:0.045,feather:0.07,steady:0.5,wobble:0.5,symFill:true,blend:0.25,
+  eyeSize:1,eyeSpacing:0.36,eyeHeight:1.18,mouthSize:1,mouthHeight:0.5,eyeMargin:0.055,mouthMargin:0.045,feather:0.07,steady:0.5,wobble:0.5,symFill:true,blend:0.15,depth:1.3,skinMatch:0.8,retouch:0.8,
   mirror:true,pip_on:true,invYaw:false,invPitch:false,deviceId:"",facing:"user"};
 let S = {...DEFAULTS};
 try{ Object.assign(S, JSON.parse(localStorage.getItem("peanutcam")||"{}")); }catch(e){}
@@ -379,36 +382,67 @@ const frameCtx = frameCanvas.getContext("2d", {alpha:false});
 const videoTex = new THREE.CanvasTexture(frameCanvas);
 videoTex.minFilter = THREE.LinearFilter; videoTex.magFilter = THREE.LinearFilter; videoTex.generateMipmaps = false;
 
+const texelU = { value: new THREE.Vector2(1/1280, 1/720) };
 function featureMaterial(){
   return new THREE.ShaderMaterial({
     transparent:true, depthWrite:false, side:THREE.DoubleSide,
     polygonOffset:true, polygonOffsetFactor:-4, polygonOffsetUnits:-4,
-    uniforms:{ map:{value:videoTex}, opacity:{value:0}, blend:{value:S.blend}, tint:tintU, light:{value:1} },
+    uniforms:{ map:{value:videoTex}, opacity:{value:0}, blend:{value:S.blend}, skinMatch:{value:S.skinMatch},
+      relief:{value:1}, smoothSkin:{value:0.8}, tint:tintU, texel:texelU, light:{value:1} },
     vertexShader:`
-      attribute float alpha; varying float vA; varying vec2 vUv; varying float vShade;
+      attribute float alpha; attribute float core; attribute vec3 snormal;
+      varying float vA; varying float vCore; varying vec2 vUv; varying vec3 vN; varying vec3 vS; varying vec3 vV;
       void main(){
-        vA = alpha; vUv = uv;
-        vec3 n = normalize(normalMatrix * normal);
-        vShade = 0.72 + 0.34 * max(dot(n, normalize(vec3(0.35, 0.55, 0.85))), 0.0);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        vA = alpha; vCore = core; vUv = uv;
+        vN = normalMatrix * normal; vS = normalMatrix * snormal;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        vV = -mv.xyz;
+        gl_Position = projectionMatrix * mv;
       }`,
     fragmentShader:`
-      uniform sampler2D map; uniform float opacity, blend, light; uniform vec3 tint;
-      varying float vA; varying vec2 vUv; varying float vShade;
+      uniform sampler2D map; uniform float opacity, blend, skinMatch, relief, smoothSkin, light;
+      uniform vec3 tint; uniform vec2 texel;
+      varying float vA; varying float vCore; varying vec2 vUv; varying vec3 vN; varying vec3 vS; varying vec3 vV;
+      // edge-preserving skin smoothing (like a beauty/retouch pass): only blurs similar colours
+      vec3 retouch(vec2 uv, float amt){
+        vec3 c0 = texture2D(map, uv).rgb;
+        if (amt < 0.02) return c0;
+        vec3 acc = c0; float ws = 1.0;
+        for (int i = 0; i < 8; i++){
+          float a = float(i) * 0.7853982;
+          vec2 o = vec2(cos(a), sin(a)) * texel * 3.0;
+          vec3 c = texture2D(map, uv + o).rgb;
+          float w = exp(-dot(c - c0, c - c0) * 80.0);
+          acc += c * w; ws += w;
+        }
+        return mix(c0, acc / ws, amt);
+      }
       void main(){
-        vec3 c = texture2D(map, vUv).rgb;
-        vec3 warm = c * (tint / max(dot(tint, vec3(0.3333)), 0.001));
-        vec3 col = mix(c, warm, blend * 0.6) * (1.0 - blend * 0.12);
-        col *= mix(1.0, vShade, 0.6) * mix(1.0, light, 0.35);
+        float skin = 1.0 - vCore;
+        vec3 c = retouch(vUv, skin * smoothSkin);
+        // grade: skin takes the shell's colour (keeping its own light and shade); lips/teeth/eyes keep theirs
+        float l = dot(c, vec3(0.299, 0.587, 0.114));
+        float tl = max(dot(tint, vec3(0.299, 0.587, 0.114)), 0.001);
+        vec3 graded = tint * (l / tl) * 1.04;
+        vec3 col = mix(c, graded, mix(blend * 0.45, skinMatch, skin));
+        // relief light: shade only the difference between the face's shape and the shell underneath
+        vec3 L = normalize(vec3(0.42, 0.57, 0.71));
+        vec3 s = normalize(vS), n = normalize(vN);
+        if (dot(n, s) < 0.0) n = -n;
+        float dn = 0.28 + 0.72 * max(dot(n, L), 0.0), ds = 0.28 + 0.72 * max(dot(s, L), 0.0);
+        col *= mix(1.0, clamp(dn / ds, 0.5, 1.6), relief);
+        col *= mix(1.0, ds, 0.45) * mix(1.0, light, 0.35);
+        // small wet highlight on lips and eyes
+        float spec = pow(max(dot(reflect(-L, n), normalize(vV)), 0.0), 30.0);
+        col += spec * 0.18 * vCore * relief;
         float inFrame = step(0.0, vUv.x) * step(vUv.x, 1.0) * step(0.0, vUv.y) * step(vUv.y, 1.0);
-        float a = smoothstep(0.0, 1.0, vA) * opacity * inFrame;
-        gl_FragColor = vec4(col, a);
+        gl_FragColor = vec4(col, smoothstep(0.0, 1.0, vA) * opacity * inFrame);
       }`
   });
 }
 
 /* ring layout: centre + N per ring; rings[] = [{alpha}] where ring 0 is the base contour */
-function makeFeatureMesh(N, ringAlphas, order, lipStrip){
+function makeFeatureMesh(N, ringAlphas, ringCores, order, lipStrip){
   const nv = 1 + N * ringAlphas.length;
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(nv*3), 3).setUsage(THREE.DynamicDrawUsage));
@@ -417,6 +451,10 @@ function makeFeatureMesh(N, ringAlphas, order, lipStrip){
   const al = new Float32Array(nv); al[0] = 1;
   ringAlphas.forEach((a, r) => { for (let i = 0; i < N; i++) al[1 + r*N + i] = a; });
   g.setAttribute("alpha", new THREE.BufferAttribute(al, 1));
+  const co = new Float32Array(nv); co[0] = 1;
+  ringCores.forEach((c, r) => { for (let i = 0; i < N; i++) co[1 + r*N + i] = c; });
+  g.setAttribute("core", new THREE.BufferAttribute(co, 1));
+  g.setAttribute("snormal", new THREE.BufferAttribute(new Float32Array(nv*3), 3).setUsage(THREE.DynamicDrawUsage));
   const idx = [];
   if (lipStrip){
     // mouth opening: zip the lower inner lip (0..10) to the upper inner lip (20..10) so concave smiles never fold
@@ -441,12 +479,13 @@ function makeFeatureMesh(N, ringAlphas, order, lipStrip){
   return mesh;
 }
 // eyes: contour, skin, feather edge. mouth: inner lips, outer lips, skin, feather edge.
-const EYE_RINGS = [1, 1, 0], MOUTH_RINGS = [1, 1, 1, 0];
+// "core" = 1 on the eye/lips themselves, 0 on the skin ring (skin gets retouched and graded to the shell)
+const EYE_RINGS = [1, 1, 0], EYE_CORE = [1, 0, 0], MOUTH_RINGS = [1, 1, 1, 0], MOUTH_CORE = [1, 1, 0, 0];
 const F_EYE = {
-  R:{ real: makeFeatureMesh(16, EYE_RINGS, 3), alt: makeFeatureMesh(16, EYE_RINGS, 4) },
-  L:{ real: makeFeatureMesh(16, EYE_RINGS, 3), alt: makeFeatureMesh(16, EYE_RINGS, 4) },
+  R:{ real: makeFeatureMesh(16, EYE_RINGS, EYE_CORE, 3), alt: makeFeatureMesh(16, EYE_RINGS, EYE_CORE, 4) },
+  L:{ real: makeFeatureMesh(16, EYE_RINGS, EYE_CORE, 3), alt: makeFeatureMesh(16, EYE_RINGS, EYE_CORE, 4) },
 };
-const F_MOUTH = { real: makeFeatureMesh(20, MOUTH_RINGS, 3, true), alt: makeFeatureMesh(20, MOUTH_RINGS, 4, true) };
+const F_MOUTH = { real: makeFeatureMesh(20, MOUTH_RINGS, MOUTH_CORE, 3, true), alt: makeFeatureMesh(20, MOUTH_RINGS, MOUTH_CORE, 4, true) };
 const FEATURE_MESHES = [F_EYE.R.real, F_EYE.R.alt, F_EYE.L.real, F_EYE.L.alt, F_MOUTH.real, F_MOUTH.alt];
 
 /* place a point on the peanut's skin, return surface normal too */
@@ -497,7 +536,7 @@ document.getElementById("bgFile").onchange = e => {
 
 /* ---------- controls ---------- */
 const fmt = v => (+v).toFixed(2);
-const ranges = ["zoom","light","roast","bump","motion","wobble","eyeSize","eyeSpacing","eyeHeight","mouthSize","mouthHeight","eyeMargin","mouthMargin","feather","steady","blend"];
+const ranges = ["zoom","light","roast","bump","motion","wobble","eyeSize","eyeSpacing","eyeHeight","mouthSize","mouthHeight","eyeMargin","mouthMargin","feather","steady","blend","depth","skinMatch","retouch"];
 const checks = ["floor","bounce","mirror","pip_on","invYaw","invPitch","symFill"];
 function onChange(k){
   if (k === "zoom") resize();
@@ -641,15 +680,25 @@ function fillFeature(buf, innerIds, baseIds, offsets){
 }
 
 /* write a buffer onto the peanut. ax/ay = anchor on peanut, ox/oy = feature origin in frontal space */
-function placeFeature(mesh, buf, ax, ay, ox, oy, k, flipX){
-  const g = mesh.geometry, pos = g.attributes.position.array, nrm = g.attributes.normal.array, uv = g.attributes.uv.array;
-  const mx = S.mirror ? -1 : 1;
+function placeFeature(mesh, buf, ax, ay, ox, oy, k, flipX, cavity){
+  const g = mesh.geometry, pos = g.attributes.position.array, sn = g.attributes.snormal.array, uv = g.attributes.uv.array;
+  const al = g.attributes.alpha.array;
+  const mx = S.mirror ? -1 : 1, N = buf.N;
+  // depth reference = the skin at the outer edge, so the edge sits flush with the shell
+  let zRef = 0; for (let i = buf.nv - N; i < buf.nv; i++) zRef += buf.F[i].z; zRef /= N;
+  const depth = S.depth * k * 0.42;
   for (let v = 0; v < buf.nv; v++){
-    const f = buf.F[v], fx = flipX ? -f.x : f.x;
-    onSurface(ax + (fx - ox)*k*mx, ay - (f.y - oy)*k, pos, v*3, nrm, v*3);
+    const f = buf.F[v], fx = flipX ? -f.x : f.x, o = v*3;
+    onSurface(ax + (fx - ox)*k*mx, ay - (f.y - oy)*k, pos, o, sn, o);
+    // push out (lips, eyeballs) or in (corners, open mouth) along the shell normal using the tracked depth
+    let h = -(f.z - zRef) * depth * al[v];
+    if (cavity && v >= 1 && v <= N) h -= cavity;      // inner lip edge rolls back into the mouth
+    h = THREE.MathUtils.clamp(h, -0.006, 0.11);       // never sink below the shell (it would be clipped)
+    pos[o] += sn[o]*h; pos[o+1] += sn[o+1]*h; pos[o+2] += sn[o+2]*h;
     uv[v*2] = buf.uv[v*2]; uv[v*2+1] = buf.uv[v*2+1];
   }
-  g.attributes.position.needsUpdate = true; g.attributes.normal.needsUpdate = true; g.attributes.uv.needsUpdate = true;
+  g.computeVertexNormals();
+  g.attributes.position.needsUpdate = true; g.attributes.snormal.needsUpdate = true; g.attributes.uv.needsUpdate = true;
 }
 
 /* symmetric mouth: the far half is rebuilt from the near half, mirrored */
@@ -686,6 +735,7 @@ function track(now){
     videoTex.dispose();                    // reallocate GPU storage at the new size
   }
   frameCtx.drawImage(video, 0, 0, vw, vh);
+  texelU.value.set(1/vw, 1/vh);
   videoTex.needsUpdate = true;             // texture = the exact frame the landmarks came from
   for (let i = 0; i < 478; i++) P[i].set(lm[i].x*vw, lm[i].y*vh, lm[i].z*vw);
 
@@ -754,8 +804,9 @@ function track(now){
   if (W.eyeR > 0) placeFeature(F_EYE.R.alt, B.L, -S.eyeSpacing*mxs, S.eyeHeight, -lcx, lcy, kE, true);
   if (W.eyeL > 0) placeFeature(F_EYE.L.alt, B.R,  S.eyeSpacing*mxs, S.eyeHeight, -rcx, rcy, kE, true);
   const n2 = Fs.get(2), mox = n2.x + mouthRest.x, moy = n2.y + mouthRest.y;
-  placeFeature(F_MOUTH.real, B.M, 0, S.mouthHeight, mox, moy, kM, false);
-  if (W.mouth > 0){ symmetricMouth(B.M, B.alt, far); placeFeature(F_MOUTH.alt, B.alt, 0, S.mouthHeight, 0, moy, kM, false); }
+  const cav = S.depth * 0.025 * jawRaw;
+  placeFeature(F_MOUTH.real, B.M, 0, S.mouthHeight, mox, moy, kM, false, cav);
+  if (W.mouth > 0){ symmetricMouth(B.M, B.alt, far); placeFeature(F_MOUTH.alt, B.alt, 0, S.mouthHeight, 0, moy, kM, false, cav); }
 }
 
 /* ---------- physics ---------- */
@@ -788,7 +839,7 @@ function loop(now){
   nut.scale.set(1 - sq*0.45, 1 + sq, 1 - sq*0.45);
   nut.rotation.set(-spr.pitch.v * 0.025 * wob, 0, -spr.yaw.v * 0.02 * wob - spr.tx.v * 0.05 * wob);
 
-  const set = (m, o) => { m.material.uniforms.opacity.value = o; m.material.uniforms.blend.value = S.blend; m.material.uniforms.light.value = S.light; m.visible = o > 0.003; };
+  const set = (m, o) => { m.material.uniforms.opacity.value = o; m.material.uniforms.blend.value = S.blend; m.material.uniforms.skinMatch.value = S.skinMatch; m.material.uniforms.relief.value = Math.min(1, S.depth); m.material.uniforms.smoothSkin.value = S.retouch; m.material.uniforms.light.value = S.light; m.visible = o > 0.003; };
   set(F_EYE.R.real, faceVis * (1 - W.eyeR)); set(F_EYE.R.alt, faceVis * W.eyeR);
   set(F_EYE.L.real, faceVis * (1 - W.eyeL)); set(F_EYE.L.alt, faceVis * W.eyeL);
   set(F_MOUTH.real, faceVis * (1 - W.mouth)); set(F_MOUTH.alt, faceVis * W.mouth);
