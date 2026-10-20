@@ -76,6 +76,7 @@ body[data-mode=puppet].holding #gl{cursor:grabbing}
 .card.primary:active .go{transform:scale(.9) rotate(-8deg)}
 .go svg{width:28px;height:28px;stroke-width:2.2}
 .bgchip{grid-column:1;justify-self:start;margin-top:8px;height:34px;padding:0 12px 0 5px;border-radius:99px;display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--ink);background:rgba(0,0,0,.28);box-shadow:inset 0 0 0 1px var(--line)}
+.pthumb{position:absolute;right:18px;top:16px;width:52px;height:62px;border-radius:12px;object-fit:cover;box-shadow:0 0 0 2px rgba(246,207,150,.6),0 8px 20px rgba(0,0,0,.4);transform:rotate(4deg)}
 .bgchip i{width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
 .chars{animation:up .8s .25s var(--spring) both}
 .chars-head{display:flex;align-items:center;gap:8px;padding:2px 4px 8px}
@@ -151,12 +152,22 @@ body.sheet-open #bar{transform:translate(-50%,140%);opacity:0}
 #micBtn{position:absolute;right:calc(27px + env(safe-area-inset-right,0px));bottom:calc(180px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:16px;
   display:grid;place-items:center;background:var(--panel);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px var(--line),0 8px 20px rgba(0,0,0,.35);color:var(--ink)}
 #micBtn.off{color:var(--mute)}
+#shot{position:absolute;right:calc(100px + env(safe-area-inset-right,0px));bottom:calc(109px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:50%;
+  display:grid;place-items:center;background:var(--panel);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 2px rgba(247,236,220,.75),0 8px 20px rgba(0,0,0,.35);color:var(--ink)}
+#shutter{position:fixed;inset:0;z-index:48;background:#fff;opacity:0;pointer-events:none}
+#shutter.go{animation:shutter .45s ease-out}
+@keyframes shutter{0%{opacity:.9}100%{opacity:0}}
+#shotPrev{position:fixed;z-index:49;left:50%;top:50%;width:120px;border-radius:14px;box-shadow:0 0 0 3px #fff,0 14px 40px rgba(0,0,0,.5);pointer-events:none;
+  transform:translate(-50%,-50%) scale(1.6) rotate(-4deg);opacity:0}
+#shotPrev.go{animation:shotfly 1.4s var(--ease) forwards}
+@keyframes shotfly{0%{opacity:0;transform:translate(-50%,-50%) scale(1.8) rotate(0)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.5) rotate(-4deg)}
+  55%{opacity:1;transform:translate(-50%,-50%) scale(1.5) rotate(-4deg)}100%{opacity:0;transform:translate(calc(50vw - 160px),calc(50vh - 190px)) scale(.35) rotate(6deg)}}
 #micBtn.off svg{opacity:.7}
 #recChip{position:absolute;left:50%;top:calc(18px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:99px;
   background:#ff3b30;color:#fff;font:500 13px var(--mono);letter-spacing:.06em;box-shadow:0 8px 24px rgba(255,59,48,.35)}
 #recChip b{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s steps(2) infinite}
-body.sheet-open #rec,body.sheet-open #micBtn{transform:translateY(calc(100% + 140px));opacity:0}
-#rec,#micBtn{transition:transform .45s var(--spring),opacity .3s,box-shadow .3s}
+body.sheet-open #rec,body.sheet-open #micBtn,body.sheet-open #shot{transform:translateY(calc(100% + 160px));opacity:0}
+#rec,#micBtn,#shot{transition:transform .45s var(--spring),opacity .3s,box-shadow .3s}
 @keyframes recpulse{0%{box-shadow:inset 0 0 0 3px #ff3b30,0 0 0 0 rgba(255,59,48,.5)}70%{box-shadow:inset 0 0 0 3px #ff3b30,0 0 0 16px rgba(255,59,48,0)}100%{box-shadow:inset 0 0 0 3px #ff3b30,0 0 0 0 rgba(255,59,48,0)}}
 @keyframes blink{to{opacity:.2}}
 .puppet-only{display:none!important}
@@ -334,6 +345,7 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
       <span class="dsc">A roasted 3D peanut that wears your real eyes and mouth.</span>
       <span class="go"><svg class="i"><use href="#arrow"/></svg></span>
       <button class="bgchip press" id="bgPeanut" aria-label="Peanut background"><i></i><span>Background</span></button>
+      <img class="pthumb" id="peanutShot" alt="" hidden>
     </div>
     <section class="chars">
       <div class="chars-head"><span class="ttl2">Characters</span><span class="cnt" id="charCount"></span><button class="addbtn press" id="addChar"><svg class="i"><use href="#plus"/></svg>Add</button></div>
@@ -352,6 +364,7 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
   <div id="recChip" hidden><b></b><span id="recTime">0:00</span></div>
   <button class="press" id="micBtn" aria-label="Record sound: on"><svg class="i"><use href="#mic"/></svg></button>
   <button id="rec" aria-label="Start recording"><i></i></button>
+  <button class="press" id="shot" aria-label="Take a picture"><svg class="i"><use href="#t-camera"/></svg></button>
   <nav id="bar" aria-label="Controls">
     <button class="bb press" id="bSettings"><svg class="i"><use href="#sliders"/></svg>Settings</button>
     <button class="bb press puppet-only" id="bLayout"><svg class="i"><use href="#move"/></svg>Layout</button>
@@ -380,6 +393,8 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
 
 <div id="modal" hidden><div class="mback"></div><div class="mpanel" role="dialog" aria-modal="true"><div class="mhead"><h2 id="mTitle"></h2><button class="sh-x press" id="mClose" aria-label="Close"><svg class="i"><use href="#x"/></svg></button></div><div id="mBody"></div></div></div>
 <div id="flash" aria-live="polite"></div>
+<div id="shutter" aria-hidden="true"></div>
+<img id="shotPrev" alt="" hidden>
 <canvas id="scan" hidden aria-hidden="true"></canvas>
 <canvas id="loupe" hidden aria-hidden="true"></canvas>
 <div id="toast" role="status"></div>
@@ -408,7 +423,8 @@ const DEFAULTS = {
   coachSeen:false,
   mirror:true, pip_on:true, deviceId:"", facing:"user"
 };
-const WORLD_OPTS = [["auto","Auto-morph"],["meadow","Meadow"],["canyon","Canyon"],["city","Neon City"],["islands","Islands"],["snow","Snowfield"],["alien","Alien"]];
+const WORLD_OPTS = [["auto","Auto-morph"],["meadow","Meadow"],["canyon","Canyon"],["city","Neon City"],["islands","Islands"],["snow","Snowfield"],["alien","Alien"],
+  ["haunted","Haunted Wood"],["volcano","Volcano"],["reef","Reef"],["drive","Sunset Drive"]];
 let S = {...DEFAULTS};
 try{ Object.assign(S, JSON.parse(localStorage.getItem("peanutcam") || "{}")); }catch(e){}
 // settings that belong to "what's on screen": the peanut has its own copy, every character has its own
@@ -1246,7 +1262,7 @@ function sampleTint(ctx, pts, r, w, h){
 /* ---------- character gallery: every uploaded picture keeps its own cut-out, layout and settings ---------- */
 let CHARS = [];
 const newId = () => Math.random().toString(36).slice(2, 10);
-async function persistChar(c){ await idb.set("char:" + c.id, {id:c.id, name:c.name, png:c.png, original:c.original, meta:c.meta, cfg:c.cfg, thumb:c.thumb, created:c.created}); }
+async function persistChar(c){ await idb.set("char:" + c.id, {id:c.id, name:c.name, png:c.png, original:c.original, meta:c.meta, cfg:c.cfg, thumb:c.thumb, shot:c.shot, created:c.created}); }
 async function persistIndex(){ await idb.set("chars", CHARS.map(c => c.id)); }
 function makeThumb(canvas){
   const k = Math.min(1, 240 / Math.max(canvas.width, canvas.height));
@@ -1318,7 +1334,7 @@ async function reprocess(){
 async function savePuppet(){ const c = CHARS.find(c => c.id === PUP?.id); if (c){ c.meta = PUP.meta; await persistChar(c); } }
 async function duplicateChar(id){
   const c = CHARS.find(c => c.id === id); if (!c) return;
-  const d = {...c, id:newId(), name:(c.name + " copy").slice(0, 24), cfg:{...c.cfg}, meta:JSON.parse(JSON.stringify(c.meta)), created:Date.now()};
+  const d = {...c, shot:null, id:newId(), name:(c.name + " copy").slice(0, 24), cfg:{...c.cfg}, meta:JSON.parse(JSON.stringify(c.meta)), created:Date.now()};
   CHARS.splice(CHARS.indexOf(c) + 1, 0, d); await persistChar(d); await persistIndex(); renderChars(); toast("Duplicated");
 }
 async function deleteChar(id){
@@ -1339,15 +1355,21 @@ function renderChars(){
     const t = el("div", "ctile" + (c.id === scopeId && mode === "puppet" ? " on" : ""));
     const cfg = c.cfg || {};
     t.innerHTML = `<button class="cface press" aria-label="Open ${c.name.replace(/"/g, "")}"></button><div class="cname"></div><button class="cmore press" aria-label="Options for ${c.name.replace(/"/g, "")}"><svg class="i"><use href="#dots"/></svg></button>`;
-    const face = t.querySelector(".cface"); face.style.background = bgCss(cfg);
-    if (c.thumb){ const im = new Image(); im.alt = ""; im.src = c.thumb; face.append(im); }
-    if (cfg.world) face.insertAdjacentHTML("beforeend", `<span class="w3d">3D</span>`);
+    const face = t.querySelector(".cface");
+    if (c.shot){ face.style.background = `#000 url("${c.shot}") center/cover no-repeat`; }
+    else {
+      face.style.background = bgCss(cfg);
+      if (c.thumb){ const im = new Image(); im.alt = ""; im.src = c.thumb; face.append(im); }
+      if (cfg.world) face.insertAdjacentHTML("beforeend", `<span class="w3d">3D</span>`);
+    }
     t.querySelector(".cname").textContent = c.name;
     face.onclick = () => { buzz(10); openChar(c.id); };
     t.querySelector(".cmore").onclick = () => { buzz(8); charOptions(c.id); };
     row.append(t);
   }
   const chip = $("#bgPeanut i"); if (chip) chip.style.background = bgCss(scopeCfg("peanut"));
+  let ps = null; try{ ps = localStorage.getItem("peanutcam.peanutShot"); }catch(e){}
+  const pi = $("#peanutShot"); if (pi){ pi.hidden = !ps; if (ps) pi.src = ps; }
 }
 
 /* ---------- modal panel (menu: background picker, character options, touch controls) ---------- */
@@ -1994,6 +2016,48 @@ async function saveVideo(blob, ext, type){
   return "Video downloaded: " + name;
 }
 $("#rec").onclick = () => { REC.on ? stopRec() : startRec(); };
+
+/* ---------- pictures: background + scene, saved to the gallery; the last one becomes the character's thumbnail ---------- */
+const SHOT = {pending:false};
+$("#shot").onclick = () => { SHOT.pending = true; buzz(14); };
+const _sc = new THREE.Vector3();
+function takeShot(){                                   // runs right after a frame is drawn
+  SHOT.pending = false;
+  const w = canvas.width, h = canvas.height, [c, x] = mkCanvas(w, h);
+  if (!S.world) paintBg(x, w, h);
+  x.drawImage(canvas, 0, 0, w, h);
+  const sh = $("#shutter"); sh.classList.remove("go"); void sh.offsetWidth; sh.classList.add("go");
+  // thumbnail: a portrait crop around the character
+  (stageMode === "puppet" ? pBody : rig).getWorldPosition(_sc); _sc.project(camera);
+  const cx = (_sc.x + 1)/2*w, cy = (1 - _sc.y)/2*h, A = 104/124;
+  let tw = w, th = w / A; if (th > h){ th = h; tw = h*A; }
+  if (stageMode === "puppet") { th = Math.min(th, h); }
+  const sx = clamp(cx - tw/2, 0, w - tw), sy = clamp(cy - th*0.42, 0, h - th);
+  const [tc, tx] = mkCanvas(252, 300); tx.drawImage(c, sx, sy, tw, th, 0, 0, 252, 300);
+  const thumb = tc.toDataURL("image/jpeg", 0.85);
+  const pv = $("#shotPrev"); pv.src = thumb; pv.hidden = false; pv.classList.remove("go"); void pv.offsetWidth; pv.classList.add("go");
+  if (mode === "puppet"){ const ch = CHARS.find(k => k.id === scopeId); if (ch){ ch.shot = thumb; persistChar(ch); } }
+  else { try{ localStorage.setItem("peanutcam.peanutShot", thumb); }catch(e){} }
+  c.toBlob(async blob => {
+    try{ toast(await saveImage(blob)); }catch(e){ toast("Couldn't save the picture: " + (e?.message || e)); }
+  }, "image/jpeg", 0.93);
+}
+async function saveImage(blob){
+  const d = new Date(), z = n => String(n).padStart(2, "0");
+  const name = `PeanutCam_${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.jpg`;
+  const N = window.PeanutNative;
+  if (N?.begin){
+    try{ N.prepare?.(); }catch(e){}
+    if (!N.begin(name, "image/jpeg")) throw new Error("the gallery refused the file");
+    const CH = 3 * 262144;
+    for (let o = 0; o < blob.size; o += CH){ if (!N.append(await toB64(blob.slice(o, o + CH)))) throw new Error("writing failed"); }
+    if (!N.finish()) throw new Error("finishing failed");
+    return "Picture saved to your gallery (Pictures › PeanutCam)";
+  }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  return "Picture downloaded: " + name;
+}
 function syncMicBtn(){
   const b = $("#micBtn");
   b.classList.toggle("off", !S.recMic);
@@ -2025,7 +2089,34 @@ const BIOMES = {
   alien:{amp:10, freq:0.035, ridge:0.9, terrace:0, water:-0.4, floor:-1.0, sky:["#0d0524","#5b1e6b"], fog:"#3b1450", low:"#3a1a5c", high:"#c04fd8", rock:"#24123a", waterC:"#2affc8",
     sun:"#7affea", sunDir:[-0.3,0.4,-1], stars:1, trunkH:0.0, trunkR:0.2, crownH:3.5, crownR:0.6, crownTop:0.0, propScale:1, density:0.35, tall:0.8, trunkC:"#000000", crownC:"#5affe0", glow:0.9, windows:0, grid:0, gridC:"#000000"}
 };
-const BIOME_ORDER = ["meadow","canyon","islands","city","snow","alien"];
+Object.assign(BIOMES, {
+  haunted:{amp:7, freq:0.035, ridge:0.2, terrace:0, water:-0.5, floor:-1.0, sky:["#07071a","#2b2440"], fog:"#2b2440", low:"#22301f", high:"#3d3a2a", rock:"#3a3530", waterC:"#1b2a22",
+    sun:"#dfe8ff", sunDir:[-0.3,0.45,-1], sunSize:0.9975, stars:0.7, trunkH:2.6, trunkR:0.14, crownH:1.3, crownR:0.5, crownTop:0.0, propScale:1, density:0.55, tall:0.6,
+    trunkC:"#2a2018", crownC:"#1e1a14", glow:0, windows:0, grid:0, gridC:"#000000", clouds:0.35, cloudC:"#4a4260",
+    pAmt:0.55, pCol:"#d8ff7a", pSize:0.13, pVel:[0,0.25,0], pWob:1.3, pGlow:1, pStretch:1},
+  volcano:{amp:13, freq:0.028, ridge:0.8, terrace:0, water:-0.2, floor:-1.0, lava:1, sky:["#140403","#5a1a0a"], fog:"#3a1206", low:"#1c1210", high:"#3a2620", rock:"#140c0a", waterC:"#ff5a14",
+    sun:"#ff7a2a", sunDir:[0.3,0.2,-1], stars:0, trunkH:0, trunkR:0.2, crownH:1.7, crownR:0.9, crownTop:0.3, propScale:1, density:0.3, tall:0.5,
+    trunkC:"#000000", crownC:"#241612", glow:0, windows:0, grid:0, gridC:"#000000", clouds:0.25, cloudC:"#2a0c06",
+    pAmt:0.85, pCol:"#ff8a3a", pSize:0.11, pVel:[0.3,2.6,0], pWob:0.7, pGlow:1, pStretch:1.3},
+  reef:{amp:6, freq:0.04, ridge:0.3, terrace:0, water:-60, floor:-1.0, sky:["#021a30","#0b4f6e"], fog:"#0b4f6e", low:"#c9b98a", high:"#6f8f6a", rock:"#3d5a5a", waterC:"#000000",
+    sun:"#bfefff", sunDir:[0.1,1,-0.4], sunSize:0.985, stars:0, trunkH:0, trunkR:0.2, crownH:5, crownR:0.28, crownTop:0.55, propScale:1, density:0.55, tall:1,
+    trunkC:"#000000", crownC:"#2f8a4a", glow:0.15, windows:0, grid:0, gridC:"#000000", fogBoost:1,
+    pAmt:0.7, pCol:"#cdf3ff", pSize:0.15, pVel:[0,1.7,0], pWob:0.9, pGlow:0.3, pStretch:1},
+  drive:{amp:12, freq:0.02, ridge:0.7, terrace:0, water:-60, floor:0, road:1, sky:["#1b0b3a","#ff6a8a"], fog:"#ff6a8a", low:"#1a0a2a", high:"#3a1a5a", rock:"#2a1050", waterC:"#000000",
+    sun:"#ffd23f", sunDir:[0,0.14,-1], sunSize:0.982, stripes:1, stars:0.4, trunkH:3.2, trunkR:0.12, crownH:0.45, crownR:1.7, crownTop:0.1, propScale:1, density:0.22, tall:0.3,
+    trunkC:"#120820", crownC:"#120820", glow:0, windows:0, grid:1, gridC:"#ff3fd0", roadC:"#140a24"}
+});
+// weather and details for the original worlds
+Object.assign(BIOMES.meadow, {clouds:0.5, cloudC:"#ffffff", pAmt:0.25, pCol:"#fff6c0", pSize:0.08, pVel:[0.4,0.15,0], pWob:0.8, pGlow:0.2});
+Object.assign(BIOMES.canyon, {clouds:0.15, cloudC:"#fff0dc", pAmt:0.35, pCol:"#f0c08a", pSize:0.07, pVel:[3,0.2,0], pWob:0.4});
+Object.assign(BIOMES.city, {road:1, roadC:"#0c0818", pAmt:0.85, pCol:"#a8b8ff", pSize:0.035, pVel:[0.6,-24,0], pWob:0, pStretch:12});
+Object.assign(BIOMES.islands, {clouds:0.45, cloudC:"#fff3e6", pAmt:0.12, pCol:"#ffffff", pSize:0.16, pVel:[2,0.4,0], pWob:1.2, pStretch:0.5});
+Object.assign(BIOMES.snow, {clouds:0.3, cloudC:"#ffffff", pAmt:0.9, pCol:"#ffffff", pSize:0.12, pVel:[0.5,-1.7,0], pWob:1.1});
+Object.assign(BIOMES.alien, {pAmt:0.6, pCol:"#7affea", pSize:0.1, pVel:[0,0.5,0], pWob:1.6, pGlow:1});
+const BIOME_DEFAULTS = {lava:0, road:0, roadC:"#1a1a1e", sunSize:0.9965, stripes:0, clouds:0, cloudC:"#ffffff", fogBoost:0,
+  pAmt:0, pCol:"#ffffff", pSize:0.1, pVel:[0,0,0], pWob:0, pGlow:0, pStretch:1};
+for (const b of Object.values(BIOMES)) for (const [k, v] of Object.entries(BIOME_DEFAULTS)) if (!(k in b)) b[k] = v;
+const BIOME_ORDER = ["meadow","canyon","islands","city","snow","alien","haunted","volcano","reef","drive"];
 const WORLD = (() => {
   const GLSL_COMMON = `
     uniform float uAmp, uFreq, uRidge, uTerrace, uWater, uFloor, uJitter;
@@ -2055,7 +2146,9 @@ const WORLD = (() => {
     uSunDir:{value:new THREE.Vector3(0.4, 0.5, -0.7).normalize()}, uStars:{value:0}, uFogNear:{value:30}, uFogFar:{value:150},
     uTrunkH:{value:1}, uTrunkR:{value:0.2}, uCrownH:{value:2}, uCrownR:{value:1}, uCrownTop:{value:0}, uPropScale:{value:1}, uDensity:{value:0.4}, uTall:{value:0},
     uTrunkC:{value:new THREE.Color()}, uCrownC:{value:new THREE.Color()}, uGlow:{value:0}, uWindows:{value:0}, uGrid:{value:0}, uGridC:{value:new THREE.Color()},
-    uTex:{value:null}
+    uTex:{value:null},
+    uRoad:{value:0}, uRoadC:{value:new THREE.Color()}, uLava:{value:0}, uSunSize:{value:0.9965}, uStripes:{value:0}, uClouds:{value:0}, uCloudC:{value:new THREE.Color()},
+    uPAmt:{value:0}, uPCol:{value:new THREE.Color()}, uPSize:{value:0.1}, uPVel:{value:new THREE.Vector3()}, uPWob:{value:0}, uPGlow:{value:0}, uPStretch:{value:1}, uCamPos:{value:new THREE.Vector3()}
   };
   // a tiny noisy texture, sampled with nearest filtering: the warped "PS1" texture look
   const tc = document.createElement("canvas"); tc.width = tc.height = 32;
@@ -2086,13 +2179,25 @@ const WORLD = (() => {
         gl_Position = psxSnap(cp);
       }`,
     fragmentShader: `
-      uniform sampler2D uTex; uniform float uAffine, uTime, uGrid; uniform vec3 uFogC, uGridC;
+      uniform sampler2D uTex; uniform float uAffine, uTime, uGrid, uRoad, uLava; uniform vec3 uFogC, uGridC, uRoadC, uWaterC;
       varying vec3 vCol; varying vec3 vUvw; varying vec2 vUvP; varying float vFog; varying float vWater; varying vec2 vW;
       void main(){
         vec2 uv = mix(vUvP, vUvw.xy/vUvw.z, uAffine);
         vec3 c = vCol*(0.78 + 0.44*texture2D(uTex, uv).r);
-        if (vWater > 0.5) c = vCol*(0.75 + 0.5*texture2D(uTex, uv*0.5 + vec2(uTime*0.05, uTime*0.03)).r);
-        if (uGrid > 0.0){ vec2 g = abs(fract(vW*0.125) - 0.5); c = mix(c, uGridC, step(0.45, max(g.x, g.y))*uGrid); }
+        if (vWater > 0.5){
+          float r = texture2D(uTex, uv*0.5 + vec2(uTime*0.05, uTime*0.03)).r;
+          c = vCol*(0.75 + 0.5*r);
+          // lava: bright, flickering, unaffected by shade
+          c = mix(c, uWaterC*(1.15 + 0.55*r + 0.25*sin(uTime*3.0 + vW.x*0.7 + vW.y*0.5)), uLava);
+        }
+        if (uGrid > 0.0){ vec2 g = abs(fract(vW*0.125) - 0.5); c = mix(c, uGridC, step(0.45, max(g.x, g.y))*uGrid*(1.0 - step(abs(vW.x), 3.0)*uRoad)); }
+        if (uRoad > 0.0){
+          float ax = abs(vW.x), on = step(ax, 2.8);
+          vec3 road = uRoadC*(0.8 + 0.3*texture2D(uTex, uv*2.0).r);
+          road = mix(road, vec3(1.0, 0.85, 0.35), step(ax, 0.1)*step(0.5, fract(vW.y*0.08)));   // dashed centre line
+          road = mix(road, vec3(0.95), step(2.45, ax)*step(ax, 2.6));                           // edge lines
+          c = mix(c, road, on*uRoad);
+        }
         gl_FragColor = vec4(mix(c, uFogC, vFog), 1.0);
       }`}));
   terrain.frustumCulled = false; scene.add(terrain);
@@ -2157,19 +2262,59 @@ const WORLD = (() => {
   // sky dome with sun and stars
   const sky = new THREE.Mesh(new THREE.SphereGeometry(380, 24, 14), new THREE.ShaderMaterial({uniforms:U, side:THREE.BackSide, depthWrite:false,
     vertexShader: GLSL_COMMON + `varying vec3 vDir; void main(){ vDir = position; vec4 cp = projectionMatrix*modelViewMatrix*vec4(position, 1.0); gl_Position = psxSnap(cp); }`,
-    fragmentShader: `
-      uniform vec3 uSky, uHorizon, uFogC, uSunC, uSunDir; uniform float uStars; varying vec3 vDir;
+    fragmentShader: GLSL_COMMON + `
+      uniform vec3 uSky, uHorizon, uFogC, uSunC, uSunDir, uCloudC; uniform float uStars, uSunSize, uStripes, uClouds, uTime; varying vec3 vDir;
       float h21(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233)))*43758.5453); }
       void main(){
         vec3 d = normalize(vDir); float y = d.y;
         vec3 c = y > 0.0 ? mix(uHorizon, uSky, pow(clamp(y, 0.0, 1.0), 0.55)) : uFogC;
-        float s = dot(d, normalize(uSunDir));
-        c += uSunC*(smoothstep(0.9965, 0.998, s) + 0.22*pow(max(s, 0.0), 24.0));
+        vec3 sd = normalize(uSunDir); float s = dot(d, sd);
+        float disc = smoothstep(uSunSize, uSunSize + 0.0015, s);
+        float band = step(0.5, fract((y - sd.y)*55.0 + uTime*0.4)) + step(sd.y + 0.004, y);   // synthwave cut-outs on the lower half
+        disc *= mix(1.0, clamp(band, 0.0, 1.0), uStripes);
+        c += uSunC*(disc + 0.22*pow(max(s, 0.0), 24.0));
+        if (uClouds > 0.0 && y > 0.02){
+          vec2 cp = d.xz/(y + 0.08)*1.6 + vec2(uTime*0.02, 0.0);
+          float cl = step(0.62 - uClouds*0.18, fbm(cp*0.9)) * smoothstep(0.02, 0.2, y);
+          c = mix(c, mix(uCloudC, uHorizon, 0.25), cl*0.9);
+        }
         vec2 sp = floor(vec2(atan(d.z, d.x), asin(clamp(y, -1.0, 1.0)))*120.0);
         c += uStars*step(0.994, h21(sp))*smoothstep(0.05, 0.35, y);
         gl_FragColor = vec4(c, 1.0);
       }`}));
   sky.frustumCulled = false; sky.renderOrder = -1; scene.add(sky);
+  // weather / particles: rain, snow, embers, fireflies, bubbles, spores, dust — chunky pixel quads, snapped like everything else
+  const PN = 1400, pq = new THREE.InstancedBufferGeometry().copy(new THREE.PlaneGeometry(1, 1));
+  const pd = new Float32Array(PN*4);
+  for (let i = 0; i < PN; i++){ pd[i*4] = Math.random(); pd[i*4+1] = Math.random(); pd[i*4+2] = Math.random(); pd[i*4+3] = Math.random(); }
+  pq.setAttribute("pData", new THREE.InstancedBufferAttribute(pd, 4)); pq.instanceCount = PN;
+  const parts = new THREE.Mesh(pq, new THREE.ShaderMaterial({uniforms:U, transparent:true, depthWrite:false,
+    vertexShader: GLSL_COMMON + `
+      attribute vec4 pData; uniform float uTime, uPAmt, uPSize, uPWob, uPStretch, uFogNear, uFogFar; uniform vec3 uPVel, uCamPos;
+      varying float vFog; varying float vSeed; varying float vKeep;
+      void main(){
+        vec3 box = vec3(70.0, 26.0, 90.0);
+        vec3 p = pData.xyz*box + uPVel*uTime*(0.7 + 0.6*pData.w);
+        p.z -= uScroll.y;                                                  // the world streams past
+        p += uPWob*vec3(sin(uTime*1.3 + pData.w*40.0), sin(uTime*1.7 + pData.x*30.0)*0.6, cos(uTime*1.1 + pData.y*20.0));
+        p = mod(p, box) - vec3(box.x*0.5, box.y*0.35, box.z - 6.0);
+        p += vec3(uCamPos.x, uCamPos.y, 0.0);
+        vKeep = step(pData.w, uPAmt);
+        vec4 mv = modelViewMatrix*vec4(p, 1.0);
+        float sz = uPSize*(0.6 + 0.8*pData.z)*vKeep;
+        mv.xy += position.xy*vec2(sz, sz*uPStretch);
+        vFog = smoothstep(uFogNear, uFogFar, -mv.z); vSeed = pData.w;
+        gl_Position = psxSnap(projectionMatrix*mv);
+      }`,
+    fragmentShader: `
+      uniform vec3 uPCol, uFogC; uniform float uPGlow, uTime; varying float vFog; varying float vSeed; varying float vKeep;
+      void main(){
+        if (vKeep < 0.5) discard;
+        float tw = mix(1.0, 0.55 + 0.45*sin(uTime*4.0 + vSeed*60.0), uPGlow);
+        vec3 c = uPCol*(1.0 + uPGlow*0.6)*tw;
+        gl_FragColor = vec4(mix(c, uFogC, vFog*(1.0 - uPGlow*0.6)), 1.0);
+      }`}));
+  parts.frustumCulled = false; parts.renderOrder = 5; scene.add(parts);
 
   // low-res target + dither/quantise pass to the screen
   let rt = null;
@@ -2191,8 +2336,9 @@ const WORLD = (() => {
   const postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
   // morphing between worlds
-  const COLS = ["low","high","rock","waterC","fog","sun","trunkC","crownC","gridC"];
-  const NUMS = ["amp","freq","ridge","terrace","water","floor","stars","trunkH","trunkR","crownH","crownR","crownTop","propScale","density","tall","glow","windows","grid"];
+  const COLS = ["low","high","rock","waterC","fog","sun","trunkC","crownC","gridC","roadC","cloudC","pCol"];
+  const NUMS = ["amp","freq","ridge","terrace","water","floor","stars","trunkH","trunkR","crownH","crownR","crownTop","propScale","density","tall","glow","windows","grid",
+    "road","lava","sunSize","stripes","clouds","pAmt","pSize","pWob","pGlow","pStretch","fogBoost"];
   const st = {from:"meadow", to:"meadow", t:1, dur:3, since:0, scroll:0, camY:3, autoIdx:0, cfgKey:""};
   const col = (h) => new THREE.Color(h);
   function setTo(b, dur){ if (st.to === b && st.t >= 1) return; st.from = st.t >= 1 ? st.to : st.to; st.to = b; st.t = 0; st.dur = dur; }
@@ -2218,17 +2364,22 @@ const WORLD = (() => {
     const A = BIOMES[st.from], Bm = BIOMES[st.to], k = st.t < 1 ? st.t*st.t*(3 - 2*st.t) : 1;
     const L = (a, b) => a + (b - a)*k;
     const map = {amp:"uAmp", freq:"uFreq", ridge:"uRidge", terrace:"uTerrace", water:"uWater", floor:"uFloor", stars:"uStars", trunkH:"uTrunkH", trunkR:"uTrunkR",
-      crownH:"uCrownH", crownR:"uCrownR", crownTop:"uCrownTop", propScale:"uPropScale", density:"uDensity", tall:"uTall", glow:"uGlow", windows:"uWindows", grid:"uGrid"};
+      crownH:"uCrownH", crownR:"uCrownR", crownTop:"uCrownTop", propScale:"uPropScale", density:"uDensity", tall:"uTall", glow:"uGlow", windows:"uWindows", grid:"uGrid",
+      road:"uRoad", lava:"uLava", sunSize:"uSunSize", stripes:"uStripes", clouds:"uClouds", pAmt:"uPAmt", pSize:"uPSize", pWob:"uPWob", pGlow:"uPGlow", pStretch:"uPStretch", fogBoost:null};
     for (const n of NUMS){
       let a = A[n], b = Bm[n];
       if (n === "water"){ a = Math.max(a, A.floor - 2); b = Math.max(b, Bm.floor - 2); }   // no sudden flood when morphing from "no water"
-      U[map[n]].value = L(a, b);
+      if (map[n]) U[map[n]].value = L(a, b); else st[n] = L(a, b);
     }
-    const cmap = {low:"uLow", high:"uHigh", rock:"uRock", waterC:"uWaterC", fog:"uFogC", sun:"uSunC", trunkC:"uTrunkC", crownC:"uCrownC", gridC:"uGridC"};
+    U.uPVel.value.fromArray(A.pVel).lerp(_sd2.fromArray(Bm.pVel), k);
+    const cmap = {low:"uLow", high:"uHigh", rock:"uRock", waterC:"uWaterC", fog:"uFogC", sun:"uSunC", trunkC:"uTrunkC", crownC:"uCrownC", gridC:"uGridC", roadC:"uRoadC", cloudC:"uCloudC", pCol:"uPCol"};
     for (const c of COLS) U[cmap[c]].value.copy(_a.set(A[c])).lerp(_b.set(Bm[c]), k);
     U.uSky.value.copy(_a.set(A.sky[0])).lerp(_b.set(Bm.sky[0]), k);
     U.uHorizon.value.copy(_a.set(A.sky[1])).lerp(_b.set(Bm.sky[1]), k);
     U.uSunDir.value.copy(_sd.fromArray(A.sunDir).normalize().lerp(_sd2.fromArray(Bm.sunDir).normalize(), k)).normalize();
+    // underwater: thicker fog on top of the user's setting
+    const fb = st.fogBoost || 0;
+    U.uFogNear.value = THREE.MathUtils.lerp(70, 10, Math.min(1, S.wFog + fb*0.5)); U.uFogFar.value = THREE.MathUtils.lerp(220, 70, Math.min(1, S.wFog + fb*0.6));
   }
   function render(dt, now){
     if (!rt) configure();
@@ -2246,7 +2397,7 @@ const WORLD = (() => {
     const par = S.wParallax;
     cam.position.set(spr.tx.p*4*par, st.camY + Math.sin(now/1300)*0.15 + spr.ty.p*2*par, 0);
     cam.lookAt(cam.position.x*0.35 - spr.yaw.p*6*par, st.camY - 1.1 + spr.pitch.p*-4*par, -30);
-    sky.position.copy(cam.position);
+    sky.position.copy(cam.position); U.uCamPos.value.copy(cam.position);
     renderer.setRenderTarget(rt); renderer.setClearColor(U.uFogC.value, 1); renderer.clear(); renderer.render(scene, cam);
     renderer.setRenderTarget(null); renderer.setClearColor(0x000000, 0);
     renderer.render(postScene, postCam);
@@ -2316,6 +2467,7 @@ function loop(now){
     renderer.autoClear = false; renderer.clearDepth(); renderer.render(scene, camera); renderer.autoClear = true;
   } else renderer.render(scene, camera);
   recFrame();
+  if (SHOT.pending) takeShot();
   if (editing && PUP){ placeEditor(); drawLoupe(); }
 }
 

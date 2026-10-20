@@ -319,13 +319,17 @@ public class MainActivity extends Activity {
                     ContentValues v = new ContentValues();
                     v.put(MediaStore.MediaColumns.DISPLAY_NAME, name);
                     v.put(MediaStore.MediaColumns.MIME_TYPE, mime);
-                    v.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/PeanutCam");
+                    boolean image = mime != null && mime.startsWith("image/");
+                    v.put(MediaStore.MediaColumns.RELATIVE_PATH, (image ? Environment.DIRECTORY_PICTURES : Environment.DIRECTORY_MOVIES) + "/PeanutCam");
                     v.put(MediaStore.MediaColumns.IS_PENDING, 1);
-                    uri = getContentResolver().insert(MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), v);
+                    uri = getContentResolver().insert(image
+                            ? MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                            : MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), v);
                     if (uri == null) return false;
                     out = getContentResolver().openOutputStream(uri);
                 } else {
-                    File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "PeanutCam");
+                    boolean image = mime != null && mime.startsWith("image/");
+                    File dir = new File(Environment.getExternalStoragePublicDirectory(image ? Environment.DIRECTORY_PICTURES : Environment.DIRECTORY_MOVIES), "PeanutCam");
                     if (!dir.exists() && !dir.mkdirs()) return false;
                     file = new File(dir, name);
                     out = new FileOutputStream(file);
