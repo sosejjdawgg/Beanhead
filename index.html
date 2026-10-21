@@ -805,9 +805,13 @@ function applyModelStyle(){
     }
   });
 }
+let modelTicket = 0;
 async function setModelFrom(c){
+  const ticket = ++modelTicket;
   if (MDL){ mturn.remove(MDL.root); faceAnchor.parent?.remove(faceAnchor); MDL = null; }
   const {root, vrm, applied} = await loadModelFile(c);
+  if (ticket !== modelTicket) throw new Error("superseded");          // another character was opened meanwhile
+  for (const ch of [...mturn.children]) mturn.remove(ch);              // never two models on stage
   if (applied) toast(`Applied ${applied === 1 ? "a texture" : applied + " textures"} from the files you picked.`);
   root.traverse(o => { if (o.isLight || o.isCamera) o.visible = false; });
   mrig.position.set(0, 0, 0); mrig.rotation.set(0, 0, 0); mrig.scale.set(1, 1, 1); mbody.rotation.set(0, 0, 0); mbody.scale.set(1, 1, 1);
@@ -1346,8 +1350,14 @@ function shadowTexture(cv, Wd){
   const t = new THREE.CanvasTexture(b);
   return {t, w:x1 - x0, h:y1 - y0, cx:(x0 + x1)/2, cy:(y0 + y1)/2};
 }
+// take every character picture, stick and shadow off the stage (only our own eyes and mouth stay)
+function clearPuppet(){
+  const keep = new Set([...EYE_MESHES, ...MOUTH_MESHES]);
+  for (const m of [...pBody.children]){ if (keep.has(m)) continue; pBody.remove(m); m.geometry?.dispose(); m.material?.map?.dispose(); m.material?.dispose(); }
+  if (PUP) PUP.meshes = null;
+}
 function buildPuppet(){
-  if (PUP.meshes) for (const m of PUP.meshes){ m.parent?.remove(m); m.geometry.dispose(); m.material.map?.dispose(); m.material.dispose(); }
+  clearPuppet();
   const cv = PUP.canvas, w = cv.width, h = cv.height, s = PUP_H / h, Wd = w*s;
   PUP.s = s;
   const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
@@ -2102,8 +2112,12 @@ async function loadChars(){
   renderChars();
 }
 async function canvasFromBlob(b){ const bmp = await createImageBitmap(b); const [c, x] = mkCanvas(bmp.width, bmp.height); x.drawImage(bmp, 0, 0); return c; }
+let puppetTicket = 0;
 async function setPuppetFrom(c){
+  const ticket = ++puppetTicket;
   const canvas = await canvasFromBlob(c.png);
+  if (ticket !== puppetTicket) return;
+  clearPuppet();
   PUP = {id:c.id, canvas, meta:c.meta, tint:new THREE.Color().setRGB(...c.meta.tint)};
   buildPuppet();
 }
@@ -2113,7 +2127,7 @@ async function openChar(id){
   await loadScope(id);
   if (c.type === "model"){
     busy("Loading " + c.name + "…");
-    try{ await setModelFrom(c); }catch(e){ busy(); console.error(e); toast("That model couldn't be opened: " + (e?.message || e), 4200); return; }
+    try{ await setModelFrom(c); }catch(e){ busy(); if (e?.message === "superseded") return; console.error(e); toast("That model couldn't be opened: " + (e?.message || e), 4200); return; }
     busy(); enterMode("model");
     if (!c.thumb && !c.shot) THUMB.pending = c.id;
     if (S.body && MDL && !MDL.rig.hasArms) toast("This model has no arm bones, so only the head follows you.");
@@ -2198,7 +2212,7 @@ async function duplicateChar(id){
 }
 async function deleteChar(id){
   CHARS = CHARS.filter(c => c.id !== id); await idb.set("char:" + id, null); await persistIndex();
-  if (scopeId === id){ scopeId = "peanut"; PUP = null; if (mode === "puppet" || mode === "model") goMenu(); }
+  if (scopeId === id){ scopeId = "peanut"; clearPuppet(); PUP = null; if (mode === "puppet" || mode === "model") goMenu(); }
   renderChars(); toast("Character deleted");
 }
 const bgCss = cfg => cfg.world ? "linear-gradient(180deg,#3a1250 0%,#ff4fd8 52%,#1b0f2e 52%,#120a20 100%)"
@@ -2384,7 +2398,7 @@ function afterChange(k){
   if (k === "body"){ syncArms(); ensureBody(); }
   if (k === "faceMode") renderBody();
   if (k === "mTurn" && MDL){ mturn.rotation.y = S.mTurn * Math.PI/2; fitFace(); }
-  if (k === "mHeadBone" && MDL){ const c = CHARS.find(x => x.id === scopeId); if (c) setModelFrom(c).then(() => showStage("model")); }
+  if (k === "mHeadBone" && MDL){ const c = CHARS.find(x => x.id === scopeId); if (c) setModelFrom(c).then(() => showStage("model")).catch(() => {}); }
   if (k === "roast"){ applyShell(); updateTint(); }
   if (k === "pBgRemove") reprocess();
   save();
