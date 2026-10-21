@@ -59,6 +59,34 @@ jobs:
           curl -fsSL --retry 3 -o "$W/models/selfie_segmenter.tflite" \
             https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite
 
+          # licence texts for everything bundled (shown in Menu › About & legal)
+          L="$W/licenses/THIRD_PARTY_LICENSES.txt"; mkdir -p "$W/licenses"
+          {
+            echo "Peanut Cam (c) 2026 James Scott. All rights reserved."
+            echo "Third-party components below remain the property of their owners and are licensed under the terms that follow."
+            echo
+          } > "$L"
+          add(){  # title, local file or URL
+            { printf '\n==================================================================\n%s\n==================================================================\n\n' "$1"
+              if [ -f "$2" ]; then cat "$2"; else curl -fsSL --retry 3 "$2" || echo "Licence text: $2"; fi
+              echo; } >> "$L"
+          }
+          N=/tmp/deps/node_modules
+          add "three.js 0.160 - MIT License" "$( [ -f $N/three/LICENSE ] && echo $N/three/LICENSE || echo https://raw.githubusercontent.com/mrdoob/three.js/r160/LICENSE )"
+          add "@pixiv/three-vrm 2.1 - MIT License" "$( [ -f $N/@pixiv/three-vrm/LICENSE ] && echo $N/@pixiv/three-vrm/LICENSE || echo https://raw.githubusercontent.com/pixiv/three-vrm/v2.1.0/LICENSE )"
+          add "MediaPipe Tasks Vision 0.10.14 and the Face Landmarker, Pose Landmarker, Hand Landmarker and Selfie Segmenter models (c) Google LLC - Apache License 2.0" https://www.apache.org/licenses/LICENSE-2.0.txt
+          add "Draco decoder (c) Google LLC - Apache License 2.0" "see the Apache License 2.0 text above"
+          add "Basis Universal transcoder (c) Binomial LLC - Apache License 2.0" "see the Apache License 2.0 text above"
+          add "meshoptimizer (c) Arseny Kapoulkine - MIT License" https://raw.githubusercontent.com/zeux/meshoptimizer/master/LICENSE.md
+          add "fflate (c) Arjun Barrett - MIT License" https://raw.githubusercontent.com/101arrowz/fflate/master/LICENSE
+          add "ktx-parse (c) Don McCurdy - MIT License" https://raw.githubusercontent.com/donmccurdy/KTX-Parse/main/LICENSE
+          add "zstddec (c) Don McCurdy - MIT License" https://raw.githubusercontent.com/donmccurdy/zstddec/main/LICENSE
+          add "Zstandard (included in zstddec) (c) Meta Platforms, Inc. - BSD License" https://raw.githubusercontent.com/facebook/zstd/dev/LICENSE
+          add "Bricolage Grotesque font - SIL Open Font License 1.1" https://raw.githubusercontent.com/google/fonts/main/ofl/bricolagegrotesque/OFL.txt
+          add "IBM Plex Mono font - SIL Open Font License 1.1" https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexmono/OFL.txt
+          cp COPYRIGHT.md THIRD_PARTY_NOTICES.md "$W/licenses/"
+          wc -c "$L"
+
           find "$W" -type f -exec ls -la {} \;
 
       - uses: gradle/actions/setup-gradle@v4

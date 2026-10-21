@@ -1,7 +1,18 @@
 <!doctype html>
+<!--
+  Peanut Cam
+  Copyright (c) 2026 James Scott. All rights reserved.
+  Protected by the Copyright, Designs and Patents Act 1988 and international treaties.
+  No licence is granted to copy, modify, re-host, redistribute or reuse any part of this
+  file or its assets, or to use them to train AI systems, without written permission.
+  Third-party components keep their own licences (see THIRD_PARTY_NOTICES.md).
+  Permissions and reports: jamscoot22@gmail.com
+-->
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="author" content="James Scott">
+<meta name="copyright" content="© 2026 James Scott. All rights reserved.">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#0e0906">
 <title>Peanut Cam</title>
@@ -115,6 +126,14 @@ body[data-mode=puppet].holding #gl{cursor:grabbing}
 #flash small{display:block;font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--nut2);margin-bottom:2px}
 .pill{flex:1;height:46px;border-radius:15px;font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--raise);color:var(--ink)}
 .pill.hot{background:var(--ink);color:#1d1109}
+.m-legal{text-align:center;color:var(--mute);font-size:11.5px;margin:-4px 0 0;opacity:.8;animation:fade 1s .8s both}
+.m-legal button{color:var(--nut2);font:inherit;text-decoration:underline;text-underline-offset:3px;padding:6px 2px}
+.legal{font-size:13.5px;line-height:1.55;color:var(--ink)}
+.legal h3{font-family:var(--display);font-size:14px;margin:16px 0 6px;color:var(--nut2)}
+.legal p,.legal ul{margin:0 0 8px} .legal ul{padding-left:18px} .legal li{margin:3px 0;color:var(--mute)}
+.legal .own{font-weight:600;font-size:14.5px}
+.legal a{color:var(--nut2)}
+.legal pre{white-space:pre-wrap;font:11px/1.45 "IBM Plex Mono",monospace;color:var(--mute);max-height:50vh;overflow:auto;background:rgba(0,0,0,.25);padding:10px;border-radius:12px}
 .m-foot{display:flex;justify-content:center;gap:8px;align-items:center;color:var(--mute);font-size:12.5px;margin:2px 0 0;animation:fade 1s .6s both}
 #status{min-height:20px;text-align:center;font:500 13px/1.45 var(--mono);color:var(--nut2)}
 body:not([data-mode=menu]) #menu{pointer-events:none}
@@ -384,6 +403,7 @@ body.rigging #hud *{pointer-events:none!important}
     </section>
     <div id="status" role="status"></div>
     <p class="m-foot"><svg class="i" style="width:15px;height:15px"><use href="#t-camera"/></svg>Your camera stays on this device.</p>
+    <p class="m-legal">© 2026 James Scott · <button class="press" id="bLegal">About &amp; legal</button></p>
   </div>
 </div>
 
@@ -458,6 +478,7 @@ body.rigging #hud *{pointer-events:none!important}
 <input type="file" id="texFiles" multiple accept="image/*,.zip" hidden>
 
 <script type="module">
+/* Peanut Cam - Copyright (c) 2026 James Scott. All rights reserved. Unauthorised copying or reuse is prohibited. */
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
@@ -2264,6 +2285,55 @@ function openModal(title, build){
   $("#mTitle").textContent = title; const b = $("#mBody"); b.innerHTML = ""; build(b);
   $("#modal").hidden = false;
 }
+/* ---------- about & legal ---------- */
+const VERSION = "4.3";
+function openLegal(){
+  openModal("About & legal", b => {
+    const d = el("div", "legal");
+    d.innerHTML = `
+      <p class="own">Peanut Cam ${VERSION}<br>© 2026 James Scott. All rights reserved.</p>
+      <p>Peanut Cam is an original app created and owned by James Scott, protected by the Copyright, Designs and Patents Act 1988 and international copyright treaties, including the Berne Convention.</p>
+      <h3>What's protected</h3>
+      <ul><li>The source code, web version and Android app.</li>
+        <li>The app's design and features as built here: the eye-and-mouth capture and blending engine, the 3D Peanut, stick characters, the PEANUT//VISION scan, the morphing PSX worlds, Place face, the rigging tool, the character gallery and touch controls.</li>
+        <li>The app's own 3D Peanut, art, icons, animation, interface, text and logo.</li>
+        <li>The name "Peanut Cam" and its logo, used as trade marks of James Scott.</li></ul>
+      <h3>Your content</h3>
+      <p>Pictures, models, videos and screenshots you add or make are yours. Your camera, pictures and models are processed on this device and are not uploaded. Only add pictures and models you have the right to use, and don't use Peanut Cam to impersonate, harass or mislead anyone.</p>
+      <h3>You may</h3>
+      <ul><li>Use the app and share the official link.</li>
+        <li>Use what you make with it anywhere, including monetised streams, without selling or redistributing the app itself or suggesting we endorse you. "Made with Peanut Cam" is appreciated.</li>
+        <li>Show the app itself in reviews and commentary, crediting "Peanut Cam by James Scott".</li></ul>
+      <h3>Not without written permission</h3>
+      <ul><li>Copying, re-hosting, mirroring, framing or redistributing the app, its files or its Android package.</li>
+        <li>Selling or commercially exploiting the app or its assets.</li>
+        <li>Reusing its code, Peanut, art, worlds or other assets elsewhere.</li>
+        <li>Decompiling the app (except as the law allows), or making clones, mods, ports or re-skins.</li>
+        <li>Using the name "Peanut Cam" or its logo in a confusing way.</li>
+        <li>Using the app or its assets to train or improve AI systems.</li></ul>
+      <p>Being able to read the source code does not give anyone permission to use it. No licence is granted except as written here.</p>
+      <h3>Not affiliated</h3>
+      <p>Peanut Cam is independent and is not affiliated with, sponsored by or endorsed by any streamer, creator or brand, including any who use a peanut character.</p>
+      <h3>Third-party software</h3>
+      <ul><li>three.js © three.js authors, MIT</li><li>@pixiv/three-vrm © pixiv Inc., MIT</li>
+        <li>MediaPipe Tasks Vision and its face, pose, hand and selfie models © Google LLC, Apache 2.0</li>
+        <li>Draco © Google LLC and Basis Universal © Binomial LLC, Apache 2.0</li>
+        <li>meshoptimizer © Arseny Kapoulkine, fflate © Arjun Barrett, ktx-parse and zstddec © Don McCurdy, MIT; Zstandard © Meta Platforms, BSD</li>
+        <li>Fonts: Bricolage Grotesque and IBM Plex Mono, SIL Open Font License 1.1</li></ul>
+      <p>These stay the property of their owners and their licences don't grant rights in Peanut Cam.</p>
+      <div class="btnrow"><button class="pill press" id="lgFull">Show full licence texts</button></div>
+      <div id="lgText"></div>
+      <h3>Contact</h3>
+      <p>Permission requests, copies or clones you've spotted, or if you think Peanut Cam uses your work: <a href="mailto:jamscoot22@gmail.com">jamscoot22@gmail.com</a>. For a rights claim, include your name and contact details, the work you own, what in the app you think infringes it, and a statement that your notice is accurate and you own or represent the rights.</p>`;
+    b.append(d);
+    d.querySelector("#lgFull").onclick = async e => {
+      e.target.disabled = true; const box = d.querySelector("#lgText");
+      try{ const r = await fetch("licenses/THIRD_PARTY_LICENSES.txt"); if (!r.ok) throw 0; const pre = el("pre"); pre.textContent = await r.text(); box.append(pre); }
+      catch{ box.innerHTML = `<p>The full texts are in THIRD_PARTY_NOTICES.md with the app's source, and linked from each project's own page.</p>`; }
+    };
+  });
+}
+$("#bLegal").onclick = () => { buzz(6); openLegal(); };
 function closeModal(){ $("#modal").hidden = true; renderChars(); }
 $("#mClose").onclick = closeModal; $("#modal .mback").onclick = closeModal;
 // background picker that edits any scope's settings (live if it's the one on screen)

@@ -1,3 +1,9 @@
+/*
+ * Peanut Cam
+ * Copyright (c) 2026 James Scott. All rights reserved.
+ * Unauthorised copying, modification, redistribution or reuse is prohibited.
+ * See COPYRIGHT.md and LICENSE. Contact: jamscoot22@gmail.com
+ */
 package com.beanhead.peanutcam;
 
 import android.Manifest;
