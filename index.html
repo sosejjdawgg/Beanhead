@@ -154,6 +154,10 @@ body.sheet-open #bar{transform:translate(-50%,140%);opacity:0}
 #micBtn.off{color:var(--mute)}
 #shot{position:absolute;right:calc(100px + env(safe-area-inset-right,0px));bottom:calc(109px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:50%;
   display:grid;place-items:center;background:var(--panel);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 2px rgba(247,236,220,.75),0 8px 20px rgba(0,0,0,.35);color:var(--ink)}
+#resetBtn{position:absolute;right:calc(100px + env(safe-area-inset-right,0px));bottom:calc(180px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:16px;
+  display:grid;place-items:center;background:var(--panel);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px var(--line),0 8px 20px rgba(0,0,0,.35);color:var(--ink)}
+#resetBtn.spin svg{animation:rspin .55s var(--spring)}
+@keyframes rspin{from{transform:rotate(0)}to{transform:rotate(-360deg)}}
 #shutter{position:fixed;inset:0;z-index:48;background:#fff;opacity:0;pointer-events:none}
 #shutter.go{animation:shutter .45s ease-out}
 @keyframes shutter{0%{opacity:.9}100%{opacity:0}}
@@ -166,8 +170,8 @@ body.sheet-open #bar{transform:translate(-50%,140%);opacity:0}
 #recChip{position:absolute;left:50%;top:calc(18px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:99px;
   background:#ff3b30;color:#fff;font:500 13px var(--mono);letter-spacing:.06em;box-shadow:0 8px 24px rgba(255,59,48,.35)}
 #recChip b{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s steps(2) infinite}
-body.sheet-open #rec,body.sheet-open #micBtn,body.sheet-open #shot{transform:translateY(calc(100% + 160px));opacity:0}
-#rec,#micBtn,#shot{transition:transform .45s var(--spring),opacity .3s,box-shadow .3s}
+body.sheet-open #rec,body.sheet-open #micBtn,body.sheet-open #shot,body.sheet-open #resetBtn{transform:translateY(calc(100% + 160px));opacity:0}
+#rec,#micBtn,#shot,#resetBtn{transition:transform .45s var(--spring),opacity .3s,box-shadow .3s}
 @keyframes recpulse{0%{box-shadow:inset 0 0 0 3px #ff3b30,0 0 0 0 rgba(255,59,48,.5)}70%{box-shadow:inset 0 0 0 3px #ff3b30,0 0 0 16px rgba(255,59,48,0)}100%{box-shadow:inset 0 0 0 3px #ff3b30,0 0 0 0 rgba(255,59,48,0)}}
 @keyframes blink{to{opacity:.2}}
 .puppet-only{display:none!important}
@@ -242,9 +246,12 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
 #editor .h::after{content:attr(data-label);position:absolute;left:50%;top:100%;transform:translate(-50%,4px);padding:2px 7px;border-radius:99px;background:rgba(14,9,6,.8);font:600 10.5px var(--display);color:var(--ink);white-space:nowrap}
 #editor .h.mouth{border-color:var(--ember);background:rgba(255,138,76,.18)}
 #editor .h.grab{transform:scale(1.15)}
+#editor .h .tk{position:absolute;left:5px;right:5px;top:50%;height:2px;margin-top:-1px;border-radius:2px;background:currentColor;opacity:.75;transform:rotate(var(--r,0deg));transition:transform .08s}
+#editor .h.twist{transform:scale(1.25);box-shadow:0 0 0 3px rgba(246,207,150,.45)}
 #editor .edbar{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(520px,calc(100% - 32px));pointer-events:auto;
   display:flex;gap:12px;align-items:center;padding:12px 12px 12px 18px;border-radius:22px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line),0 14px 40px rgba(0,0,0,.5);font-size:13.5px;line-height:1.4;color:var(--mute)}
-#editor .edbar .pill{flex:none;padding:0 22px}
+#editor .edbar .pill{flex:none;padding:0 18px}
+@media (max-width:420px){#editor .edbar{flex-wrap:wrap} #editor .edbar span{flex:1 1 100%} #editor .edbar .pill{flex:1}}
 
 /* ---------- rigging tool ---------- */
 #rigCv{position:fixed;inset:0;z-index:26;width:100%;height:100%;touch-action:none}
@@ -334,6 +341,7 @@ body.rigging #hud *{pointer-events:none!important}
   <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
   <symbol id="back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
   <symbol id="sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+  <symbol id="recentre" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4 3.5v3.8h3.8"/><circle cx="12" cy="12" r="2.2"/></symbol>
   <symbol id="flip" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><path d="M9 13a3 3 0 0 1 5.5-1.6M15 13a3 3 0 0 1-5.5 1.6"/></symbol>
   <symbol id="eye" viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/><path d="M4 20 20 4"/></symbol>
   <symbol id="image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M20 16l-5-5-8 8"/></symbol>
@@ -388,6 +396,7 @@ body.rigging #hud *{pointer-events:none!important}
   <button class="press" id="micBtn" aria-label="Record sound: on"><svg class="i"><use href="#mic"/></svg></button>
   <button id="rec" aria-label="Start recording"><i></i></button>
   <button class="press" id="shot" aria-label="Take a picture"><svg class="i"><use href="#t-camera"/></svg></button>
+  <button class="press" id="resetBtn" aria-label="Reset position"><svg class="i"><use href="#recentre"/></svg></button>
   <nav id="bar" aria-label="Controls">
     <button class="bb press" id="bSettings"><svg class="i"><use href="#sliders"/></svg>Settings</button>
     <button class="bb press puppet-only" id="bLayout"><svg class="i"><use href="#move"/></svg>Layout</button>
@@ -408,10 +417,10 @@ body.rigging #hud *{pointer-events:none!important}
 
 <div id="editor" hidden>
   <div class="stem" id="edStem" hidden></div>
-  <div class="h" data-h="eyeR" data-label="Eye"></div>
-  <div class="h" data-h="eyeL" data-label="Eye"></div>
-  <div class="h mouth" data-h="mouth" data-label="Mouth"></div>
-  <div class="edbar"><span>Drag the markers onto the picture's eyes and mouth.</span><button class="pill hot press" id="edDone">Done</button></div>
+  <div class="h" data-h="eyeR" data-label="Eye"><b class="tk"></b></div>
+  <div class="h" data-h="eyeL" data-label="Eye"><b class="tk"></b></div>
+  <div class="h mouth" data-h="mouth" data-label="Mouth"><b class="tk"></b></div>
+  <div class="edbar"><span id="edMsg">Drag the markers onto the eyes and mouth. Twist with two fingers to tilt one.</span><button class="pill press" id="edStraight">Straighten</button><button class="pill hot press" id="edDone">Done</button></div>
 </div>
 
 <div id="modal" hidden><div class="mback"></div><div class="mpanel" role="dialog" aria-modal="true"><div class="mhead"><h2 id="mTitle"></h2><button class="sh-x press" id="mClose" aria-label="Close"><svg class="i"><use href="#x"/></svg></button></div><div id="mBody"></div></div></div>
@@ -467,7 +476,7 @@ const DEFAULTS = {
   nX:0, nY:0, nScale:1, nRot:0, nSpin:0, nTilt:0,
   world:false, wBiome:"auto", wMorph:20, wSpeed:0.35, wRes:240, wJitter:0.5, wAffine:true, wDither:0.7, wDepth:15, wFog:0.5, wParallax:0.6,
   coachSeen:false, psx:"modern", body:false,
-  faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true,
+  faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mEyeZ:0, mMouthZ:0, mEyeRot:0, mMouthRot:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true,
   mirror:true, pip_on:true, deviceId:"", facing:"user"
 };
 const WORLD_OPTS = [["auto","Auto-morph"],["meadow","Meadow"],["canyon","Canyon"],["city","Neon City"],["islands","Islands"],["snow","Snowfield"],["alien","Alien"],
@@ -479,7 +488,7 @@ const SCOPED = ["bg","bgColor","world","wBiome","wMorph","wSpeed","wRes","wJitte
   "skinMatch","depth","retouch","blend","eyeMargin","mouthMargin","feather","symFill","light","zoom"];
 const NUT_KEYS = ["nX","nY","nScale","nRot","nSpin","nTilt"];
 const CHAR_KEYS = ["pX","pY","pScale","pRot","pEyeSize","pMouthSize","pMove","pStick","pShadow"];
-const MODEL_KEYS = ["faceMode","mEyeSpacing","mEyeY","mMouthY","mEyeSize","mMouthSize","mFaceZ","mCurve","mFaceK","mTurn","mHeadBone"];
+const MODEL_KEYS = ["faceMode","mEyeSpacing","mEyeY","mMouthY","mEyeSize","mMouthSize","mFaceZ","mEyeZ","mMouthZ","mEyeRot","mMouthRot","mCurve","mFaceK","mTurn","mHeadBone"];
 const charType = id => CHARS.find(c => c.id === id)?.type || "image";
 let scopeId = "peanut";
 const scopeKeys = id => id === "peanut" ? [...SCOPED, ...NUT_KEYS] : id === "x" ? [...SCOPED, ...CHAR_KEYS, ...NUT_KEYS, ...MODEL_KEYS]
@@ -1505,7 +1514,9 @@ function onFlat(x, y, out, off, nOut, nOff){
 // the face area on a model: an ellipsoid cap fitted to the model's face when it was loaded
 function onModel(x, y, out, off, nOut, nOff){
   if (!MDL) return onFlat(x, y, out, off, nOut, nOff);                // between models while one loads
-  const F = MDL.face, R = F.R*S.mCurve, z0 = F.z0 + S.mFaceZ*F.f*0.35, cz = z0 - R, yy = y*0.6;
+  const F = MDL.face, R = F.R*S.mCurve, fk = F.f*S.mFaceK, ey = (0.02 + S.mEyeY)*fk, my = (-0.66 + S.mMouthY)*fk;
+  const t = clamp((ey - y)/Math.max(1e-4, ey - my), 0, 1), dz = (S.mEyeZ + (S.mMouthZ - S.mEyeZ)*t)*F.f*0.35;   // eyes and mouth each get their own depth
+  const z0 = F.z0 + S.mFaceZ*F.f*0.35 + dz, cz = z0 - R, yy = y*0.6;
   const zz = cz + Math.sqrt(Math.max(R*R - x*x - yy*yy, R*R*0.05));
   out[off] = x; out[off+1] = y; out[off+2] = zz + 0.012;
   _n.set(x, yy, zz - cz).normalize(); nOut[nOff] = _n.x; nOut[nOff+1] = _n.y; nOut[nOff+2] = _n.z;
@@ -1733,14 +1744,14 @@ function fillFeature(buf, innerIds, baseIds, offsets){
     }
   }
 }
-function placeFeature(mesh, buf, ax, ay, ox, oy, k, flipX, cavity){
+function placeFeature(mesh, buf, ax, ay, ox, oy, k, flipX, cavity, rot = 0){
   const g = mesh.geometry, pos = g.attributes.position.array, sn = g.attributes.snormal.array, uv = g.attributes.uv.array, al = g.attributes.alpha.array;
   const mx = S.mirror ? -1 : 1, N = buf.N;
   let zRef = 0; for (let i = buf.nv - N; i < buf.nv; i++) zRef += buf.F[i].z; zRef /= N;
-  const depth = S.depth * k * 0.42;
+  const depth = S.depth * k * 0.42, rc = Math.cos(rot), rs = Math.sin(rot);
   for (let v = 0; v < buf.nv; v++){
-    const f = buf.F[v], fx = flipX ? -f.x : f.x, o = v*3;
-    SURF(ax + (fx - ox)*k*mx, ay - (f.y - oy)*k, pos, o, sn, o);
+    const f = buf.F[v], fx = flipX ? -f.x : f.x, o = v*3, dx = (fx - ox)*k*mx, dy = -(f.y - oy)*k;
+    SURF(ax + dx*rc - dy*rs, ay + dx*rs + dy*rc, pos, o, sn, o);
     let h = -(f.z - zRef) * depth * al[v];
     if (cavity && v >= 1 && v <= N) h -= cavity;
     h = clamp(h, -0.006, 0.11);
@@ -1825,9 +1836,10 @@ function track(now){
   W.mouth = S.symFill ? smooth01(0.40, 0.70, Math.abs(yawF)) : 0;
 
   // where the features go: on the peanut, or on the uploaded picture
-  let eRx, eRy, eLx, eLy, mX, mY, kE, kM;
+  let eRx, eRy, eLx, eLy, mX, mY, kE, kM, rR = 0, rL = 0, rM = 0;
   if (stageMode === "puppet" && PUP){
-    const m = PUP.meta, unit = m.unit * PUP.s;
+    const m = PUP.meta, unit = m.unit * PUP.s, ro = m.rot || {};
+    rR = (S.mirror ? ro.eyeL : ro.eyeR) || 0; rL = (S.mirror ? ro.eyeR : ro.eyeL) || 0; rM = ro.mouth || 0;
     const scrL = pxToWorld(m.eyeR), scrR = pxToWorld(m.eyeL);   // the picture's right eye sits on the left of the image
     const forR = S.mirror ? scrR : scrL, forL = S.mirror ? scrL : scrR;
     [eRx, eRy] = forR; [eLx, eLy] = forL; [mX, mY] = pxToWorld(m.mouth);
@@ -1836,19 +1848,20 @@ function track(now){
     const f = MDL.face.f*S.mFaceK, sp = (0.36 + S.mEyeSpacing)*f;
     eRx = -sp*mx; eLx = sp*mx; eRy = eLy = (0.02 + S.mEyeY)*f; mX = 0; mY = (-0.66 + S.mMouthY)*f;
     kE = 1.45 * S.mEyeSize * f * 0.8; kM = 1.2 * S.mMouthSize * f * 0.8;
+    rR = S.mEyeRot; rL = -S.mEyeRot; rM = S.mMouthRot;
   } else {
     eRx = -S.eyeSpacing*mx; eLx = S.eyeSpacing*mx; eRy = eLy = S.eyeHeight; mX = 0; mY = S.mouthHeight;
     kE = 1.45 * S.eyeSize; kM = 1.2 * S.mouthSize;
   }
   const eyeCentre = buf => [(buf.F[1].x + buf.F[9].x)/2, (buf.F[1].y + buf.F[9].y)/2];
   const [rcx, rcy] = eyeCentre(B.R), [lcx, lcy] = eyeCentre(B.L);
-  placeFeature(F_EYE.R.real, B.R, eRx, eRy, rcx, rcy, kE, false);
-  placeFeature(F_EYE.L.real, B.L, eLx, eLy, lcx, lcy, kE, false);
-  if (W.eyeR > 0) placeFeature(F_EYE.R.alt, B.L, eRx, eRy, -lcx, lcy, kE, true);
-  if (W.eyeL > 0) placeFeature(F_EYE.L.alt, B.R, eLx, eLy, -rcx, rcy, kE, true);
+  placeFeature(F_EYE.R.real, B.R, eRx, eRy, rcx, rcy, kE, false, 0, rR);
+  placeFeature(F_EYE.L.real, B.L, eLx, eLy, lcx, lcy, kE, false, 0, rL);
+  if (W.eyeR > 0) placeFeature(F_EYE.R.alt, B.L, eRx, eRy, -lcx, lcy, kE, true, 0, rR);
+  if (W.eyeL > 0) placeFeature(F_EYE.L.alt, B.R, eLx, eLy, -rcx, rcy, kE, true, 0, rL);
   const n2 = Fs.get(2), mox = n2.x + mouthRest.x, moy = n2.y + mouthRest.y, cav = S.depth * 0.025 * jawRaw;
-  placeFeature(F_MOUTH.real, B.M, mX, mY, mox, moy, kM, false, cav);
-  if (W.mouth > 0){ symmetricMouth(B.M, B.alt, far); placeFeature(F_MOUTH.alt, B.alt, mX, mY, 0, moy, kM, false, cav); }
+  placeFeature(F_MOUTH.real, B.M, mX, mY, mox, moy, kM, false, cav, rM);
+  if (W.mouth > 0){ symmetricMouth(B.M, B.alt, far); placeFeature(F_MOUTH.alt, B.alt, mX, mY, 0, moy, kM, false, cav, rM); }
 }
 
 /* ---------- uploaded picture: cut out and find the face ---------- */
@@ -2314,7 +2327,7 @@ window.onSharedImage = async () => {
 };
 
 /* ---------- settings sheet ---------- */
-const fmtX = v => "×" + (+v).toFixed(2), fmtP = v => Math.round(v*100) + "%", fmtN = v => (+v).toFixed(2);
+const fmtDeg = v => Math.round(v*180/Math.PI) + "°", fmtX = v => "×" + (+v).toFixed(2), fmtP = v => Math.round(v*100) + "%", fmtN = v => (+v).toFixed(2);
 const RG = (k, label, min, max, step, fmt = fmtP) => ({t:"range", k, label, min, max, step, fmt});
 const TG = (k, label) => ({t:"toggle", k, label});
 const CH = (k, label, opts) => ({t:"chips", k, label, opts});
@@ -2363,8 +2376,9 @@ const TABS = {
   model: [
     MODEL_LOOK,
     ["face","Face",[CH("faceMode","Face",[["overlay","Your eyes & mouth"],["model","Model's own face"],["both","Both"]]),
-      {t:"if", when:() => S.faceMode !== "model", items:[SEC("Placement"), {t:"faceplace"}, RG("mFaceK","Face size",0.3,3,0.02,fmtX), RG("mEyeSpacing","Eye spacing",-0.3,0.3,0.005,fmtN), RG("mEyeY","Eye height",-0.6,0.6,0.01,fmtN), RG("mMouthY","Mouth height",-0.6,0.6,0.01,fmtN),
-        RG("mEyeSize","Eye size",0.3,2,0.02,fmtX), RG("mMouthSize","Mouth size",0.3,2,0.02,fmtX), RG("mFaceZ","Face depth",-1,1,0.02,fmtN), RG("mCurve","Face roundness",0.3,3,0.05,fmtX),
+      {t:"if", when:() => S.faceMode !== "model", items:[SEC("Placement"), {t:"faceplace"}, RG("mFaceK","Face size",0.3,3,0.02,fmtX), RG("mEyeSpacing","Eye spacing",-0.3,0.3,0.005,fmtN), RG("mEyeY","Eye height",-0.6,0.6,0.005,fmtN), RG("mMouthY","Mouth height",-0.6,0.6,0.005,fmtN),
+        RG("mEyeSize","Eye size",0.3,2,0.02,fmtX), RG("mMouthSize","Mouth size",0.3,2,0.02,fmtX), RG("mFaceZ","Face depth (both)",-1,1,0.01,fmtN), RG("mEyeZ","Eye depth",-1,1,0.01,fmtN), RG("mMouthZ","Mouth depth",-1,1,0.01,fmtN), RG("mEyeRot","Eye tilt",-0.6,0.6,0.0087,fmtDeg), RG("mMouthRot","Mouth tilt",-0.6,0.6,0.0087,fmtDeg), RG("mCurve","Face roundness",0.3,3,0.02,fmtX),
+        {t:"resetface"},
         ...faceShared("Blend skin into model")]}]],
     ["model","Model",[CH("mTurn","Facing",[[0,"Front"],[1,"Left"],[2,"Back"],[3,"Right"]]), TG("mHeadBone","Turn only the head (if it has one)"), {t:"rigtools"}, {t:"modelinfo"}]],
     motionTab, cameraTab
@@ -2471,6 +2485,11 @@ function buildItem(it){
     return w;
   }
   if (it.t === "if") { const w = el("div"); if (it.when()) for (const x of it.items) w.append(buildItem(x)); return w; }
+  if (it.t === "resetface"){
+    const row = el("div", "btnrow"), b = el("button", "pill press", "Reset eye & mouth tweaks");
+    b.onclick = () => { for (const k of ["mEyeSpacing","mEyeY","mMouthY","mEyeSize","mMouthSize","mFaceZ","mEyeZ","mMouthZ","mEyeRot","mMouthRot","mCurve","mFaceK"]) S[k] = DEFAULTS[k]; buzz([10, 40, 10]); save(); renderBody(); toast("Eye and mouth tweaks reset"); };
+    row.append(b); return row;
+  }
   if (it.t === "faceplace"){
     const w = el("div"); const row = el("div", "btnrow");
     const b1 = el("button", "pill hot press", "Place face on model"); b1.onclick = () => { buzz(8); placeFaceStart(); };
@@ -2522,7 +2541,8 @@ function rangeRow(it){
   const row = el("div", "srow");
   row.innerHTML = `<span class="slabel">${it.label}</span><div class="sctl"><button class="step press" aria-label="Less ${it.label}">${ico("minus")}</button><button class="sval" aria-expanded="false" aria-label="${it.label}: fine adjust"></button><button class="step press" aria-label="More ${it.label}">${ico("plus")}</button></div><div class="scrub"><div><div class="track"><div class="fill"></div><span>Slide sideways</span></div></div></div>`;
   const [minus, val, plus] = row.querySelectorAll("button"), scrub = row.querySelector(".scrub"), track = row.querySelector(".track"), fill = row.querySelector(".fill");
-  const span = it.max - it.min, nudge = Math.max(it.step, Math.round(span / 20 / it.step) * it.step);
+  const span = it.max - it.min, nudge = /^m(EyeSpacing|EyeY|MouthY|EyeSize|MouthSize|FaceZ|EyeZ|MouthZ|EyeRot|MouthRot|Curve|FaceK)$/.test(it.k) ? it.step   // face-on-model: tiny precise steps (hold to speed up)
+    : Math.max(it.step, Math.round(span / 20 / it.step) * it.step);
   const show = () => { val.textContent = it.fmt(S[it.k]); fill.style.width = ((S[it.k] - it.min) / span * 100) + "%"; };
   let lastBucket = null;
   const setV = (v, tick) => {
@@ -2606,7 +2626,7 @@ function screenToPx(sx, sy){
   pBody.worldToLocal(_hit);
   return [_hit.x / PUP.s + PUP.canvas.width/2, PUP.canvas.height/2 - _hit.y / PUP.s];
 }
-function openEditor(){ if (!PUP) return; editing = true; editor.hidden = false; buzz(10); }
+function openEditor(){ if (!PUP) return; editing = true; editor.hidden = false; TW.pts.clear(); TW.h = null; showTilt(); $("#edMsg").textContent = "Drag the markers onto the eyes and mouth. Twist with two fingers to tilt one."; buzz(10); }
 function closeEditor(){
   if (!editing) return;
   editing = false; editor.hidden = true;
@@ -2647,11 +2667,50 @@ function drawLoupe(){
   lctx.fillStyle = "#f7ecdc"; lctx.font = "600 11px 'Bricolage Grotesque', sans-serif"; lctx.textAlign = "center";
   lctx.fillText(EDG.h.dataset.h === "mouth" ? "Mouth" : "Eye", L/2, L - 7);
 }
+// two-finger twist tilts the eye or mouth nearest the fingers (or the one you're holding)
+const TW = {pts:new Map(), h:null, a0:0, r0:0};
+const rotOf = n => (PUP?.meta.rot?.[n]) || 0;
+function showTilt(){
+  for (const h of editor.querySelectorAll(".h")) h.style.setProperty("--r", (-rotOf(h.dataset.h)*180/Math.PI) + "deg");
+}
+function twistAngle(){ const [a, b] = [...TW.pts.values()]; return Math.atan2(b.y - a.y, b.x - a.x); }
+addEventListener("pointerdown", e => {
+  if (!editing || !PUP) return;
+  TW.pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (TW.pts.size === 2){
+    const [a, b] = [...TW.pts.values()], mx = (a.x + b.x)/2, my = (a.y + b.y)/2;
+    let best = EDG.h, bd = 1e9;
+    if (!best) for (const h of editor.querySelectorAll(".h")){ const r = h.getBoundingClientRect(), d = Math.hypot(r.left + r.width/2 - mx, r.top + r.height/2 - my); if (d < bd){ bd = d; best = h; } }
+    TW.h = best; TW.a0 = twistAngle(); TW.r0 = rotOf(best.dataset.h);
+    best.classList.add("twist"); buzz(8);
+  }
+}, true);
+addEventListener("pointermove", e => {
+  if (!TW.pts.has(e.pointerId)) return;
+  TW.pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (TW.h && TW.pts.size >= 2){
+    const m = PUP.meta; m.rot ||= {};
+    let d = twistAngle() - TW.a0; d = Math.atan2(Math.sin(d), Math.cos(d));
+    let r = TW.r0 - d;                                                     // screen is y-down: a clockwise twist tilts clockwise
+    if (Math.abs(r) < 0.035) r = 0;                                        // gentle snap to level
+    const prev = Math.round(rotOf(TW.h.dataset.h)*180/Math.PI/5);
+    m.rot[TW.h.dataset.h] = clamp(r, -Math.PI, Math.PI);
+    if (Math.round(r*180/Math.PI/5) !== prev) buzz(2);
+    showTilt();
+    $("#edMsg").textContent = (TW.h.dataset.h === "mouth" ? "Mouth" : "Eye") + " tilt " + Math.round(-r*180/Math.PI) + "°";
+  }
+}, true);
+const twEnd = e => {
+  if (!TW.pts.delete(e.pointerId)) return;
+  if (TW.pts.size < 2 && TW.h){ TW.h.classList.remove("twist"); TW.h = null; savePuppet(); }
+};
+addEventListener("pointerup", twEnd, true); addEventListener("pointercancel", twEnd, true);
+$("#edStraight").onclick = () => { if (PUP){ PUP.meta.rot = {}; showTilt(); savePuppet(); buzz([8, 30, 8]); $("#edMsg").textContent = "Straightened"; } };
 for (const h of editor.querySelectorAll(".h")){
   let on = false;
   h.addEventListener("pointerdown", e => { on = true; h.setPointerCapture(e.pointerId); h.classList.add("grab"); EDG.h = h; edMove(e); loupe.hidden = false; buzz(6); });
   h.addEventListener("pointermove", e => {
-    if (!on) return;
+    if (!on || TW.h) return;                                              // twisting, not moving
     edMove(e);
     const p = screenToPx(EDG.mx, EDG.my); if (!p) return;
     const m = PUP.meta;
@@ -2869,6 +2928,7 @@ async function cycleChar(dir){
   if (n === "peanut"){ await openPeanut(); flash("Peanut", "Character"); }
   else { await openChar(n); flash(CHARS.find(c => c.id === n)?.name || "", "Character"); }
 }
+$("#resetBtn").onclick = () => { const b = $("#resetBtn"); b.classList.remove("spin"); void b.offsetWidth; b.classList.add("spin"); resetPose(); };
 function resetPose(){
   if (mode === "puppet"){ S.pX = DEFAULTS.pX; S.pY = DEFAULTS.pY; S.pScale = DEFAULTS.pScale; S.pRot = 0; }
   else { for (const k of NUT_KEYS) S[k] = DEFAULTS[k]; }
