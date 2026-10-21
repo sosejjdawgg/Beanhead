@@ -246,6 +246,25 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
   display:flex;gap:12px;align-items:center;padding:12px 12px 12px 18px;border-radius:22px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line),0 14px 40px rgba(0,0,0,.5);font-size:13.5px;line-height:1.4;color:var(--mute)}
 #editor .edbar .pill{flex:none;padding:0 22px}
 
+/* ---------- rigging tool ---------- */
+#rigCv{position:fixed;inset:0;z-index:26;width:100%;height:100%;touch-action:none}
+#rigBar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:27;width:min(540px,calc(100% - 24px));
+  display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:22px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line),0 14px 40px rgba(0,0,0,.5)}
+#pfBar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:27;width:min(540px,calc(100% - 24px));
+  display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:22px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line),0 14px 40px rgba(0,0,0,.5)}
+#pfBar p{margin:0 4px;color:var(--mute);font-size:13px;line-height:1.4}
+#pfBar b{color:var(--ink)}
+#pfBar .pfsize{display:flex;align-items:center;gap:12px;margin:0 4px;font-size:14px;color:var(--ink)}
+#pfBar .pfsize input{flex:1;accent-color:var(--nut)}
+#pfBar .rbtns{display:flex;gap:8px} #pfBar .pill{flex:1;height:44px;font-size:14px}
+#rigBar p{margin:0 4px;color:var(--mute);font-size:13px;line-height:1.4}
+#rigBar .rbtns{display:flex;gap:8px}
+#rigBar .pill{height:44px;font-size:14px}
+#rigBar .pill.on{box-shadow:inset 0 0 0 2px var(--nut)}
+body.placing #hud{opacity:0!important;pointer-events:none}
+body.placing #hud *{pointer-events:none!important}
+body.rigging #hud{opacity:0!important;pointer-events:none}
+body.rigging #hud *{pointer-events:none!important}
 /* ---------- upload scan + layout loupe ---------- */
 #scan{position:fixed;inset:0;z-index:58;width:100%;height:100%;background:#070101;transition:opacity .5s}
 #scan.out{opacity:0}
@@ -399,13 +418,35 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
 <div id="flash" aria-live="polite"></div>
 <div id="shutter" aria-hidden="true"></div>
 <img id="shotPrev" alt="" hidden>
+<canvas id="rigCv" hidden aria-hidden="true"></canvas>
+<div id="rigBar" hidden>
+  <p id="rigHint">Drag each joint onto the model. Bones bend where the joints are.</p>
+  <div class="rbtns">
+    <button class="pill press" id="rigView">Side view</button>
+    <button class="pill press on" id="rigMirror">Mirror ✓</button>
+    <button class="pill press" id="rigReset">Reset</button>
+  </div>
+  <div class="rbtns">
+    <button class="pill press" id="rigCancel">Cancel</button>
+    <button class="pill hot press" id="rigDone">Add bones</button>
+  </div>
+</div>
+<div id="pfBar" hidden>
+  <p>Drag the target onto the spot <b>between the model's eyes</b>. The target sits above your finger so you can see it.</p>
+  <label class="pfsize">Face size <input type="range" id="pfSize" min="0.3" max="3" step="0.02"></label>
+  <div class="rbtns">
+    <button class="pill press" id="pfAuto">Auto-find</button>
+    <button class="pill hot press" id="pfDone">Done</button>
+  </div>
+</div>
 <canvas id="scan" hidden aria-hidden="true"></canvas>
 <canvas id="loupe" hidden aria-hidden="true"></canvas>
 <div id="toast" role="status"></div>
 <div id="busy"><div class="bx"><svg viewBox="0 0 24 24" fill="#e3ad6b"><use href="#nut"/></svg><span id="busyMsg">Working…</span></div></div>
 <input type="file" id="pupFile" accept="image/*" hidden>
 <input type="file" id="bgFile" accept="image/*" hidden>
-<input type="file" id="modelFile" hidden>
+<input type="file" id="modelFile" multiple hidden>
+<input type="file" id="texFiles" multiple accept="image/*,.zip" hidden>
 
 <script type="module">
 import * as THREE from "three";
@@ -426,7 +467,7 @@ const DEFAULTS = {
   nX:0, nY:0, nScale:1, nRot:0, nSpin:0, nTilt:0,
   world:false, wBiome:"auto", wMorph:20, wSpeed:0.35, wRes:240, wJitter:0.5, wAffine:true, wDither:0.7, wDepth:15, wFog:0.5, wParallax:0.6,
   coachSeen:false, psx:"modern", body:false,
-  faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mCurve:1, mTurn:0, mHeadBone:true,
+  faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true,
   mirror:true, pip_on:true, deviceId:"", facing:"user"
 };
 const WORLD_OPTS = [["auto","Auto-morph"],["meadow","Meadow"],["canyon","Canyon"],["city","Neon City"],["islands","Islands"],["snow","Snowfield"],["alien","Alien"],
@@ -438,7 +479,7 @@ const SCOPED = ["bg","bgColor","world","wBiome","wMorph","wSpeed","wRes","wJitte
   "skinMatch","depth","retouch","blend","eyeMargin","mouthMargin","feather","symFill","light","zoom"];
 const NUT_KEYS = ["nX","nY","nScale","nRot","nSpin","nTilt"];
 const CHAR_KEYS = ["pX","pY","pScale","pRot","pEyeSize","pMouthSize","pMove","pStick","pShadow"];
-const MODEL_KEYS = ["faceMode","mEyeSpacing","mEyeY","mMouthY","mEyeSize","mMouthSize","mFaceZ","mCurve","mTurn","mHeadBone"];
+const MODEL_KEYS = ["faceMode","mEyeSpacing","mEyeY","mMouthY","mEyeSize","mMouthSize","mFaceZ","mCurve","mFaceK","mTurn","mHeadBone"];
 const charType = id => CHARS.find(c => c.id === id)?.type || "image";
 let scopeId = "peanut";
 const scopeKeys = id => id === "peanut" ? [...SCOPED, ...NUT_KEYS] : id === "x" ? [...SCOPED, ...CHAR_KEYS, ...NUT_KEYS, ...MODEL_KEYS]
@@ -613,13 +654,51 @@ const mrig = new THREE.Group(), mbody = new THREE.Group(), mturn = new THREE.Gro
 mrig.add(mbody); mbody.add(mturn); scene.add(mrig); mrig.visible = false;
 let MDL = null;   // {id, root, vrm, rig, morphs, head, neck, headRest, neckRest, face:{z0,R,f}, tint}
 const MODEL_EXT = ["glb","gltf","vrm","obj","fbx","stl","ply","dae"];
-async function loadModelFile(blob, ext){
-  const url = URL.createObjectURL(blob);
+const IMG_EXT = ["png","jpg","jpeg","webp","bmp","gif","tga","ktx2","dds","tif","tiff"];
+const extOf = n => (n.split(/[\\/]/).pop().split(".").pop() || "").toLowerCase();
+const baseOf = n => decodeURIComponent(String(n)).split(/[?#]/)[0].split(/[\\/]/).pop().toLowerCase();
+const MIME = {png:"image/png", jpg:"image/jpeg", jpeg:"image/jpeg", webp:"image/webp", gif:"image/gif", bmp:"image/bmp"};
+// a character's files: older characters stored one file; newer ones keep the whole set (model, materials, textures)
+function filesOf(c){ return c.files?.length ? c.files : c.file ? [{name:"model." + c.ext, blob:c.file}] : []; }
+// unpack .zip files and drop junk, so a whole exported folder can be picked in one go
+async function expandFiles(list){
+  const out = [];
+  for (const f of list){
+    if (extOf(f.name) === "zip"){
+      const fflate = await import("three/addons/libs/fflate.module.js");
+      const ents = fflate.unzipSync(new Uint8Array(await f.arrayBuffer()));
+      for (const [path, data] of Object.entries(ents)){
+        if (path.endsWith("/") || /(^|\/)(__MACOSX|\.)/.test(path) || !data.length) continue;
+        out.push({name:path, blob:new Blob([data], {type:MIME[extOf(path)] || "application/octet-stream"})});
+      }
+    } else out.push({name:f.name, blob:f});
+  }
+  return out;
+}
+const MAIN_ORDER = ["vrm","glb","gltf","fbx","dae","obj","ply","stl"];
+function pickMain(files){
+  for (const e of MAIN_ORDER){ const f = files.find(x => extOf(x.name) === e); if (f) return f; }
+  return null;
+}
+async function loadModelFile(c){
+  const files = filesOf(c), main = files.find(f => f.name === c.main) || pickMain(files);
+  if (!main) throw new Error("no 3D model file in what was picked");
+  const ext = extOf(main.name);
+  // every file gets a local URL; loaders asking for "textures/skin.png" or "C:\\art\\skin.png" get the file called skin.png
+  const urls = new Map(), made = [];
+  for (const f of files){ const u = URL.createObjectURL(f.blob); made.push(u); urls.set(baseOf(f.name), u); }
+  const manager = new THREE.LoadingManager();
+  let prog = null, allDone = false;
+  manager.onProgress = (u, l, t) => { prog = [l, t]; };
+  manager.onLoad = () => { allDone = true; };
+  manager.setURLModifier(u => { if (u.startsWith("data:")) return u; const b = urls.get(baseOf(u)); return b || u; });
+  const url = urls.get(baseOf(main.name));
   const std = () => new THREE.MeshStandardMaterial({color:0xb9b2a6, roughness:0.8, flatShading:true});
+  let out;
   try{
     if (ext === "glb" || ext === "gltf" || ext === "vrm"){
       const {GLTFLoader} = await import("three/addons/loaders/GLTFLoader.js");
-      const loader = new GLTFLoader();
+      const loader = new GLTFLoader(manager);
       // compressed glTF: Meshopt geometry, Draco geometry, KTX2 (Basis) textures
       try{ const {MeshoptDecoder} = await import("three/addons/libs/meshopt_decoder.module.js"); loader.setMeshoptDecoder(MeshoptDecoder); }catch(e){}
       try{ const {DRACOLoader} = await import("three/addons/loaders/DRACOLoader.js"); const d = new DRACOLoader(); d.setDecoderPath(PC.three + "examples/jsm/libs/draco/gltf/"); loader.setDRACOLoader(d); }catch(e){}
@@ -629,16 +708,68 @@ async function loadModelFile(blob, ext){
       const g = await loader.loadAsync(url);
       const vrm = g.userData.vrm || null;
       if (vrm && V){ V.VRMUtils.removeUnnecessaryVertices?.(g.scene); V.VRMUtils.rotateVRM0?.(vrm); }
-      return {root: vrm ? vrm.scene : g.scene, vrm};
-    }
-    if (ext === "obj"){ const {OBJLoader} = await import("three/addons/loaders/OBJLoader.js"); const o = await new OBJLoader().loadAsync(url); o.traverse(m => { if (m.isMesh && (!m.material || m.material.type === "MeshPhongMaterial" && !m.material.map)) m.material = std(); }); return {root:o}; }
-    if (ext === "fbx"){ const {FBXLoader} = await import("three/addons/loaders/FBXLoader.js"); return {root: await new FBXLoader().loadAsync(url)}; }
-    if (ext === "stl"){ const {STLLoader} = await import("three/addons/loaders/STLLoader.js"); const g = await new STLLoader().loadAsync(url); g.computeVertexNormals(); return {root:new THREE.Mesh(g, std())}; }
-    if (ext === "ply"){ const {PLYLoader} = await import("three/addons/loaders/PLYLoader.js"); const g = await new PLYLoader().loadAsync(url); g.computeVertexNormals();
-      const m = std(); if (g.attributes.color){ m.vertexColors = true; m.color.set(0xffffff); } return {root:new THREE.Mesh(g, m)}; }
-    if (ext === "dae"){ const {ColladaLoader} = await import("three/addons/loaders/ColladaLoader.js"); return {root:(await new ColladaLoader().loadAsync(url)).scene}; }
-    throw new Error("unsupported file type ." + ext);
-  } finally { setTimeout(() => URL.revokeObjectURL(url), 5000); }
+      out = {root: vrm ? vrm.scene : g.scene, vrm, gltf:true};
+    } else if (ext === "obj"){
+      const {OBJLoader} = await import("three/addons/loaders/OBJLoader.js");
+      const loader = new OBJLoader(manager);
+      const objText = await main.blob.text();
+      const lib = (objText.match(/^mtllib\s+(.+)$/m) || [])[1]?.trim();
+      const mtl = files.find(f => extOf(f.name) === "mtl" && (!lib || baseOf(f.name) === baseOf(lib))) || files.find(f => extOf(f.name) === "mtl");
+      if (mtl){
+        const {MTLLoader} = await import("three/addons/loaders/MTLLoader.js");
+        const mats = new MTLLoader(manager).parse(await mtl.blob.text(), "");
+        mats.preload(); loader.setMaterials(mats);
+      }
+      const o = loader.parse(objText);
+      o.traverse(m => { if (m.isMesh) m.material = [].concat(m.material).map(x => !x || (x.type === "MeshPhongMaterial" && !x.map && !mtl) ? std() : x).reduce((a, x, i, arr) => arr.length > 1 ? arr : x, null); });
+      out = {root:o};
+    } else if (ext === "fbx"){ const {FBXLoader} = await import("three/addons/loaders/FBXLoader.js"); out = {root: await new FBXLoader(manager).loadAsync(url)}; }
+    else if (ext === "stl"){ const {STLLoader} = await import("three/addons/loaders/STLLoader.js"); const g = await new STLLoader(manager).loadAsync(url); g.computeVertexNormals(); out = {root:new THREE.Mesh(g, std())}; }
+    else if (ext === "ply"){ const {PLYLoader} = await import("three/addons/loaders/PLYLoader.js"); const g = await new PLYLoader(manager).loadAsync(url); g.computeVertexNormals();
+      const m = std(); if (g.attributes.color){ m.vertexColors = true; m.color.set(0xffffff); } out = {root:new THREE.Mesh(g, m)}; }
+    else if (ext === "dae"){ const {ColladaLoader} = await import("three/addons/loaders/ColladaLoader.js"); out = {root:(await new ColladaLoader(manager).loadAsync(url)).scene}; }
+    else throw new Error("unsupported file type ." + ext);
+    // wait for any textures the loaders are still fetching
+    if (prog && prog[0] < prog[1] && !allDone) await new Promise(res => { manager.onLoad = res; setTimeout(res, 8000); });
+    out.applied = await applyLooseTextures(out.root, files, !!out.gltf);
+    return out;
+  } finally { setTimeout(() => made.forEach(u => URL.revokeObjectURL(u)), 15000); }
+}
+// textures that came along but aren't referenced by the model: match them to materials by name, or use the
+// most likely colour map for anything left untextured
+const TEX_ROLE = n => /normal|nrm|_n(\.|_)|nor(\.|_)/.test(n) ? "normal" : /rough/.test(n) ? "rough" : /metal|_m(\.|_)/.test(n) ? "metal" :
+  /(^|[_\-. ])(ao|occlusion|ambient)/.test(n) ? "ao" : /emiss|glow/.test(n) ? "emissive" : /spec|gloss|height|disp|bump|mask|alpha|opacity/.test(n) ? "other" : "color";
+async function applyLooseTextures(root, files, gltf){
+  const imgs = files.filter(f => ["png","jpg","jpeg","webp","bmp","gif"].includes(extOf(f.name)));
+  if (!imgs.length) return 0;
+  const mats = [];
+  root.traverse(o => { if (o.isMesh) for (const m of [].concat(o.material)) if (m && !mats.includes(m)) { m.userData.meshName = o.name; mats.push(m); } });
+  const bare = mats.filter(m => !m.map && "map" in m);
+  if (!bare.length) return 0;
+  const toks = s => (s || "").toLowerCase().replace(/\.[a-z0-9]+$/, "").split(/[^a-z0-9]+/).filter(t => t.length > 1 && !["mat","material","tex","texture","diffuse","albedo","basecolor","base","color","colour","col","d"].includes(t));
+  const colorImgs = imgs.filter(f => TEX_ROLE(baseOf(f.name)) === "color");
+  const pool = colorImgs.length ? colorImgs : imgs;
+  const bySize = [...pool].sort((a, b) => b.blob.size - a.blob.size);
+  const tl = new THREE.TextureLoader(), cache = new Map();
+  const tex = async (f, srgb) => {
+    if (!cache.has(f.name)){ const u = URL.createObjectURL(f.blob); const t = await tl.loadAsync(u).catch(() => null); if (t){ t.flipY = !gltf; t.wrapS = t.wrapT = THREE.RepeatWrapping; } cache.set(f.name, t); }
+    const t = cache.get(f.name); if (t && srgb) t.colorSpace = THREE.SRGBColorSpace; return t;
+  };
+  let n = 0;
+  for (const m of bare){
+    const want = new Set([...toks(m.name), ...toks(m.userData.meshName)]);
+    const score = f => toks(baseOf(f.name)).filter(t => want.has(t)).length;
+    const best = [...pool].sort((a, b) => score(b) - score(a) || b.blob.size - a.blob.size)[0];
+    const pickF = score(best) > 0 ? best : bySize[0];
+    const t = await tex(pickF, true); if (!t) continue;
+    m.map = t; if (m.color) m.color.set(0xffffff); if (m.vertexColors) m.vertexColors = false;
+    // matching normal map if there is one with the same name stem
+    const stem = toks(baseOf(pickF.name)).join("_");
+    const nf = imgs.find(f => TEX_ROLE(baseOf(f.name)) === "normal" && toks(baseOf(f.name)).join("_").startsWith(stem.slice(0, 6)));
+    if (nf && "normalMap" in m){ const nt = await tex(nf, false); if (nt) m.normalMap = nt; }
+    m.needsUpdate = true; n++;
+  }
+  return n;
 }
 
 const _bx = new THREE.Box3(), _v1 = new THREE.Vector3(), _ray2 = new THREE.Raycaster();
@@ -661,10 +792,11 @@ function sampleMat(hit){
 }
 function applyModelStyle(){
   if (!MDL) return;
+  const ours = new Set(); faceAnchor.traverse(o => ours.add(o));         // our eyes and mouth ride on the head bone; leave them alone
   MDL.root.traverse(o => {
-    if (!o.isMesh) return;
+    if (!o.isMesh || ours.has(o)) return;
     for (const m of [].concat(o.material)){
-      if (!m) continue;
+      if (!m || m.isShaderMaterial) continue;
       psxPatch(m);
       const lo = S.psx === "ps1";
       for (const t of [m.map, m.emissiveMap]) if (t){ t.magFilter = lo ? THREE.NearestFilter : THREE.LinearFilter; t.minFilter = lo ? THREE.NearestFilter : THREE.LinearMipmapLinearFilter; t.needsUpdate = true; }
@@ -675,7 +807,8 @@ function applyModelStyle(){
 }
 async function setModelFrom(c){
   if (MDL){ mturn.remove(MDL.root); faceAnchor.parent?.remove(faceAnchor); MDL = null; }
-  const {root, vrm} = await loadModelFile(c.file, c.ext);
+  const {root, vrm, applied} = await loadModelFile(c);
+  if (applied) toast(`Applied ${applied === 1 ? "a texture" : applied + " textures"} from the files you picked.`);
   root.traverse(o => { if (o.isLight || o.isCamera) o.visible = false; });
   mrig.position.set(0, 0, 0); mrig.rotation.set(0, 0, 0); mrig.scale.set(1, 1, 1); mbody.rotation.set(0, 0, 0); mbody.scale.set(1, 1, 1);
   const turn = (S.mTurn || 0) * Math.PI/2;
@@ -725,44 +858,18 @@ async function setModelFrom(c){
   root.position.add(off);
   bx = measure();
   root.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
+  const own = hasOwnBones(root);
+  let auto = null;
+  if (!own && c.cfg.autoRig?.joints){ try{ auto = skinModel(root, c.cfg.autoRig); }catch(e){ console.error(e); toast("Couldn't apply the bones: " + (e?.message || e)); } }
   const rig = prepareRig(findRig(root, vrm));
   // morph targets named like ARKit blendshapes (what the face tracker reports)
   const morphs = [];
   root.traverse(o => { if (o.morphTargetDictionary && o.morphTargetInfluences){ const map = {}; for (const [k, i] of Object.entries(o.morphTargetDictionary)) map[k.toLowerCase().replace(/^.*[.:]/, "").replace(/[^a-z]/g, "")] = i; morphs.push({o, map}); } });
   const arkit = morphs.some(m => "jawopen" in m.map || "eyeblinkleft" in m.map);
-  // find the face: head bone height (or near the top), then read the front surface from a depth render
-  const hgt = bx.max.y - bx.min.y;
-  let yc = bx.max.y - 0.12*hgt;
-  if (rig.head){ rig.head.getWorldPosition(_v1); yc = Math.min(bx.max.y - 0.03*hgt, _v1.y + 0.05*hgt); }
-  const half = 0.25*hgt, near = 0.01, far = (bx.max.z - bx.min.z) + 2;
-  const dcam = new THREE.OrthographicCamera(-half, half, half, -half, near, far); dcam.position.set(0, yc, bx.max.z + 1); dcam.lookAt(0, yc, bx.min.z);
-  const dp = shoot(dcam, new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking})).slice();
-  const zAt = (wx, wy) => {
-    const x = Math.round((wx + half)/(2*half)*255), y = Math.round((wy - yc + half)/(2*half)*255);
-    if (x < 0 || x > 255 || y < 0 || y > 255) return null;
-    const i = (y*256 + x)*4; if (dp[i+3] === 0) return null;
-    // three.js RGBA depth packing: alpha holds the most significant part
-    const d = (255/256) * (dp[i]/255/16777216 + dp[i+1]/255/65536 + dp[i+2]/255/256 + dp[i+3]/255);
-    return bx.max.z + 1 - (near + d*(far - near));
-  };
-  const z0 = zAt(0, yc) ?? bx.max.z;
-  let r = 0.05*hgt;
-  for (let x = 0.01*hgt; x < 0.3*hgt; x += 0.006*hgt){ const z = zAt(x, yc); if (z === null || z0 - z > 0.12*hgt){ r = x; break; } r = x; }
-  const hx = r*0.45, zh = zAt(hx, yc), sag = zh !== null ? Math.max(0.002, z0 - zh) : r*0.15;
-  const R = clamp((hx*hx + sag*sag)/(2*sag), 0.4*r, 4*r);
-  // skin colour straight from a lit render of the face centre
-  const cp = shoot(dcam).slice(); const ci = (128*256 + 128)*4;
-  const tint = cp[ci+3] ? [cp[ci]/255, cp[ci+1]/255, cp[ci+2]/255] : [0.8, 0.65, 0.55];
   rt.dispose();
   mturn.add(root); mrig.updateWorldMatrix(true, true);
-  // the anchor rides on the head bone if there is one
-  faceAnchor.position.set(0, 0, 0); faceAnchor.rotation.set(0, 0, 0); faceAnchor.scale.set(1, 1, 1);
-  mbody.add(faceAnchor); faceAnchor.position.copy(mbody.worldToLocal(new THREE.Vector3(0, yc, 0)));
-  faceAnchor.updateWorldMatrix(true, false);
-  const z0l = faceAnchor.worldToLocal(new THREE.Vector3(0, yc, z0)).z;
-  if (rig.head && S.mHeadBone) rig.head.attach(faceAnchor);
-  MDL = {id:c.id, root, vrm, rig, morphs, arkit, head:rig.head, face:{z0:z0l, R, f:Math.max(0.05, r/0.9)},
-           tint:new THREE.Color().setRGB(...tint)};
+  MDL = {id:c.id, root, vrm, rig, morphs, arkit, head:rig.head, own, autoRig:auto ? c.cfg.autoRig.type : null, tail:auto?.tail || [], turn, bx:bx.clone(), cfg:c.cfg};
+  fitFace();
   if (!c.cfg.faceModeSet){ c.cfg.faceModeSet = true; c.cfg.faceMode = (vrm?.expressionManager || arkit) ? "model" : "overlay"; S.faceMode = c.cfg.faceMode; persistChar(c); }
   applyModelStyle();
   return MDL;
@@ -787,6 +894,261 @@ function driveFace(){
     set("aa", g("jawOpen")*1.2); set("oh", g("mouthFunnel")); set("ou", g("mouthPucker")); set("ee", (g("mouthStretchLeft") + g("mouthStretchRight"))*0.7);
     set("ih", smile*0.4); set("happy", smile*0.9); set("surprised", g("browInnerUp")*0.8); set("angry", (g("browDownLeft") + g("browDownRight"))*0.4);
   }
+}
+
+/* ---------- where the eyes and mouth sit on a model ----------
+   Spot = the point you placed (stored relative to the model), else the head joint/bone, else near the top;
+   when it was guessed, it's refined to the nose (the face's most forward point) and lifted to eye level. */
+function fitFace(){
+  const M = MDL; if (!M) return;
+  const {root, rig, bx} = M, turn = M.turn = (S.mTurn || 0) * Math.PI/2, cfg = M.cfg || {};
+  faceAnchor.parent?.remove(faceAnchor);                              // never measure our own eyes and mouth
+  const par = root.parent;
+  const tmp = new THREE.Scene(), tg = new THREE.Group(); tg.rotation.y = turn; tmp.add(tg); tg.add(root);
+  tmp.add(new THREE.AmbientLight(0xffffff, 2.0), new THREE.DirectionalLight(0xffffff, 1.5));
+  tg.updateWorldMatrix(true, true);
+  const b = bx, hgt = b.max.y - b.min.y, sph = b.getBoundingSphere(new THREE.Sphere()), front = sph.center.length() + sph.radius + 0.5;
+  let cx = 0, cy = b.max.y - 0.12*hgt, placed = false, findNose = false, win = 0.06*hgt;
+  if (cfg.facePt){ const p = root.localToWorld(new THREE.Vector3(...cfg.facePt)); cx = p.x; cy = p.y; placed = true; }
+  else if (cfg.autoRig?.joints?.Head){
+    const h = root.localToWorld(new THREE.Vector3(...cfg.autoRig.joints.Head)), t = root.localToWorld(new THREE.Vector3(...cfg.autoRig.joints.HeadTop));
+    if (cfg.autoRig.type === "quad"){ cx = t.x; cy = h.y; findNose = true; } else { const e = h.clone().lerp(t, 0.45); cx = e.x; cy = e.y; }
+  } else {
+    // read the head off the front silhouette: the top blob down to the narrowest row (the neck)
+    const sp = Math.max(hgt, b.max.x - b.min.x)*1.1, Nn = 256, ccx = (b.min.x + b.max.x)/2, ccy = (b.min.y + b.max.y)/2;
+    const cam = new THREE.OrthographicCamera(-sp/2, sp/2, sp/2, -sp/2, 0.01, 4*(front + 1)); cam.position.set(ccx, ccy, front + 1); cam.lookAt(ccx, ccy, -front);
+    const srt = new THREE.WebGLRenderTarget(Nn, Nn), px = new Uint8Array(Nn*Nn*4);
+    renderer.setRenderTarget(srt); renderer.setClearColor(0, 0); renderer.clear(); renderer.render(tmp, cam); renderer.readRenderTargetPixels(srt, 0, 0, Nn, Nn, px); renderer.setRenderTarget(null); srt.dispose();
+    const wx = i => ccx + ((i + 0.5)/Nn - 0.5)*sp, wy = j => ccy + ((j + 0.5)/Nn - 0.5)*sp, on = (i, j) => px[(j*Nn + i)*4 + 3] > 0;
+    let jt = -1; for (let j = Nn - 1; j >= 0 && jt < 0; j--) for (let i = 0; i < Nn; i++) if (on(i, j)){ jt = j; break; }
+    const deep = (b.max.z - b.min.z) > 0.9*hgt;                       // longer than tall: an animal side-on to us
+    if (jt >= 0 && !deep){
+      // follow the run under the top of the head down, tracking its width; the neck is where it's narrowest before widening into shoulders
+      let ci = 0, best = 1e9; for (let i = 0; i < Nn; i++) if (on(i, jt) && Math.abs(i - Nn/2) < best){ best = Math.abs(i - Nn/2); ci = i; }
+      const rows = []; let minW = 1e9, neck = -1, maxW = 0;
+      for (let j = jt; j >= Math.max(0, jt - Math.round(0.4*hgt/sp*Nn)); j--){
+        if (!on(ci, j)){ let k = 1; while (k < 20 && !on(ci - k, j) && !on(ci + k, j)) k++; if (k >= 20) break; ci = on(ci - k, j) ? ci - k : ci + k; }
+        let a = ci, c2 = ci; while (a > 0 && on(a - 1, j)) a--; while (c2 < Nn - 1 && on(c2 + 1, j)) c2++;
+        const w = c2 - a + 1; ci = (a + c2) >> 1; rows.push({j, w, ci});
+        maxW = Math.max(maxW, w);
+        if (rows.length > 4 && w < minW){ minW = w; neck = rows.length - 1; }
+        if (neck >= 0 && w > minW*1.9 && w > maxW*0.9 && rows.length - neck > 2) break;      // into the shoulders
+      }
+      if (neck > 3){ const e = rows[Math.round(neck*0.5)]; cx = wx(e.ci); cy = wy(e.j); }
+      else { cy = wy(jt) - 0.06*hgt; }
+    } else { findNose = true; win = 0.22*hgt; cy = wy(Math.max(jt, 0)) - 0.2*hgt; }
+  }
+  const N = 256, half = 0.25*hgt, near = 0.01, far = 2*front + 2;
+  const rt = new THREE.WebGLRenderTarget(N, N);
+  const shoot = (x0, y0, mat) => {
+    const cam = new THREE.OrthographicCamera(-half, half, half, -half, near, far); cam.position.set(x0, y0, front + 1); cam.lookAt(x0, y0, -front);
+    const px = new Uint8Array(N*N*4); tmp.overrideMaterial = mat || null;
+    renderer.setRenderTarget(rt); renderer.setClearColor(0, 0); renderer.clear(); renderer.render(tmp, cam);
+    renderer.readRenderTargetPixels(rt, 0, 0, N, N, px); renderer.setRenderTarget(null); tmp.overrideMaterial = null; return px;
+  };
+  const depthMat = new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking});
+  let dx = cx, dy = cy, dp = shoot(dx, dy, depthMat);
+  const zAt = (wx, wy) => {
+    const x = Math.round((wx - dx + half)/(2*half)*(N-1)), y = Math.round((wy - dy + half)/(2*half)*(N-1));
+    if (x < 0 || x > N-1 || y < 0 || y > N-1) return null;
+    const i = (y*N + x)*4; if (dp[i+3] === 0) return null;
+    const d = (255/256) * (dp[i]/255/16777216 + dp[i+1]/255/65536 + dp[i+2]/255/256 + dp[i+3]/255);
+    return front + 1 - (near + d*(far - near));
+  };
+  const widthAt = (x0, y0) => {
+    const z0 = zAt(x0, y0) ?? front; let r = 0.05*hgt;
+    for (let x = 0.01*hgt; x < 0.3*hgt; x += 0.004*hgt){ const zl = zAt(x0 - x, y0), zr = zAt(x0 + x, y0);
+      const z = zl === null ? zr : zr === null ? zl : Math.max(zl, zr);
+      if (z === null || z0 - z > 0.07*hgt){ r = x; break; } r = x; }
+    return {z0, r:Math.min(r, 0.1*hgt)};
+  };
+  if (findNose){
+    // nose = the most forward point near the guess; the eye line sits a little above it
+    let best = null;
+    for (let y = cy - Math.max(0.08*hgt, win); y <= cy + Math.max(0.03*hgt, win*0.9); y += 0.004*hgt) for (let x = cx - win; x <= cx + win; x += 0.004*hgt){
+      const z = zAt(x, y); if (z !== null && (!best || z > best.z + 1e-4)) best = {x, y, z};
+    }
+    if (best){   // flat fronts: take the middle of everything within a hair of the front
+      let sx = 0, sy = 0, n = 0;
+      for (let y = cy - Math.max(0.08*hgt, win); y <= cy + Math.max(0.03*hgt, win*0.9); y += 0.004*hgt) for (let x = cx - win; x <= cx + win; x += 0.004*hgt){
+        const z = zAt(x, y); if (z !== null && z > best.z - 0.01*hgt){ sx += x; sy += y; n++; } }
+      if (n){ best.x = sx/n; best.y = sy/n; }
+    }
+    if (best){ const {r} = widthAt(best.x, best.y); cx = best.x; cy = best.y + 0.35*r; }
+    if (Math.abs(cx - dx) > 1e-4 || Math.abs(cy - dy) > 1e-4){ dx = cx; dy = cy; dp = shoot(dx, dy, depthMat); }
+  }
+  let {z0, r} = widthAt(cx, cy);
+  if (placed && zAt(cx, cy) === null){ const p = root.localToWorld(new THREE.Vector3(...cfg.facePt)); z0 = p.z; }
+  const hx = r*0.45, zh = zAt(cx + hx, cy), sag = zh !== null ? Math.max(0.002, z0 - zh) : r*0.15;
+  const R = clamp((hx*hx + sag*sag)/(2*sag), 0.4*r, 4*r);
+  const cp = shoot(cx, cy); const ci = ((N/2)*N + N/2)*4;
+  const tint = cp[ci+3] ? [cp[ci]/255, cp[ci+1]/255, cp[ci+2]/255] : [0.8, 0.65, 0.55];
+  rt.dispose(); depthMat.dispose();
+  par.add(root);
+  // the tg frame is the body's own frame, so the spot goes straight onto the anchor
+  faceAnchor.position.set(cx, cy, 0); faceAnchor.rotation.set(0, 0, 0); faceAnchor.scale.set(1, 1, 1);
+  mbody.add(faceAnchor); mrig.updateWorldMatrix(true, true);
+  if (rig.head && S.mHeadBone) rig.head.attach(faceAnchor);
+  M.face = {z0, R, f:Math.max(0.05, r/0.9)};
+  M.tint = new THREE.Color().setRGB(...tint);
+  if (stageMode === "model") tintU.value.copy(M.tint);
+}
+
+/* ---------- rigging tool: give a boneless model a skeleton (two-legged humanoid or four-legged pet) ----------
+   1. joints are guessed from front and side silhouettes of the model, 2. you drag them into place,
+   3. bones are built and every vertex is weighted to its nearest bones (smooth falloff, left/right kept apart). */
+const RIG_T = {
+  biped:[["Hips",null],["Spine","Hips"],["Chest","Spine"],["Neck","Chest"],["Head","Neck"],["HeadTop","Head"],
+    ...["Left","Right"].flatMap(s => [[s+"Shoulder","Chest"],[s+"Arm",s+"Shoulder"],[s+"ForeArm",s+"Arm"],[s+"Hand",s+"ForeArm"],[s+"HandTip",s+"Hand"]]),
+    ...["Left","Right"].flatMap(s => [[s+"UpLeg","Hips"],[s+"Leg",s+"UpLeg"],[s+"Foot",s+"Leg"],[s+"Toe",s+"Foot"]])],
+  quad:[["Hips",null],["Spine","Hips"],["Chest","Spine"],["Neck","Chest"],["Head","Neck"],["HeadTop","Head"],["Tail1","Hips"],["Tail2","Tail1"],["Tail3","Tail2"],
+    ...["Left","Right"].flatMap(s => [[s+"Arm","Chest"],[s+"ForeArm",s+"Arm"],[s+"Hand",s+"ForeArm"],[s+"HandTip",s+"Hand"]]),
+    ...["Left","Right"].flatMap(s => [[s+"UpLeg","Hips"],[s+"Leg",s+"UpLeg"],[s+"Foot",s+"Leg"],[s+"Toe",s+"Foot"]])]
+};
+const hasOwnBones = root => { let b = false; root.traverse(o => { if (o.isSkinnedMesh || o.isBone) b = true; }); return b; };
+// front (x/y) or side (z/y) silhouette of the model, in the stage frame
+function silhouette(root, side){
+  root.updateWorldMatrix(true, true);
+  const bx = new THREE.Box3().setFromObject(root), c = bx.getCenter(new THREE.Vector3()), sz = bx.getSize(new THREE.Vector3());
+  const span = Math.max(sz.x, sz.y, sz.z, 0.1) * 1.3, N = 256;
+  const cam = new THREE.OrthographicCamera(-span/2, span/2, span/2, -span/2, 0.01, span*6);
+  if (side){ cam.position.set(c.x + span*3, c.y, c.z); } else { cam.position.set(c.x, c.y, c.z + span*3); }
+  cam.lookAt(c); cam.layers.set(7);
+  root.traverse(o => o.layers.enable(7));
+  const rt = new THREE.WebGLRenderTarget(N, N), px = new Uint8Array(N*N*4);
+  renderer.setRenderTarget(rt); renderer.setClearColor(0, 0); renderer.clear(); renderer.render(scene, cam);
+  renderer.readRenderTargetPixels(rt, 0, 0, N, N, px); renderer.setRenderTarget(null); rt.dispose();
+  root.traverse(o => o.layers.disable(7));
+  const toW = q => (q + 0.5)/N*span - span/2;
+  const S2 = {N, px, on:(i, j) => i >= 0 && j >= 0 && i < N && j < N && px[(j*N + i)*4 + 3] > 0,
+    // horizontal axis in world units: front view = x, side view = z (screen right is -z)
+    h:i => side ? c.z - toW(i) : c.x + toW(i), v:j => c.y + toW(j),
+    iOf:w => Math.round((side ? c.z - w : w - c.x) / span * N + N/2 - 0.5), jOf:y => Math.round((y - c.y)/span*N + N/2 - 0.5)};
+  let j0 = N, j1 = -1, i0 = N, i1 = -1;
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) if (S2.on(i, j)){ if (j < j0) j0 = j; if (j > j1) j1 = j; if (i < i0) i0 = i; if (i > i1) i1 = i; }
+  Object.assign(S2, {bottom:S2.v(j0), top:S2.v(j1), hmin:Math.min(S2.h(i0), S2.h(i1)), hmax:Math.max(S2.h(i0), S2.h(i1))});
+  S2.runs = y => { const j = S2.jOf(y), r = []; let st = -1; for (let i = 0; i <= N; i++){ const o = i < N && S2.on(i, j); if (o && st < 0) st = i; if (!o && st >= 0){ const a = S2.h(st), b = S2.h(i - 1); r.push([Math.min(a, b), Math.max(a, b)]); st = -1; } } return r; };
+  S2.ext = y => { const r = S2.runs(y); return r.length ? [Math.min(...r.map(x => x[0])), Math.max(...r.map(x => x[1]))] : null; };
+  S2.col = h => { const i = S2.iOf(h); let a = null, b = null; for (let j = 0; j < N; j++) if (S2.on(i, j)){ if (a === null) a = S2.v(j); b = S2.v(j); } return a === null ? null : [a, b]; };
+  return S2;
+}
+function guessJoints(root, type){
+  const F = silhouette(root, false), Sd = silhouette(root, true);
+  const bottom = F.bottom, top = F.top, H = top - bottom, Y = t => bottom + t*H;
+  const zc = y => { const e = Sd.ext(y); return e ? (e[0] + e[1])/2 : (Sd.hmin + Sd.hmax)/2; };
+  const J = {}, put = (n, x, y, z) => { J[n] = new THREE.Vector3(x, y, z); };
+  if (type === "biped"){
+    for (const [n, t] of [["Hips",0.52],["Spine",0.6],["Chest",0.7],["Neck",0.83],["Head",0.87]]) put(n, 0, Y(t), zc(Y(t)));
+    put("HeadTop", 0, top, zc(Y(0.92)));
+    // hands: the furthest-out part of the silhouette between hip and shoulder height
+    let tip = null;
+    for (let t = 0.35; t <= 0.86; t += 0.01){ const e = F.ext(Y(t)); if (e && (!tip || e[1] > tip.x)) tip = {x:e[1], y:Y(t)}; }
+    const sx = 0.1*H, ay = Y(0.8), az = zc(Y(0.78));
+    if (!tip || tip.x < sx + 0.1*H) tip = {x:sx + 0.04*H, y:Y(0.42)};               // arms hang down
+    const legs = F.runs(Y(0.27)).filter(r => r[1] - r[0] > 0.02*H);
+    const legX = legs.length >= 2 ? Math.abs((legs[legs.length-1][0] + legs[legs.length-1][1])/2) : 0.06*H;
+    for (const sg of [1, -1]){
+      const s = sg > 0 ? "Left" : "Right", tx = tip.x*sg;
+      put(s+"Shoulder", 0.035*H*sg, ay + 0.005*H, az);
+      put(s+"Arm", sx*sg, ay, az);
+      const a = J[s+"Arm"], tp = new THREE.Vector3(tx, tip.y, az);
+      put(s+"ForeArm", ...a.clone().lerp(tp, 0.45).toArray());
+      put(s+"Hand", ...a.clone().lerp(tp, 0.84).toArray());
+      put(s+"HandTip", ...tp.toArray());
+      put(s+"UpLeg", 0.055*H*sg, Y(0.5), zc(Y(0.5)));
+      put(s+"Leg", legX*sg, Y(0.27), zc(Y(0.27)) + 0.01*H);
+      put(s+"Foot", legX*sg, Y(0.05), zc(Y(0.05)));
+      put(s+"Toe", legX*sg, Y(0.01), zc(Y(0.05)) + 0.07*H);
+    }
+  } else {
+    const L = Sd.hmax - Sd.hmin, z0 = Sd.hmin, z1 = Sd.hmax;           // z1 = nose end (model faces +z)
+    const ground = Sd.runs(Y(0.05)).filter(r => r[1] - r[0] > 0.01*L);
+    const frontZ = ground.length ? (ground[ground.length-1][0] + ground[ground.length-1][1])/2 : z0 + 0.72*L;
+    const backZ = ground.length > 1 ? (ground[0][0] + ground[0][1])/2 : z0 + 0.25*L;
+    let belly = Y(0.45);
+    for (let t = 0.05; t < 0.9; t += 0.01){ const e = Sd.ext(Y(t)); if (e && e[1] - e[0] > 0.5*L){ belly = Y(t); break; } }
+    const mid = Sd.col((frontZ + backZ)/2), back = mid ? mid[1] : Y(0.8), spineY = (belly + back)/2;
+    const hc = Sd.col(z1 - 0.07*L), headY = hc ? (hc[0] + hc[1])/2 : Y(0.85);
+    const fx = F.runs(Y(0.05)).filter(r => r[1] - r[0] > 0.01*H);
+    const W = F.hmax - F.hmin, legX = fx.length >= 2 ? Math.abs((fx[fx.length-1][0] + fx[fx.length-1][1])/2) : 0.25*W;
+    put("Hips", 0, spineY, backZ); put("Spine", 0, spineY + 0.02*H, (frontZ + backZ)/2); put("Chest", 0, spineY, frontZ);
+    put("Neck", 0, (spineY + headY)/2 + 0.04*H, frontZ + 0.08*L); put("Head", 0, headY, z1 - 0.16*L); put("HeadTop", 0, headY, z1);
+    put("Tail1", 0, spineY + 0.04*H, z0 + 0.12*L); put("Tail2", 0, spineY + 0.07*H, z0 + 0.05*L); put("Tail3", 0, spineY + 0.09*H, z0);
+    const kneeY = (belly + bottom)/2;
+    for (const sg of [1, -1]){
+      const s = sg > 0 ? "Left" : "Right";
+      put(s+"Arm", legX*sg, spineY - 0.02*H, frontZ); put(s+"ForeArm", legX*sg, kneeY, frontZ + 0.01*L); put(s+"Hand", legX*sg, bottom + 0.04*H, frontZ); put(s+"HandTip", legX*sg, bottom, frontZ + 0.05*L);
+      put(s+"UpLeg", legX*sg, spineY - 0.02*H, backZ); put(s+"Leg", legX*sg, kneeY, backZ - 0.03*L); put(s+"Foot", legX*sg, bottom + 0.04*H, backZ); put(s+"Toe", legX*sg, bottom, backZ + 0.05*L);
+    }
+  }
+  // stored relative to the model itself, so they survive re-fitting and facing changes
+  const out = {}; for (const [n, v] of Object.entries(J)) out[n] = root.worldToLocal(v.clone()).toArray();
+  return out;
+}
+const _sA = new THREE.Vector3(), _sB = new THREE.Vector3(), _sP = new THREE.Vector3();
+function segD2(p, a, b){ _sA.subVectors(b, a); const l2 = _sA.lengthSq(); let t = l2 > 1e-12 ? _sP.subVectors(p, a).dot(_sA)/l2 : 0; t = Math.max(0, Math.min(1, t)); return _sP.copy(a).addScaledVector(_sA, t).distanceToSquared(p); }
+function skinModel(root, cfg){
+  const T = RIG_T[cfg.type]; if (!T) return null;
+  root.updateWorldMatrix(true, true);
+  const JL = n => new THREE.Vector3(...cfg.joints[n]);
+  const bones = {}, order = [];
+  for (const [n] of T){ const b = new THREE.Bone(); b.name = n; bones[n] = b; order.push(b); }
+  for (const [n, par] of T){ if (!par){ root.add(bones[n]); bones[n].position.copy(JL(n)); } else { bones[par].add(bones[n]); bones[n].position.copy(JL(n)).sub(JL(par)); } }
+  root.updateWorldMatrix(true, true);
+  const skeleton = new THREE.Skeleton(order);
+  const kids = {}; for (const [n, par] of T) if (par) (kids[par] ||= []).push(n);
+  // each bone pulls on the vertices near its segment (to its first child); leaf end-markers don't
+  const W = n => root.localToWorld(JL(n));
+  const front = new THREE.Vector3(); root.getWorldPosition(front);
+  const H = (() => { const b = new THREE.Box3().setFromObject(root); return b.max.y - b.min.y; })(), tol = 0.015*H, eps = (0.02*H)**2;
+  // gates stop limbs grabbing the body next to them (no webbing from the armpit or between the legs)
+  const has = n => !!cfg.joints[n], quad = cfg.type === "quad";
+  const gate = n => {
+    const sd = /^Left/.test(n) ? 1 : /^Right/.test(n) ? -1 : 0, base = n.replace(/^(Left|Right)/, "");
+    if (!quad){
+      if (/^(Arm|ForeArm|Hand)$/.test(base)){ const S2 = sd > 0 ? "Left" : "Right", ax = Math.abs(W(S2 + "Arm").x)*0.75;
+        const lo = Math.min(...["Arm","ForeArm","Hand","HandTip"].map(k => W(S2 + k).y)) - 0.02*H;   // nothing below the fingertips (coat hems, hips)
+        return p => p.x*sd >= ax && p.y >= lo; }
+      if (base === "Shoulder"){ const ax = Math.abs(W(sd > 0 ? "LeftArm" : "RightArm").x)*0.3; return p => p.x*sd >= ax; }
+      if (/^(UpLeg|Leg|Foot)$/.test(base)){ const hy = W(sd > 0 ? "LeftUpLeg" : "RightUpLeg").y + 0.02*H; return p => p.y <= hy; }
+      if (base === "Head"){ const hy = W("Head").y - 0.02*H; return p => p.y >= hy; }
+    } else {
+      if (/^(Arm|ForeArm|Hand|UpLeg|Leg|Foot)$/.test(base)){ const top = W(sd > 0 ? (base.match(/Arm|Hand/) ? "LeftArm" : "LeftUpLeg") : (base.match(/Arm|Hand/) ? "RightArm" : "RightUpLeg")).y + 0.02*H; return p => p.y <= top; }
+      if (/^Tail/.test(base) && has("Hips")){ const hz = W("Hips").z; return p => p.z <= hz; }
+      if (base === "Head" && has("Neck")){ const nz = W("Neck").z; return p => p.z >= nz; }
+    }
+    return null;
+  };
+  const infl = T.filter(([n]) => kids[n]).map(([n]) => ({i:order.indexOf(bones[n]), a:W(n), b:W(kids[n][0]), side:/^Left/.test(n) ? 1 : /^Right/.test(n) ? -1 : 0, gate:gate(n)}));
+  const meshes = []; root.traverse(o => { if (o.isMesh && !o.isSkinnedMesh) meshes.push(o); });
+  const p = new THREE.Vector3();
+  for (const mesh of meshes){
+    const g = mesh.geometry.clone(), pos = g.attributes.position, n = pos.count;
+    const si = new Uint16Array(n*4), sw = new Float32Array(n*4), bi = [0,0,0,0], bw = [0,0,0,0];
+    for (let v = 0; v < n; v++){
+      p.fromBufferAttribute(pos, v).applyMatrix4(mesh.matrixWorld);
+      bi.fill(0); bw.fill(0);
+      for (const s of infl){
+        if (s.side && p.x*s.side < -tol) continue;                 // left bones never grab the right side
+        const d2 = segD2(p, s.a, s.b);
+        let w = 1/((d2 + eps)**3);
+        if (s.gate && !s.gate(p)) w *= 1e-4;                         // outside its zone: only if nothing else is near
+        if (!(w > 0)) continue;
+        let k = 3; if (w <= bw[3]) continue;
+        while (k > 0 && w > bw[k-1]){ bw[k] = bw[k-1]; bi[k] = bi[k-1]; k--; }
+        bw[k] = w; bi[k] = s.i;
+      }
+      const sum = bw[0] + bw[1] + bw[2] + bw[3] || 1;
+      for (let k = 0; k < 4; k++){ si[v*4+k] = bi[k]; sw[v*4+k] = bw[k]/sum; }
+    }
+    g.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(si, 4));
+    g.setAttribute("skinWeight", new THREE.Float32BufferAttribute(sw, 4));
+    const sm = new THREE.SkinnedMesh(g, mesh.material);
+    sm.name = mesh.name; sm.position.copy(mesh.position); sm.quaternion.copy(mesh.quaternion); sm.scale.copy(mesh.scale); sm.frustumCulled = false;
+    const parent = mesh.parent; parent.add(sm); for (const ch of [...mesh.children]) sm.add(ch); parent.remove(mesh);
+    sm.updateWorldMatrix(true, false); sm.bind(skeleton, sm.matrixWorld.clone());
+  }
+  return {bones, tail:["Tail1","Tail2","Tail3"].map(n => bones[n]).filter(Boolean)};
 }
 
 /* bone finding: VRM humanoid first, then common naming schemes (Mixamo, VRoid, Unity, Blender, Biped) */
@@ -1132,6 +1494,7 @@ function onFlat(x, y, out, off, nOut, nOff){
 }
 // the face area on a model: an ellipsoid cap fitted to the model's face when it was loaded
 function onModel(x, y, out, off, nOut, nOff){
+  if (!MDL) return onFlat(x, y, out, off, nOut, nOff);                // between models while one loads
   const F = MDL.face, R = F.R*S.mCurve, z0 = F.z0 + S.mFaceZ*F.f*0.35, cz = z0 - R, yy = y*0.6;
   const zz = cz + Math.sqrt(Math.max(R*R - x*x - yy*yy, R*R*0.05));
   out[off] = x; out[off+1] = y; out[off+2] = zz + 0.012;
@@ -1460,7 +1823,7 @@ function track(now){
     [eRx, eRy] = forR; [eLx, eLy] = forL; [mX, mY] = pxToWorld(m.mouth);
     kE = unit * S.pEyeSize; kM = unit * S.pMouthSize;
   } else if (stageMode === "model" && MDL){
-    const f = MDL.face.f, sp = (0.36 + S.mEyeSpacing)*f;
+    const f = MDL.face.f*S.mFaceK, sp = (0.36 + S.mEyeSpacing)*f;
     eRx = -sp*mx; eLx = sp*mx; eRy = eLy = (0.02 + S.mEyeY)*f; mX = 0; mY = (-0.66 + S.mMouthY)*f;
     kE = 1.45 * S.mEyeSize * f * 0.8; kM = 1.2 * S.mMouthSize * f * 0.8;
   } else {
@@ -1715,7 +2078,7 @@ function sampleTint(ctx, pts, r, w, h){
 /* ---------- character gallery: every uploaded picture keeps its own cut-out, layout and settings ---------- */
 let CHARS = [];
 const newId = () => Math.random().toString(36).slice(2, 10);
-async function persistChar(c){ await idb.set("char:" + c.id, {id:c.id, type:c.type || "image", file:c.file, ext:c.ext, name:c.name, png:c.png, original:c.original, meta:c.meta, cfg:c.cfg, thumb:c.thumb, shot:c.shot, created:c.created}); }
+async function persistChar(c){ await idb.set("char:" + c.id, {id:c.id, type:c.type || "image", file:c.file, files:c.files, main:c.main, ext:c.ext, name:c.name, png:c.png, original:c.original, meta:c.meta, cfg:c.cfg, thumb:c.thumb, shot:c.shot, created:c.created}); }
 async function persistIndex(){ await idb.set("chars", CHARS.map(c => c.id)); }
 function makeThumb(canvas){
   const k = Math.min(1, 240 / Math.max(canvas.width, canvas.height));
@@ -1735,7 +2098,7 @@ async function loadChars(){
     await idb.set("chars", ids);
   }
   CHARS = [];
-  for (const id of ids){ const c = await idb.get("char:" + id); if (c?.png || c?.file) CHARS.push(c); }
+  for (const id of ids){ const c = await idb.get("char:" + id); if (c?.png || c?.file || c?.files?.length) CHARS.push(c); }
   renderChars();
 }
 async function canvasFromBlob(b){ const bmp = await createImageBitmap(b); const [c, x] = mkCanvas(bmp.width, bmp.height); x.drawImage(bmp, 0, 0); return c; }
@@ -1760,14 +2123,19 @@ async function openChar(id){
   }
   renderChars();
 }
-async function addModel(file){
-  const ext = (file.name.split(".").pop() || "").toLowerCase();
-  if (!MODEL_EXT.includes(ext)){ toast("Pick a 3D model file: " + MODEL_EXT.map(e => "." + e).join(", "), 4200); return; }
-  const c = {id:newId(), type:"model", file, ext, name:file.name.replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ").slice(0, 24) || "3D model",
+async function addModel(picked){
+  busy("Reading files…");
+  let files;
+  try{ files = await expandFiles([...picked]); }catch(e){ busy(); toast("Couldn't open that zip: " + (e?.message || e)); return; }
+  busy();
+  const main = pickMain(files);
+  if (!main){ toast("No 3D model found. Pick a " + MODEL_EXT.map(e => "." + e).join(", ") + " file, its whole folder of files, or a .zip.", 5200); return; }
+  const ext = extOf(main.name);
+  const c = {id:newId(), type:"model", files, main:main.name, ext, name:baseOf(main.name).replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ").slice(0, 24) || "3D model",
              cfg:{...pick(scopeKeys("x"), DEFAULTS), bg:"studio"}, created:Date.now()};
   CHARS.unshift(c); await persistChar(c); await persistIndex(); renderChars();
   await openChar(c.id);
-  if (MDL && MDL.id === c.id) toast(MDL.vrm ? "VRM loaded: your expressions drive its face." : MDL.arkit ? "Face shapes found: your expressions drive them." : "Model loaded. Settings › Face to place your eyes and mouth.", 4200);
+  if (MDL && MDL.id === c.id) toast(MDL.vrm ? "VRM loaded: your expressions drive its face." : MDL.arkit ? "Face shapes found: your expressions drive them." : "Model loaded. If the eyes and mouth are off, use Settings › Face › Place face on model.", 4200);
 }
 function chooseAdd(){
   openModal("Add a character", b => {
@@ -1775,10 +2143,21 @@ function chooseAdd(){
     const pic = el("button", "pill hot press", `${ico("image")}Picture`); pic.onclick = () => { closeModal(); pickImage(); };
     const mdl = el("button", "pill press", `${ico("cube")}3D model`); mdl.onclick = () => { closeModal(); $("#modelFile").click(); };
     row.append(pic, mdl); b.append(row);
-    b.append(el("p", "note", "Pictures: any head-and-shoulders photo or drawing. 3D models: .glb, .gltf, .vrm, .obj, .fbx, .stl, .ply or .dae. Single-file .glb or .vrm works best (textures included). Rigged models also get arm and hand tracking."));
+    b.append(el("p", "note", "Pictures: any head-and-shoulders photo or drawing. 3D models: .glb, .gltf, .vrm, .obj, .fbx, .stl, .ply or .dae. For a model with separate textures, select all of its files at once (model, .mtl/.bin and images) or pick a .zip of the folder. Models without bones can be rigged afterwards in Settings › Model."));
   });
 }
-$("#modelFile").onchange = e => { const f = e.target.files[0]; e.target.value = ""; if (f) addModel(f); };
+$("#modelFile").onchange = e => { const f = [...e.target.files]; e.target.value = ""; if (f.length) addModel(f); };
+// extra textures for a model that's already in the gallery
+$("#texFiles").onchange = async e => {
+  const picked = [...e.target.files]; e.target.value = ""; if (!picked.length) return;
+  const c = CHARS.find(x => x.id === scopeId); if (!c || c.type !== "model") return;
+  const add = await expandFiles(picked);
+  c.files = [...filesOf(c), ...add]; if (!c.main) c.main = pickMain(c.files)?.name;
+  await persistChar(c);
+  busy("Re-loading " + c.name + "…");
+  try{ await setModelFrom(c); showStage("model"); }catch(err){ toast("Couldn't reload: " + (err?.message || err)); }
+  busy();
+};
 async function addCharacter(blob, name){
   try{
     const {canvas, meta} = await processImage(blob);
@@ -1970,10 +2349,10 @@ const TABS = {
   model: [
     MODEL_LOOK,
     ["face","Face",[CH("faceMode","Face",[["overlay","Your eyes & mouth"],["model","Model's own face"],["both","Both"]]),
-      {t:"if", when:() => S.faceMode !== "model", items:[SEC("Placement"), RG("mEyeSpacing","Eye spacing",-0.3,0.3,0.005,fmtN), RG("mEyeY","Eye height",-0.6,0.6,0.01,fmtN), RG("mMouthY","Mouth height",-0.6,0.6,0.01,fmtN),
+      {t:"if", when:() => S.faceMode !== "model", items:[SEC("Placement"), {t:"faceplace"}, RG("mFaceK","Face size",0.3,3,0.02,fmtX), RG("mEyeSpacing","Eye spacing",-0.3,0.3,0.005,fmtN), RG("mEyeY","Eye height",-0.6,0.6,0.01,fmtN), RG("mMouthY","Mouth height",-0.6,0.6,0.01,fmtN),
         RG("mEyeSize","Eye size",0.3,2,0.02,fmtX), RG("mMouthSize","Mouth size",0.3,2,0.02,fmtX), RG("mFaceZ","Face depth",-1,1,0.02,fmtN), RG("mCurve","Face roundness",0.3,3,0.05,fmtX),
         ...faceShared("Blend skin into model")]}]],
-    ["model","Model",[CH("mTurn","Facing",[[0,"Front"],[1,"Left"],[2,"Back"],[3,"Right"]]), TG("mHeadBone","Turn only the head (if it has one)"), {t:"modelinfo"}]],
+    ["model","Model",[CH("mTurn","Facing",[[0,"Front"],[1,"Left"],[2,"Back"],[3,"Right"]]), TG("mHeadBone","Turn only the head (if it has one)"), {t:"rigtools"}, {t:"modelinfo"}]],
     motionTab, cameraTab
   ]
 };
@@ -2004,7 +2383,7 @@ function afterChange(k){
   if (k === "psx"){ if (PSX_PRESETS[S.psx]) Object.assign(S, PSX_PRESETS[S.psx]); syncNutStyle(); applyModelStyle(); WORLD.configure(); renderBody(); }
   if (k === "body"){ syncArms(); ensureBody(); }
   if (k === "faceMode") renderBody();
-  if (k === "mTurn" && MDL) mturn.rotation.y = S.mTurn * Math.PI/2;
+  if (k === "mTurn" && MDL){ mturn.rotation.y = S.mTurn * Math.PI/2; fitFace(); }
   if (k === "mHeadBone" && MDL){ const c = CHARS.find(x => x.id === scopeId); if (c) setModelFrom(c).then(() => showStage("model")); }
   if (k === "roast"){ applyShell(); updateTint(); }
   if (k === "pBgRemove") reprocess();
@@ -2078,6 +2457,32 @@ function buildItem(it){
     return w;
   }
   if (it.t === "if") { const w = el("div"); if (it.when()) for (const x of it.items) w.append(buildItem(x)); return w; }
+  if (it.t === "faceplace"){
+    const w = el("div"); const row = el("div", "btnrow");
+    const b1 = el("button", "pill hot press", "Place face on model"); b1.onclick = () => { buzz(8); placeFaceStart(); };
+    const b2 = el("button", "pill press", "Auto-find"); b2.onclick = async () => { buzz(8); const c = CHARS.find(x => x.id === scopeId); if (c){ delete c.cfg.facePt; await persistChar(c); if (MDL) MDL.cfg = c.cfg; } fitFace(); toast("Face re-found"); };
+    row.append(b1, b2); w.append(row);
+    w.append(el("p", "note", "Drag a target onto the spot between the model's eyes. Your eyes and mouth snap onto its surface there."));
+    return w;
+  }
+  if (it.t === "rigtools"){
+    const w = el("div"); const m = MDL;
+    w.append(el("div", "sec", "Bones"));
+    const row = el("div", "btnrow");
+    const btn = (label, fn, hot) => { const b = el("button", "pill press" + (hot ? " hot" : ""), label); b.onclick = () => { buzz(8); fn(); }; row.append(b); };
+    if (!m) w.append(el("p", "note", "Open a model first."));
+    else if (m.own) w.append(el("p", "note", "This model came with its own skeleton."));
+    else if (m.autoRig){ btn("Adjust bones", () => rigStart(m.autoRig), true); btn("Remove bones", rigRemove); w.append(row); }
+    else {
+      btn("Two-legged", () => rigStart("biped"), true); btn("Four-legged", () => rigStart("quad"));
+      w.append(el("p", "note", "This model has no bones. Add a skeleton so its head turns with you and arm tracking can move it. Set Facing first so the model looks at you."));
+      w.append(row);
+    }
+    w.append(el("div", "sec", "Textures"));
+    const r2 = el("div", "btnrow"); const tb = el("button", "pill press", "Add textures…"); tb.onclick = () => { buzz(8); $("#texFiles").click(); }; r2.append(tb); w.append(r2);
+    w.append(el("p", "note", "Pick the image files (or a .zip) that came with the model. They're matched to its materials by name."));
+    return w;
+  }
   if (it.t === "modelinfo"){
     const m = MDL, r = m?.rig, n = (r ? ["L","R"].reduce((a, sd) => a + [r[sd].upper, r[sd].lower, r[sd].hand].filter(Boolean).length + FINGERS.reduce((b, f) => b + (r[sd].fingers[f]?.length || 0), 0), 0) : 0);
     const lines = !m ? ["No model loaded."] : [
@@ -2243,6 +2648,140 @@ for (const h of editor.querySelectorAll(".h")){
   h.addEventListener("pointerup", up); h.addEventListener("pointercancel", up);
 }
 
+/* ---------- place the face on a model ---------- */
+const PF = {on:false, drag:false, fx:0, fy:0, t:0, ok:true};
+function placeFaceStart(){
+  if (!MDL) return; closeSheet();
+  PF.on = true; PF.drag = false; document.body.classList.add("placing"); rigCv.hidden = false; $("#pfBar").hidden = false;
+  $("#pfSize").value = S.mFaceK; buzz(10);
+}
+function placeFaceEnd(){ PF.on = false; document.body.classList.remove("placing"); rigCv.hidden = true; $("#pfBar").hidden = true; save(); }
+$("#pfDone").onclick = () => { buzz(8); placeFaceEnd(); toast("Face placed. Fine-tune it in Settings → Face."); };
+$("#pfAuto").onclick = async () => { buzz(8); const c = CHARS.find(x => x.id === scopeId); if (c){ delete c.cfg.facePt; await persistChar(c); } MDL.cfg = c?.cfg || MDL.cfg; fitFace(); };
+$("#pfSize").oninput = e => { S.mFaceK = +e.target.value; };
+const _pr = new THREE.Raycaster(), _pn = new THREE.Vector2();
+function placeAt(x, y, final){
+  _pn.set(x/innerWidth*2 - 1, -(y/innerHeight*2 - 1)); _pr.setFromCamera(_pn, camera);
+  const hit = _pr.intersectObject(MDL.root, true).find(h => { for (let o = h.object; o; o = o.parent) if (o === faceAnchor) return false; return true; });
+  PF.ok = !!hit; if (!hit) return;
+  const c = CHARS.find(q => q.id === scopeId); if (!c) return;
+  c.cfg.facePt = MDL.root.worldToLocal(hit.point.clone()).toArray(); MDL.cfg = c.cfg;
+  const now = performance.now();
+  if (final || now - PF.t > 140){ PF.t = now; fitFace(); }
+  if (final) persistChar(c);
+}
+function drawPlace(){
+  const dpr = Math.min(devicePixelRatio, 2);
+  if (rigCv.width !== Math.round(innerWidth*dpr)){ rigCv.width = Math.round(innerWidth*dpr); rigCv.height = Math.round(innerHeight*dpr); }
+  rctx.setTransform(dpr, 0, 0, dpr, 0, 0); rctx.clearRect(0, 0, innerWidth, innerHeight);
+  if (!PF.drag) return;
+  const x = PF.fx, y = PF.fy - 70, col = PF.ok ? "#ffcf8a" : "#ff6b6b";
+  rctx.lineWidth = 2; rctx.strokeStyle = "rgba(0,0,0,.55)"; rctx.beginPath(); rctx.arc(x, y, 17, 0, 7); rctx.stroke();
+  rctx.strokeStyle = col; rctx.beginPath(); rctx.arc(x, y, 15, 0, 7); rctx.stroke();
+  rctx.beginPath(); rctx.moveTo(x - 26, y); rctx.lineTo(x - 8, y); rctx.moveTo(x + 8, y); rctx.lineTo(x + 26, y); rctx.moveTo(x, y - 26); rctx.lineTo(x, y - 8); rctx.moveTo(x, y + 8); rctx.lineTo(x, y + 26); rctx.stroke();
+  rctx.fillStyle = col; rctx.beginPath(); rctx.arc(x, y, 2.5, 0, 7); rctx.fill();
+  rctx.strokeStyle = "rgba(255,207,138,.35)"; rctx.beginPath(); rctx.moveTo(PF.fx, PF.fy); rctx.lineTo(x, y + 17); rctx.stroke();
+}
+
+/* ---------- joint editor ---------- */
+const RIGE = {on:false, type:"biped", joints:null, sel:null, mirror:true, side:false, c:null, W:null, Wi:null, fx:0, fy:0, drag:false};
+const rigCv = $("#rigCv"), rctx = rigCv.getContext("2d");
+const MIRROR_OF = n => n.startsWith("Left") ? "Right" + n.slice(4) : n.startsWith("Right") ? "Left" + n.slice(5) : null;
+async function rigStart(type){
+  const c = CHARS.find(x => x.id === scopeId); if (!c || !MDL) return;
+  if (MDL.own){ toast("This model already has its own skeleton."); return; }
+  closeSheet();
+  if (MDL.autoRig){ const prev = c.cfg.autoRig; busy("Preparing…"); delete c.cfg.autoRig; try{ await setModelFrom(c); showStage("model"); } finally { busy(); c.cfg.autoRig = prev; } }
+  RIGE.c = c; RIGE.type = type; RIGE.on = true; RIGE.side = false; RIGE.sel = null;
+  mrig.position.set(0, 0, 0); mrig.rotation.set(0, 0, 0); mrig.scale.set(1, 1, 1); mturn.rotation.y = MDL.turn;
+  MDL.root.updateWorldMatrix(true, true);
+  RIGE.W = MDL.root.matrixWorld.clone(); RIGE.Wi = RIGE.W.clone().invert();
+  RIGE.joints = (c.cfg.autoRig?.type === type && c.cfg.autoRig.joints) ? JSON.parse(JSON.stringify(c.cfg.autoRig.joints)) : guessJoints(MDL.root, type);
+  document.body.classList.add("rigging"); rigCv.hidden = false; $("#rigBar").hidden = false;
+  $("#rigView").textContent = "Side view"; $("#rigMirror").classList.toggle("on", RIGE.mirror);
+  $("#rigHint").textContent = type === "quad"
+    ? "Drag the joints onto your pet: spine along the back, legs down to the paws, tail at the back, nose at the front. Use Side view to line up the depth."
+    : "Drag the joints onto the model: shoulders, elbows, wrists, hips, knees and ankles. Use Side view to line up the depth.";
+  buzz(10);
+}
+function rigEnd(){
+  RIGE.on = false; document.body.classList.remove("rigging"); rigCv.hidden = true; $("#rigBar").hidden = true;
+  if (MDL) mturn.rotation.y = MDL.turn;
+}
+$("#rigCancel").onclick = async () => { buzz(8); rigEnd(); const c = RIGE.c; if (c && c.cfg.autoRig && !MDL?.autoRig){ await setModelFrom(c); showStage("model"); } };
+$("#rigReset").onclick = () => { buzz(8); mturn.rotation.y = MDL.turn; MDL.root.updateWorldMatrix(true, true); RIGE.joints = guessJoints(MDL.root, RIGE.type); if (RIGE.side) mturn.rotation.y = MDL.turn - Math.PI/2; };
+$("#rigMirror").onclick = () => { RIGE.mirror = !RIGE.mirror; $("#rigMirror").classList.toggle("on", RIGE.mirror); $("#rigMirror").textContent = RIGE.mirror ? "Mirror ✓" : "Mirror"; buzz(6); };
+$("#rigView").onclick = () => { RIGE.side = !RIGE.side; mturn.rotation.y = MDL.turn - (RIGE.side ? Math.PI/2 : 0); $("#rigView").textContent = RIGE.side ? "Front view" : "Side view"; buzz(6); };
+$("#rigDone").onclick = async () => {
+  const c = RIGE.c; if (!c) return;
+  c.cfg.autoRig = {type:RIGE.type, joints:RIGE.joints}; await persistChar(c);
+  rigEnd(); busy("Adding bones…"); await nextFrame();
+  try{ await setModelFrom(c); showStage("model"); toast(RIGE.type === "quad" ? "Bones added. Its head follows yours, your arms move its front legs, and it wags when you smile." : "Bones added. The head follows you, and arm tracking now moves its arms."); }
+  catch(e){ toast("Couldn't add bones: " + (e?.message || e)); }
+  busy(); renderBody?.();
+};
+async function rigRemove(){
+  const c = CHARS.find(x => x.id === scopeId); if (!c) return;
+  delete c.cfg.autoRig; await persistChar(c); busy("Removing bones…");
+  try{ await setModelFrom(c); showStage("model"); }catch(e){} busy(); toast("Bones removed"); renderBody();
+}
+const _jv = new THREE.Vector3();
+function jointScreen(n){ _jv.fromArray(RIGE.joints[n]); MDL.root.localToWorld(_jv); const w = _jv.clone(); _jv.project(camera); return {x:(_jv.x + 1)/2*innerWidth, y:(1 - _jv.y)/2*innerHeight, w}; }
+function drawRig(){
+  const dpr = Math.min(devicePixelRatio, 2);
+  if (rigCv.width !== Math.round(innerWidth*dpr)){ rigCv.width = Math.round(innerWidth*dpr); rigCv.height = Math.round(innerHeight*dpr); }
+  rctx.setTransform(dpr, 0, 0, dpr, 0, 0); rctx.clearRect(0, 0, innerWidth, innerHeight);
+  const T = RIG_T[RIGE.type], P = {};
+  for (const [n] of T) P[n] = jointScreen(n);
+  const colOf = n => n.startsWith("Left") ? "#ffb35c" : n.startsWith("Right") ? "#5cd0ff" : "#f7ecdc";
+  rctx.lineWidth = 4; rctx.lineCap = "round";
+  for (const [n, par] of T) if (par){ rctx.strokeStyle = "rgba(0,0,0,.45)"; rctx.lineWidth = 6; rctx.beginPath(); rctx.moveTo(P[par].x, P[par].y); rctx.lineTo(P[n].x, P[n].y); rctx.stroke();
+    rctx.strokeStyle = colOf(n); rctx.lineWidth = 3; rctx.beginPath(); rctx.moveTo(P[par].x, P[par].y); rctx.lineTo(P[n].x, P[n].y); rctx.stroke(); }
+  for (const [n] of T){
+    const q = P[n], sel = RIGE.sel === n, r = sel ? 11 : 8;
+    rctx.fillStyle = "rgba(0,0,0,.5)"; rctx.beginPath(); rctx.arc(q.x, q.y, r + 3, 0, 7); rctx.fill();
+    rctx.fillStyle = colOf(n); rctx.beginPath(); rctx.arc(q.x, q.y, r, 0, 7); rctx.fill();
+    if (sel){
+      rctx.font = "600 12px 'Bricolage Grotesque', sans-serif"; rctx.textAlign = "center";
+      const label = n.replace(/([a-z])([A-Z])/g, "$1 $2").replace("Fore Arm", "Elbow").replace(/^(Left|Right) Arm$/, "$1 Shoulder joint").replace("Up Leg", "Hip").replace(/ Leg$/, " Knee").replace("Hand Tip", "Hand end").replace("Head Top", RIGE.type === "quad" ? "Nose" : "Head top");
+      rctx.fillStyle = "rgba(14,9,6,.85)"; const w = rctx.measureText(label).width + 16; rctx.fillRect(q.x - w/2, q.y - 40, w, 22);
+      rctx.fillStyle = "#f7ecdc"; rctx.fillText(label, q.x, q.y - 24);
+      if (RIGE.drag){ rctx.strokeStyle = "rgba(246,207,150,.7)"; rctx.lineWidth = 2; rctx.beginPath(); rctx.moveTo(RIGE.fx, RIGE.fy); rctx.lineTo(q.x, q.y + r); rctx.stroke(); }
+    }
+  }
+}
+const _rp = new THREE.Plane(), _rr = new THREE.Raycaster(), _rh = new THREE.Vector3(), _rn = new THREE.Vector2();
+rigCv.addEventListener("pointerdown", e => {
+  if (PF.on){ PF.drag = true; PF.fx = e.clientX; PF.fy = e.clientY; rigCv.setPointerCapture(e.pointerId); placeAt(e.clientX, e.clientY - 70, false); buzz(6); return; }
+  let best = null, bd = 34;
+  for (const [n] of RIG_T[RIGE.type]){ const q = jointScreen(n), d = Math.hypot(q.x - e.clientX, q.y - e.clientY); if (d < bd){ bd = d; best = n; } }
+  RIGE.sel = best; if (!best) return;
+  RIGE.drag = true; RIGE.fx = e.clientX; RIGE.fy = e.clientY; rigCv.setPointerCapture(e.pointerId); buzz(6);
+});
+rigCv.addEventListener("pointermove", e => {
+  if (PF.on){ if (PF.drag){ PF.fx = e.clientX; PF.fy = e.clientY; placeAt(e.clientX, e.clientY - 70, false); } return; }
+  if (!RIGE.drag || !RIGE.sel) return;
+  RIGE.fx = e.clientX; RIGE.fy = e.clientY;
+  const sx = e.clientX, sy = e.clientY - 60;                        // the joint rides above the fingertip
+  const q = jointScreen(RIGE.sel);
+  _rp.setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()).negate(), q.w);
+  _rn.set(sx/innerWidth*2 - 1, -(sy/innerHeight*2 - 1)); _rr.setFromCamera(_rn, camera);
+  if (!_rr.ray.intersectPlane(_rp, _rh)) return;
+  const local = MDL.root.worldToLocal(_rh.clone());
+  RIGE.joints[RIGE.sel] = local.toArray();
+  const m = MIRROR_OF(RIGE.sel);
+  if (m && RIGE.mirror){
+    // mirror across the model's own centre line (in the front-facing frame captured when editing began)
+    const f = local.clone().applyMatrix4(RIGE.W); f.x = -f.x; RIGE.joints[m] = f.applyMatrix4(RIGE.Wi).toArray();
+  } else if (!m && RIGE.mirror){
+    const f = local.clone().applyMatrix4(RIGE.W); f.x = 0; RIGE.joints[RIGE.sel] = f.applyMatrix4(RIGE.Wi).toArray();   // centre joints stay centred
+  }
+});
+const rigUp = () => {
+  if (PF.on){ if (PF.drag){ placeAt(PF.fx, PF.fy - 70, true); buzz(4); } PF.drag = false; return; }
+  if (RIGE.drag) buzz(4); RIGE.drag = false; };
+rigCv.addEventListener("pointerup", rigUp); rigCv.addEventListener("pointercancel", rigUp);
+
 /* ---------- menu, modes, HUD ---------- */
 const statusEl = $("#status");
 async function ensureCamera(){
@@ -2274,6 +2813,8 @@ function enterMode(m){
   if (!S.coachSeen){ S.coachSeen = true; save(); setTimeout(showGestures, 700); }
 }
 async function goMenu(){
+  if (RIGE.on) rigEnd();
+  if (PF.on) placeFaceEnd();
   closeEditor(); closeSheet(); stopRec();
   mode = "menu"; document.body.dataset.mode = "menu";
   await loadScope("peanut");
@@ -2348,7 +2889,7 @@ $("#bClean").onclick = () => { buzz(8); closeSheet(); document.body.classList.ad
 /* ---------- touch controls (both the peanut and characters) ---------- */
 let suppressClick = false, holding = false;
 const perPx = () => 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov/2)) * camera.position.z / innerHeight;
-const canGesture = () => (mode === "puppet" && PUP || mode === "peanut" || mode === "model" && MDL) && !editing;
+const canGesture = () => (mode === "puppet" && PUP || mode === "peanut" || mode === "model" && MDL) && !editing && !RIGE.on && !PF.on;
 const G = {pts:new Map(), n:0, max:0, t0:0, moved:false, base:null, swipe:{x:0, y:0}, lastTap2:0};
 const isPup = () => mode === "puppet";
 function gBaseline(){
@@ -3020,6 +3561,8 @@ function loop(now){
     nut.scale.set(1 - sq*0.45, 1 + sq, 1 - sq*0.45);
     nut.rotation.set(-spr.pitch.v * 0.025 * wob, 0, -spr.yaw.v * 0.02 * wob - spr.tx.v * 0.05 * wob);
     if (NUT_ARMS && S.body) driveArms(NUT_ARMS, now, Math.min(1, dt*14));
+  } else if (stageMode === "model" && MDL && (RIGE.on || PF.on)){
+    mrig.position.set(0, 0, 0); mrig.rotation.set(0, 0, 0); mrig.scale.set(1, 1, 1);
   } else if (stageMode === "model" && MDL){
     const useHead = MDL.head && S.mHeadBone, bodyK = useHead ? 0.2 : 1;
     const idle = (seen ? 0 : Math.sin(now/900) * 0.05) + mk * Math.sin(now/1600) * 0.35;
@@ -3034,6 +3577,10 @@ function loop(now){
     }
     if (S.body) driveArms(R, now, kk);
     driveFace();
+    if (MDL.tail.length){                                            // pets wag, more when you smile
+      const happy = clamp(((BSV.mouthSmileLeft || 0) + (BSV.mouthSmileRight || 0))*0.8, 0, 1);
+      MDL.tail.forEach((b, i) => { b.rotation.y = Math.sin(now/1000*(6 + happy*8) - i*0.7)*(0.18 + happy*0.45)*(1 + i*0.3); });
+    }
     MDL.vrm?.update?.(dt);
   } else if (PUP){
     const sc = spr.gs.p, bob = (spr.talk.p * 0.07 + Math.sin(now / 1500) * 0.012) * S.pMove * (editing ? 0 : 1);
@@ -3063,6 +3610,8 @@ function loop(now){
   if (SHOT.pending) takeShot();
   if (THUMB.pending) takeThumb();
   if (editing && PUP){ placeEditor(); drawLoupe(); }
+  if (RIGE.on && MDL) drawRig();
+  if (PF.on && MDL) drawPlace();
 }
 
 /* ---------- boot ---------- */

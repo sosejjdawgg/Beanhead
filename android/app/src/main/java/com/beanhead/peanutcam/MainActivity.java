@@ -2,6 +2,7 @@ package com.beanhead.peanutcam;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.ContentValues;
 import android.media.MediaScannerConnection;
 import android.os.Build;
@@ -235,7 +236,17 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_FILE && fileCallback != null) {
-            fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
+            Uri[] picked = null;
+            if (resultCode == RESULT_OK && data != null) {
+                ClipData clip = data.getClipData();
+                if (clip != null && clip.getItemCount() > 0) {
+                    picked = new Uri[clip.getItemCount()];
+                    for (int i = 0; i < clip.getItemCount(); i++) picked[i] = clip.getItemAt(i).getUri();
+                } else if (data.getData() != null) {
+                    picked = new Uri[]{data.getData()};
+                }
+            }
+            fileCallback.onReceiveValue(picked);
             fileCallback = null;
         }
     }
