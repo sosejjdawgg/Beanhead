@@ -291,6 +291,38 @@ body.placing #hud{opacity:0!important;pointer-events:none}
 body.placing #hud *{pointer-events:none!important}
 body.rigging #hud{opacity:0!important;pointer-events:none}
 body.rigging #hud *{pointer-events:none!important}
+/* ---------- cut-out editor ---------- */
+#cut{position:fixed;inset:0;z-index:40;background:#141010;touch-action:none}
+#cutCv{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#cut .ctop{position:absolute;left:0;right:0;top:0;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(rgba(14,9,6,.92),rgba(14,9,6,0));color:var(--ink);font:700 16px var(--display)}
+#cut .ctop .pill{height:42px;padding:0 16px;min-width:92px}
+#cut .chint{position:absolute;left:50%;top:calc(66px + env(safe-area-inset-top,0px));transform:translateX(-50%);padding:5px 12px;border-radius:99px;background:rgba(14,9,6,.7);color:var(--mute);font-size:12px;white-space:nowrap;pointer-events:none;transition:opacity .6s}
+#cut .cpanel{position:absolute;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(560px,calc(100% - 20px));
+  padding:10px 12px 12px;border-radius:22px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line),0 14px 40px rgba(0,0,0,.5);color:var(--ink)}
+#cut .ctabs{display:flex;gap:4px;padding:3px;border-radius:14px;background:rgba(0,0,0,.28);margin-bottom:10px}
+#cut .ctabs button{flex:1;height:36px;border-radius:11px;font:600 13px var(--display);color:var(--mute)}
+#cut .ctabs button[aria-selected=true]{background:var(--raise);color:var(--nut2);box-shadow:inset 0 0 0 1px var(--line)}
+#cut .crow{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+#cut .cseg{flex:1;display:flex;gap:4px;padding:3px;border-radius:14px;background:rgba(0,0,0,.28)}
+#cut .cseg button{flex:1;height:40px;border-radius:11px;font:600 14px var(--display);color:var(--mute)}
+#cut .cseg button[aria-pressed=true]{background:var(--nut);color:#1b120c}
+#cut .cseg #cuErase[aria-pressed=true]{background:#ff8a7a}
+#cut .cicon{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:rgba(0,0,0,.28);color:var(--ink)}
+#cut .cicon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#cut .cicon:disabled{opacity:.35}
+#cut .cr{display:flex;align-items:center;gap:12px;font-size:13.5px;min-height:38px;flex:1}
+#cut .cr span{width:104px;flex:none;color:var(--mute)}
+#cut .cr input{flex:1;accent-color:var(--nut);min-width:0}
+#cut .cchk{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--mute);min-height:34px}
+#cut .cchk input{width:18px;height:18px;accent-color:var(--nut)}
+#cut .cnote{margin:6px 2px 0;font-size:12px;line-height:1.45;color:var(--mute)}
+#cut .cline{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}
+#cut .cswatch{display:flex;gap:7px;flex-wrap:wrap;padding-left:2px}
+#cut .cswatch button{width:28px;height:28px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)}
+#cut .cswatch button[aria-pressed=true]{box-shadow:0 0 0 2px #141010,0 0 0 4px var(--nut2)}
+#cut .cswatch label{width:28px;height:28px;border-radius:50%;overflow:hidden;position:relative;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)}
+#cut .cswatch label input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
 /* ---------- upload scan + layout loupe ---------- */
 #scan{position:fixed;inset:0;z-index:58;width:100%;height:100%;background:#070101;transition:opacity .5s}
 #scan.out{opacity:0}
@@ -361,6 +393,7 @@ body.rigging #hud *{pointer-events:none!important}
   <symbol id="back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
   <symbol id="sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
   <symbol id="recentre" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4 3.5v3.8h3.8"/><circle cx="12" cy="12" r="2.2"/></symbol>
+  <symbol id="cutout" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.6"/><circle cx="6" cy="17" r="2.6"/><path d="M8.2 8.4 20 17M8.2 15.6 20 7"/></symbol>
   <symbol id="flip" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><path d="M9 13a3 3 0 0 1 5.5-1.6M15 13a3 3 0 0 1-5.5 1.6"/></symbol>
   <symbol id="eye" viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/><path d="M4 20 20 4"/></symbol>
   <symbol id="image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M20 16l-5-5-8 8"/></symbol>
@@ -420,6 +453,7 @@ body.rigging #hud *{pointer-events:none!important}
   <nav id="bar" aria-label="Controls">
     <button class="bb press" id="bSettings"><svg class="i"><use href="#sliders"/></svg>Settings</button>
     <button class="bb press puppet-only" id="bLayout"><svg class="i"><use href="#move"/></svg>Layout</button>
+    <button class="bb press puppet-only" id="bCut"><svg class="i"><use href="#cutout"/></svg>Edges</button>
     <button class="bb press puppet-only" id="bImage"><svg class="i"><use href="#plus"/></svg>New</button>
     <button class="bb press" id="bFlip"><svg class="i"><use href="#flip"/></svg>Flip</button>
     <button class="bb press" id="bClean"><svg class="i"><use href="#eye"/></svg>Hide</button>
@@ -466,6 +500,31 @@ body.rigging #hud *{pointer-events:none!important}
   <div class="rbtns">
     <button class="pill press" id="pfAuto">Auto-find</button>
     <button class="pill hot press" id="pfDone">Done</button>
+  </div>
+</div>
+<div id="cut" hidden>
+  <canvas id="cutCv"></canvas>
+  <div class="ctop"><button class="pill press" id="cutCancel">Cancel</button><b>Cut-out</b><button class="pill hot press" id="cutDone">Done</button></div>
+  <div class="chint" id="cutHint">One finger paints. Two fingers zoom and move.</div>
+  <div class="cpanel">
+    <div class="ctabs" role="tablist"><button data-t="brush" aria-selected="true">Brush</button><button data-t="edges" aria-selected="false">Edges</button><button data-t="outline" aria-selected="false">Outline</button></div>
+    <div class="cbody" data-p="brush">
+      <div class="crow"><div class="cseg"><button id="cuErase" aria-pressed="true">Erase</button><button id="cuRestore" aria-pressed="false">Restore</button></div>
+        <button class="cicon press" id="cuUndo" aria-label="Undo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+        <button class="cicon press" id="cuRedo" aria-label="Redo"><svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button></div>
+      <label class="cr"><span>Brush size</span><input type="range" id="cuSize" min="6" max="140" value="36"></label>
+      <label class="cr"><span>Softness</span><input type="range" id="cuSoft" min="0" max="1" step="0.05" value="0.45"></label>
+      <label class="cchk"><input type="checkbox" id="cuGhost" checked><span>Show removed parts faintly</span></label>
+    </div>
+    <div class="cbody" data-p="edges" hidden>
+      <label class="cr"><span>Smooth</span><input type="range" id="cuSmooth" min="0" max="10" step="0.5" value="0"></label>
+      <label class="cr"><span>Shrink ↔ Grow</span><input type="range" id="cuGrow" min="-1" max="1" step="0.05" value="0"></label>
+      <p class="cnote">Smooth rounds off jagged, stepped edges. Shrink trims leftover background around the edge; Grow brings back thin edges and hair.</p>
+    </div>
+    <div class="cbody" data-p="outline" hidden>
+      <div class="cline"><label class="cr"><span>Outline 1</span><input type="range" id="cuW0" min="0" max="40" value="0"></label><div class="cswatch" data-i="0"></div></div>
+      <div class="cline"><label class="cr"><span>Outline 2</span><input type="range" id="cuW1" min="0" max="40" value="0"></label><div class="cswatch" data-i="1"></div></div>
+    </div>
   </div>
 </div>
 <canvas id="scan" hidden aria-hidden="true"></canvas>
@@ -1367,12 +1426,12 @@ function stickTexture(){
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
   return t;
 }
-function shadowTexture(cv, Wd){
-  const pad = 0.45, x0 = -Wd/2 - pad, x1 = Wd/2 + pad, y1 = PUP_H/2 + pad, y0 = STICK.top - STICK.len - pad;
+function shadowTexture(cv, Wd, Hd = PUP_H){
+  const pad = 0.45, x0 = -Wd/2 - pad, x1 = Wd/2 + pad, y1 = Hd/2 + pad, y0 = STICK.top - STICK.len - pad;
   const k = Math.min(160, 700 / (y1 - y0));          // canvas pixels per world unit
   const c = document.createElement("canvas"); c.width = Math.round((x1 - x0)*k); c.height = Math.round((y1 - y0)*k);
   const x = c.getContext("2d");
-  x.drawImage(cv, (-Wd/2 - x0)*k, (y1 - PUP_H/2)*k, Wd*k, PUP_H*k);
+  x.drawImage(cv, (-Wd/2 - x0)*k, (y1 - Hd/2)*k, Wd*k, Hd*k);
   x.beginPath(); x.roundRect((-STICK.w/2 - x0)*k, (y1 - STICK.top)*k, STICK.w*k, STICK.len*k, STICK.w*k/2); x.fillStyle = "#000"; if (S.pStick) x.fill();
   x.globalCompositeOperation = "source-in"; x.fillStyle = "#000"; x.fillRect(0, 0, c.width, c.height);
   const b = document.createElement("canvas"); b.width = c.width; b.height = c.height;
@@ -1388,20 +1447,20 @@ function clearPuppet(){
 }
 function buildPuppet(){
   clearPuppet();
-  const cv = PUP.canvas, w = cv.width, h = cv.height, s = PUP_H / h, Wd = w*s;
+  const cv = PUP.canvas, w = cv.width, h = cv.height, pad = PUP.pad || 0, s = PUP_H / (h - 2*pad), Wd = w*s, Hd = h*s;   // outlines add a margin; the character keeps its size
   PUP.s = s;
   const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
-  const pic = new THREE.Mesh(new THREE.PlaneGeometry(Wd, PUP_H), new THREE.MeshBasicMaterial({map:tex, transparent:true, toneMapped:false, alphaTest:0.02}));
+  const pic = new THREE.Mesh(new THREE.PlaneGeometry(Wd, Hd), new THREE.MeshBasicMaterial({map:tex, transparent:true, toneMapped:false, alphaTest:0.02}));
   pic.renderOrder = 2;
   const stick = new THREE.Mesh(new THREE.PlaneGeometry(STICK.w, STICK.len), new THREE.MeshBasicMaterial({map:stickTexture(), transparent:true, toneMapped:false, alphaTest:0.02}));
   stick.position.set(0, STICK.top - STICK.len/2, -0.03); stick.renderOrder = 1; stick.visible = S.pStick;
-  const sh = shadowTexture(cv, Wd);
+  const sh = shadowTexture(cv, Wd, Hd);
   const shadow = new THREE.Mesh(new THREE.PlaneGeometry(sh.w, sh.h), new THREE.MeshBasicMaterial({map:sh.t, transparent:true, opacity:0.42, depthWrite:false, toneMapped:false}));
   shadow.position.set(sh.cx + 0.13, sh.cy - 0.16, -0.22); shadow.renderOrder = 0; shadow.visible = S.pShadow;
   pBody.add(shadow, stick, pic);
   PUP.meshes = [pic, stick, shadow]; PUP.stick = stick; PUP.shadow = shadow;
 }
-const pxToWorld = (p) => PUP ? [(p[0] - PUP.canvas.width/2) * PUP.s, (PUP.canvas.height/2 - p[1]) * PUP.s] : [0, 0];
+const pxToWorld = (p) => PUP ? [(p[0] + (PUP.pad || 0) - PUP.canvas.width/2) * PUP.s, (PUP.canvas.height/2 - p[1] - (PUP.pad || 0)) * PUP.s] : [0, 0];
 
 /* ---------- face features ----------
    Each feature is a ring mesh built from face landmarks: centre -> contour -> skin rings -> feathered edge.
@@ -2096,7 +2155,7 @@ async function processImage(blob){
   const cw = x1 - x0 + 1, ch = y1 - y0 + 1;
   const [out, oxx] = mkCanvas(cw, ch); oxx.drawImage(cut, x0, y0, cw, ch, 0, 0, cw, ch);
 
-  const meta = {face: !!lm};
+  const meta = {face: !!lm, crop:[x0, y0, w0, h0]};
   if (lm){
     const Pt = i => [lm[i].x*w0 - x0, lm[i].y*h0 - y0];
     meta.eyeR = avgPt([Pt(33), Pt(133)]); meta.eyeL = avgPt([Pt(263), Pt(362)]);
@@ -2119,6 +2178,228 @@ function sampleTint(ctx, pts, r, w, h){
   }
   return n ? [R/n/255, G/n/255, Bc/n/255] : [0.75, 0.55, 0.42];
 }
+/* ---------- outlines: rings around the cut-out, drawn when a character loads ---------- */
+function outlineCanvas(base, strokes){
+  const h = base.height, list = (strokes || []).map(o => ({r:Math.round((o?.w || 0)*h), c:o?.c || "#fff"})).filter(o => o.r > 0);
+  if (!list.length) return {canvas:base, pad:0};
+  const total = list.reduce((a, o) => a + o.r, 0), pad = total + 2;
+  const [out, ox] = mkCanvas(base.width + 2*pad, h + 2*pad);
+  const ring = (R, col) => {                                  // the shape grown by R, filled with one colour
+    const [lc, lx] = mkCanvas(out.width, out.height);
+    const steps = Math.max(1, Math.ceil(R / 3)), n = Math.max(16, Math.min(48, Math.round(R*1.5)));
+    for (let k = 1; k <= steps; k++){ const rr = R*k/steps; for (let a = 0; a < n; a++) lx.drawImage(base, pad + Math.cos(a/n*6.2832)*rr, pad + Math.sin(a/n*6.2832)*rr); }
+    lx.globalCompositeOperation = "source-in"; lx.fillStyle = col; lx.fillRect(0, 0, lc.width, lc.height);
+    ox.drawImage(lc, 0, 0);
+  };
+  let R = total; for (let i = list.length - 1; i >= 0; i--){ ring(R, list[i].c); R -= list[i].r; }
+  ox.drawImage(base, pad, pad);
+  return {canvas:out, pad};
+}
+// the person over the full-colour source, through a mask (optionally smoothed and grown/shrunk)
+function refineMask(mask, smooth, grow){
+  if (!smooth && !grow) return mask;
+  const w = mask.width, h = mask.height, [c, x] = mkCanvas(w, h);
+  x.filter = `blur(${Math.max(0.6, smooth + Math.abs(grow)*5)}px)`; x.drawImage(mask, 0, 0); x.filter = "none";
+  const id = x.getImageData(0, 0, w, h), d = id.data, t = 0.5 - grow*0.42, k = 0.1 + smooth*0.006;
+  for (let i = 3; i < d.length; i += 4){ let v = (d[i]/255 - (t - k)) / (2*k); v = v < 0 ? 0 : v > 1 ? 1 : v; d[i] = v*v*(3 - 2*v)*255; d[i-1] = d[i-2] = d[i-3] = 255; }
+  x.putImageData(id, 0, 0); return c;
+}
+function maskedCut(src, mask, smooth, grow){
+  const [o, ox] = mkCanvas(src.width, src.height); ox.drawImage(src, 0, 0);
+  ox.globalCompositeOperation = "destination-in"; ox.drawImage(refineMask(mask, smooth, grow), 0, 0); return o;
+}
+// the original picture, cropped exactly like the cut-out (so Restore can paint real pixels back)
+async function sourceCrop(c, base){
+  if (!c.original) return null;
+  const bmp = await createImageBitmap(c.original), sc = Math.min(1, 1100 / Math.max(bmp.width, bmp.height));
+  const w0 = Math.round(bmp.width*sc), h0 = Math.round(bmp.height*sc), [src, sx] = mkCanvas(w0, h0); sx.drawImage(bmp, 0, 0, w0, h0);
+  const cw = base.width, ch = base.height;
+  let ox = null, oy = null;
+  if (c.meta.crop && c.meta.crop[2] === w0){ [ox, oy] = c.meta.crop; }
+  else {
+    // older characters: find where the cut-out sits by matching solid pixels
+    const bd = base.getContext("2d", {willReadFrequently:true}).getImageData(0, 0, cw, ch).data, sd = sx.getImageData(0, 0, w0, h0).data;
+    const smp = []; for (let k = 0; k < 4000 && smp.length < 40; k++){ const x = (k*7919) % cw, y = Math.floor(((k*104729) % (cw*ch)) / cw), i = (y*cw + x)*4; if (bd[i+3] === 255) smp.push([x, y, bd[i], bd[i+1], bd[i+2]]); }
+    const near = (i, r, g, b) => Math.abs(sd[i] - r) <= 3 && Math.abs(sd[i+1] - g) <= 3 && Math.abs(sd[i+2] - b) <= 3;
+    if (smp.length >= 8){
+      const [fx, fy, fr, fg, fb] = smp[0];
+      search: for (let Y = fy; Y <= fy + h0 - ch; Y++) for (let X = fx; X <= fx + w0 - cw; X++){
+        if (!near((Y*w0 + X)*4, fr, fg, fb)) continue;
+        const dx = X - fx, dy = Y - fy;
+        if (smp.every(([x, y, r, g, b]) => near(((y + dy)*w0 + x + dx)*4, r, g, b))){ ox = dx; oy = dy; break search; }
+      }
+    }
+    if (ox === null) return null;
+    c.meta.crop = [ox, oy, w0, h0];
+  }
+  const [out, o] = mkCanvas(cw, ch); o.drawImage(src, ox, oy, cw, ch, 0, 0, cw, ch);
+  return out;
+}
+
+const SWATCHES = ["#ffffff","#111111","#f6cf96","#ff4d4d","#ffd23f","#3ddc84","#4da3ff","#c86bff"];
+const CUT = {on:false};
+const cutCv = $("#cutCv"), cutX = cutCv.getContext("2d");
+async function openCut(){
+  const c = CHARS.find(x => x.id === PUP?.id); if (!c) return;
+  closeSheet(); if (editing) closeEditor();
+  busy("Opening cut-out…");
+  try{
+    const base = await canvasFromBlob(c.png);
+    const src = await sourceCrop(c, base).catch(() => null);
+    const [mask, mx] = mkCanvas(base.width, base.height);
+    mx.drawImage(base, 0, 0); mx.globalCompositeOperation = "source-in"; mx.fillStyle = "#fff"; mx.fillRect(0, 0, mask.width, mask.height); mx.globalCompositeOperation = "source-over";
+    const st = c.meta.strokes || [];
+    Object.assign(CUT, {on:true, c, base, src:src || base, canRestore:!!src, mask, mx, undo:[], redo:[], mode:"erase", pts:new Map(), paint:null, pinch:null, cur:null,
+      strokes:[0, 1].map(i => ({w:st[i]?.w || 0, c:st[i]?.c || (i ? "#111111" : "#ffffff")})), smooth:0, grow:0, preview:null, dirty:true, full:true});
+  }catch(e){ busy(); toast("Couldn't open the cut-out: " + (e?.message || e)); return; }
+  busy();
+  $("#cuSmooth").value = 0; $("#cuGrow").value = 0;
+  CUT.strokes.forEach((o, i) => { $("#cuW" + i).value = Math.round(o.w*800); });
+  buildSwatches(); setCutMode("erase"); cutTab("brush"); syncUndo();
+  $("#cutHint").style.opacity = 1; setTimeout(() => $("#cutHint").style.opacity = 0, 3500);
+  $("#cut").hidden = false; fitCut(); buzz(10);
+  if (!CUT.canRestore) toast("Restore isn't available for this picture (the original wasn't kept). Erase still works.", 4500);
+  requestAnimationFrame(cutLoop);
+}
+function closeCut(){ CUT.on = false; $("#cut").hidden = true; }
+function fitCut(){
+  const dpr = Math.min(devicePixelRatio, 2);
+  cutCv.width = Math.round(innerWidth*dpr); cutCv.height = Math.round(innerHeight*dpr);
+  const top = 70, bottom = $("#cut .cpanel").offsetHeight + 24, W = innerWidth - 24, H = innerHeight - top - bottom;
+  const s = Math.min(W / CUT.base.width, H / CUT.base.height);
+  CUT.view = {s, x:(innerWidth - CUT.base.width*s)/2, y:top + (H - CUT.base.height*s)/2};
+  CUT.dirty = true;
+}
+function setCutMode(m){
+  if (m === "restore" && !CUT.canRestore){ toast("Restore needs the original picture. Use Change picture to upload it again."); m = "erase"; }
+  CUT.mode = m; $("#cuErase").setAttribute("aria-pressed", m === "erase"); $("#cuRestore").setAttribute("aria-pressed", m === "restore"); buzz(6);
+}
+function cutTab(t){
+  for (const b of document.querySelectorAll("#cut .ctabs button")) b.setAttribute("aria-selected", b.dataset.t === t);
+  for (const p of document.querySelectorAll("#cut .cbody")) p.hidden = p.dataset.p !== t;
+}
+function buildSwatches(){
+  for (const box of document.querySelectorAll("#cut .cswatch")){
+    const i = +box.dataset.i; box.innerHTML = "";
+    const mark = () => box.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.c === CUT.strokes[i].c));
+    for (const col of SWATCHES){
+      const b = el("button"); b.style.background = col; b.dataset.c = col; b.setAttribute("aria-label", "Outline colour " + col);
+      b.onclick = () => { CUT.strokes[i].c = col; if (!CUT.strokes[i].w){ CUT.strokes[i].w = 8/800; $("#cuW" + i).value = 8; } mark(); cutRefresh(); buzz(6); };
+      box.append(b);
+    }
+    const lab = el("label"); lab.title = "Any colour"; const inp = document.createElement("input"); inp.type = "color"; inp.value = CUT.strokes[i].c;
+    inp.oninput = () => { CUT.strokes[i].c = inp.value; if (!CUT.strokes[i].w){ CUT.strokes[i].w = 8/800; $("#cuW" + i).value = 8; } mark(); cutRefresh(); };
+    lab.append(inp); box.append(lab); mark();
+  }
+}
+let cutT = 0;
+function cutRefresh(){ clearTimeout(cutT); cutT = setTimeout(() => { CUT.full = true; CUT.dirty = true; }, 70); }
+function syncUndo(){ $("#cuUndo").disabled = !CUT.undo.length; $("#cuRedo").disabled = !CUT.redo.length; }
+function snapshot(){ return CUT.mx.getImageData(0, 0, CUT.mask.width, CUT.mask.height); }
+function pushUndo(){ CUT.undo.push(snapshot()); if (CUT.undo.length > 12) CUT.undo.shift(); CUT.redo = []; syncUndo(); }
+$("#cuUndo").onclick = () => { if (!CUT.undo.length) return; CUT.redo.push(snapshot()); CUT.mx.putImageData(CUT.undo.pop(), 0, 0); syncUndo(); cutRefresh(); buzz(6); };
+$("#cuRedo").onclick = () => { if (!CUT.redo.length) return; CUT.undo.push(snapshot()); CUT.mx.putImageData(CUT.redo.pop(), 0, 0); syncUndo(); cutRefresh(); buzz(6); };
+$("#cuErase").onclick = () => setCutMode("erase");
+$("#cuRestore").onclick = () => setCutMode("restore");
+for (const b of document.querySelectorAll("#cut .ctabs button")) b.onclick = () => { cutTab(b.dataset.t); buzz(6); };
+$("#cuSmooth").oninput = e => { CUT.smooth = +e.target.value; cutRefresh(); };
+$("#cuGrow").oninput = e => { CUT.grow = +e.target.value; cutRefresh(); };
+for (const i of [0, 1]) $("#cuW" + i).oninput = e => { CUT.strokes[i].w = +e.target.value / 800; cutRefresh(); };
+$("#cuGhost").onchange = () => { CUT.dirty = true; };
+$("#cutCancel").onclick = () => { buzz(8); closeCut(); };
+$("#cutDone").onclick = async () => {
+  const c = CUT.c; buzz(10); busy("Saving cut-out…"); await nextFrame();
+  try{
+    const out = maskedCut(CUT.src, CUT.mask, CUT.smooth, CUT.grow);
+    c.png = await new Promise(r => out.toBlob(r, "image/png"));
+    c.meta.strokes = CUT.strokes.map(o => ({w:o.w, c:o.c}));
+    c.thumb = makeThumb(outlineCanvas(out, c.meta.strokes).canvas);
+    await persistChar(c); closeCut(); await setPuppetFrom(c); showStage("puppet"); renderChars();
+    toast("Cut-out saved");
+  }catch(e){ toast("Couldn't save: " + (e?.message || e)); }
+  busy();
+};
+addEventListener("resize", () => { if (CUT.on) fitCut(); });
+const toImg = (sx, sy) => [(sx - CUT.view.x)/CUT.view.s, (sy - CUT.view.y)/CUT.view.s];
+function dab(x, y){
+  const r = +$("#cuSize").value / 2 / CUT.view.s, soft = +$("#cuSoft").value, m = CUT.mx;
+  const g = m.createRadialGradient(x, y, r*(1 - soft)*0.98, x, y, r);
+  g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(1, "rgba(255,255,255,0)");
+  m.globalCompositeOperation = CUT.mode === "erase" ? "destination-out" : "source-over";
+  m.fillStyle = g; m.beginPath(); m.arc(x, y, r, 0, 6.2832); m.fill();
+  m.globalCompositeOperation = "source-over";
+}
+function paintTo(x, y){
+  const p = CUT.paint, r = +$("#cuSize").value / 2 / CUT.view.s, step = Math.max(0.5, r*0.22);
+  const d = Math.hypot(x - p.x, y - p.y), n = Math.max(1, Math.floor(d / step));
+  for (let k = 1; k <= n; k++) dab(p.x + (x - p.x)*k/n, p.y + (y - p.y)*k/n);
+  p.x = x; p.y = y; p.moved += d; CUT.full = false; CUT.dirty = true;
+}
+cutCv.addEventListener("pointerdown", e => {
+  if (!CUT.on) return; cutCv.setPointerCapture(e.pointerId);
+  CUT.pts.set(e.pointerId, {x:e.clientX, y:e.clientY}); CUT.cur = {x:e.clientX, y:e.clientY};
+  if (CUT.pts.size === 1){
+    pushUndo(); const [x, y] = toImg(e.clientX, e.clientY);
+    CUT.paint = {x, y, moved:0, t:performance.now()}; dab(x, y); CUT.full = false; CUT.dirty = true;
+  } else if (CUT.pts.size === 2){
+    if (CUT.paint){ CUT.mx.putImageData(CUT.undo.pop(), 0, 0); syncUndo(); CUT.paint = null; }   // it was a pinch, not a stroke
+    const [a, b] = [...CUT.pts.values()];
+    CUT.pinch = {d:Math.hypot(a.x - b.x, a.y - b.y), mx:(a.x + b.x)/2, my:(a.y + b.y)/2, v:{...CUT.view}};
+    CUT.dirty = true;
+  }
+});
+cutCv.addEventListener("pointermove", e => {
+  if (!CUT.on) return;
+  CUT.cur = {x:e.clientX, y:e.clientY}; CUT.dirty = true;
+  if (!CUT.pts.has(e.pointerId)) return;
+  CUT.pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if (CUT.pinch && CUT.pts.size >= 2){
+    const [a, b] = [...CUT.pts.values()], P = CUT.pinch, d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x)/2, my = (a.y + b.y)/2;
+    const s = clamp(P.v.s * d / P.d, 0.05, 40), k = s / P.v.s;
+    CUT.view = {s, x:mx - (P.mx - P.v.x)*k, y:my - (P.my - P.v.y)*k};
+  } else if (CUT.paint){ const [x, y] = toImg(e.clientX, e.clientY); paintTo(x, y); }
+});
+const cutUp = e => {
+  if (!CUT.pts.delete(e.pointerId)) return;
+  if (CUT.paint && !CUT.pts.size){ CUT.paint = null; cutRefresh(); buzz(3); }
+  if (CUT.pts.size < 2) CUT.pinch = null;
+  if (!CUT.pts.size && e.pointerType !== "mouse") CUT.cur = null;
+};
+cutCv.addEventListener("pointerup", cutUp); cutCv.addEventListener("pointercancel", cutUp);
+cutCv.addEventListener("pointerleave", e => { if (e.pointerType === "mouse"){ CUT.cur = null; CUT.dirty = true; } });
+cutCv.addEventListener("wheel", e => {
+  e.preventDefault(); const v = CUT.view, s = clamp(v.s * Math.exp(-e.deltaY*0.0015), 0.05, 40), k = s / v.s;
+  CUT.view = {s, x:e.clientX - (e.clientX - v.x)*k, y:e.clientY - (e.clientY - v.y)*k}; CUT.dirty = true;
+}, {passive:false});
+let checker = null;
+function cutLoop(){
+  if (!CUT.on) return;
+  requestAnimationFrame(cutLoop);
+  if (!CUT.dirty) return; CUT.dirty = false;
+  if (CUT.full || !CUT.preview){
+    const cut = maskedCut(CUT.src, CUT.mask, CUT.smooth, CUT.grow);
+    const st = outlineCanvas(cut, CUT.strokes.map(o => ({w:o.w, c:o.c})));
+    CUT.preview = st.canvas; CUT.ppad = st.pad; CUT.full = false;
+  } else if (CUT.paint){
+    const [o, ox] = mkCanvas(CUT.src.width, CUT.src.height); ox.drawImage(CUT.src, 0, 0); ox.globalCompositeOperation = "destination-in"; ox.drawImage(CUT.mask, 0, 0);
+    CUT.preview = o; CUT.ppad = 0;
+  }
+  const dpr = cutCv.width / innerWidth, x = cutX, v = CUT.view;
+  x.setTransform(dpr, 0, 0, dpr, 0, 0); x.fillStyle = "#141010"; x.fillRect(0, 0, innerWidth, innerHeight);
+  if (!checker){ const [pc, px] = mkCanvas(20, 20); px.fillStyle = "#2a2422"; px.fillRect(0, 0, 20, 20); px.fillStyle = "#363030"; px.fillRect(0, 0, 10, 10); px.fillRect(10, 10, 10, 10); checker = x.createPattern(pc, "repeat"); }
+  const W = CUT.base.width*v.s, H = CUT.base.height*v.s;
+  x.fillStyle = checker; x.fillRect(v.x, v.y, W, H);
+  x.imageSmoothingEnabled = v.s < 2;
+  if ($("#cuGhost").checked && CUT.canRestore){ x.globalAlpha = 0.28; x.drawImage(CUT.src, v.x, v.y, W, H); x.globalAlpha = 1; }
+  const pp = CUT.ppad*v.s; x.drawImage(CUT.preview, v.x - pp, v.y - pp, CUT.preview.width*v.s, CUT.preview.height*v.s);
+  if (CUT.cur && !CUT.pinch){
+    const r = +$("#cuSize").value / 2;
+    x.lineWidth = 3; x.strokeStyle = "rgba(0,0,0,.6)"; x.beginPath(); x.arc(CUT.cur.x, CUT.cur.y, r, 0, 6.2832); x.stroke();
+    x.lineWidth = 1.5; x.strokeStyle = CUT.mode === "erase" ? "#ff8a7a" : "#f6cf96"; x.beginPath(); x.arc(CUT.cur.x, CUT.cur.y, r, 0, 6.2832); x.stroke();
+  }
+}
+$("#cuSize").oninput = () => { CUT.cur = {x:innerWidth/2, y:innerHeight*0.42}; CUT.dirty = true; };
+
 /* ---------- character gallery: every uploaded picture keeps its own cut-out, layout and settings ---------- */
 let CHARS = [];
 const newId = () => Math.random().toString(36).slice(2, 10);
@@ -2152,7 +2433,8 @@ async function setPuppetFrom(c){
   const canvas = await canvasFromBlob(c.png);
   if (ticket !== puppetTicket) return;
   clearPuppet();
-  PUP = {id:c.id, canvas, meta:c.meta, tint:new THREE.Color().setRGB(...c.meta.tint)};
+  const st = outlineCanvas(canvas, c.meta.strokes);
+  PUP = {id:c.id, canvas:st.canvas, pad:st.pad, base:canvas, meta:c.meta, tint:new THREE.Color().setRGB(...c.meta.tint)};
   buildPuppet();
 }
 async function openChar(id){
@@ -2233,6 +2515,7 @@ async function reprocess(){
   if (!c?.original){ toast("Upload the picture again to change this."); return; }
   try{
     const {canvas, meta} = await processImage(c.original);
+    if (c.meta?.strokes) meta.strokes = c.meta.strokes;                 // keep the outline when the picture is re-cut
     c.png = await new Promise(r => canvas.toBlob(r, "image/png")); c.meta = meta; c.thumb = makeThumb(canvas);
     await persistChar(c); await setPuppetFrom(c); showStage("puppet"); renderChars();
     await scanFinish();
@@ -2286,7 +2569,7 @@ function openModal(title, build){
   $("#modal").hidden = false;
 }
 /* ---------- about & legal ---------- */
-const VERSION = "4.3";
+const VERSION = "4.4";
 function openLegal(){
   openModal("About & legal", b => {
     const d = el("div", "legal");
@@ -2434,7 +2717,7 @@ const TABS = {
       {t:"note", text:"Drag to move it. Two fingers: pinch to resize, twist to rotate. Three-finger swipes switch background and character."},
       SEC("Lollipop"), RG("pScale","Size",0.4,2.2,0.02,fmtX), RG("pMove","Movement",0,1,0.01), TG("pStick","Show stick"), TG("pShadow","Shadow"),
       {t:"btns", items:[["Put it back in the middle","centre"]]},
-      SEC("Picture"), TG("pBgRemove","Remove photo background")]],
+      SEC("Picture"), {t:"btns", items:[["Edit cut-out & outline","cutout"]]}, TG("pBgRemove","Remove photo background")]],
     ["look","Look",[CH("psx","Style",[["modern","Modern"],["ps2","PS2"],["ps1","PS1"]]), {t:"bg"}, {t:"if", when:() => S.world, items:[SEC("3D world"), CH("wBiome","World",WORLD_OPTS), RG("wMorph","Morph every",5,60,1,v => Math.round(v) + "s"), RG("wSpeed","Fly speed",0,1,0.01),
       RG("wFog","Fog",0,1,0.01), RG("wParallax","Head parallax",0,1,0.01), TG("wAffine","Texture warp")]},
     {t:"if", when:() => S.world || S.psx !== "modern", items:[SEC("Retro rendering"), CH("wRes","Resolution",[[200,"200p"],[240,"240p"],[360,"360p"],[480,"480p"]]), RG("wJitter","Vertex wobble",0,1,0.01),
@@ -2676,6 +2959,7 @@ const ACTIONS = {
   newImage: () => replaceImage(),
   centre: () => { S.pX = DEFAULTS.pX; S.pY = DEFAULTS.pY; S.pScale = DEFAULTS.pScale; S.pRot = 0; save(); renderBody(); },
   layout: () => { closeSheet(); openEditor(); },
+  cutout: () => openCut(),
   reset: (b) => {
     if (b.dataset.armed !== "1"){ b.dataset.armed = "1"; b.textContent = "Tap again to reset everything"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "Reset all settings"; }, 3000); return; }
     const keep = {deviceId:S.deviceId, facing:S.facing}; S = {...DEFAULTS, ...keep}; save();
@@ -2694,7 +2978,7 @@ function screenToPx(sx, sy){
   _plane.set(new THREE.Vector3(0, 0, 1), -pBody.getWorldPosition(new THREE.Vector3()).z);
   if (!_ray.ray.intersectPlane(_plane, _hit)) return null;
   pBody.worldToLocal(_hit);
-  return [_hit.x / PUP.s + PUP.canvas.width/2, PUP.canvas.height/2 - _hit.y / PUP.s];
+  return [_hit.x / PUP.s + PUP.canvas.width/2 - (PUP.pad || 0), PUP.canvas.height/2 - _hit.y / PUP.s - (PUP.pad || 0)];
 }
 function openEditor(){ if (!PUP) return; editing = true; editor.hidden = false; TW.pts.clear(); TW.h = null; showTilt(); $("#edMsg").textContent = "Drag the markers onto the eyes and mouth. Twist with two fingers to tilt one."; buzz(10); }
 function closeEditor(){
@@ -2784,7 +3068,7 @@ for (const h of editor.querySelectorAll(".h")){
     edMove(e);
     const p = screenToPx(EDG.mx, EDG.my); if (!p) return;
     const m = PUP.meta;
-    m[h.dataset.h] = [clamp(p[0], 0, PUP.canvas.width), clamp(p[1], 0, PUP.canvas.height)];
+    m[h.dataset.h] = [clamp(p[0], 0, PUP.canvas.width - 2*(PUP.pad || 0)), clamp(p[1], 0, PUP.canvas.height - 2*(PUP.pad || 0))];
     if (h.dataset.h !== "mouth") m.unit = Math.hypot(m.eyeL[0] - m.eyeR[0], m.eyeL[1] - m.eyeR[1]) / 0.7;
   });
   const up = () => { if (!on) return; on = false; h.classList.remove("grab"); EDG.h = null; loupe.hidden = true; $("#edStem").hidden = true; buzz(4); };
@@ -2969,6 +3253,7 @@ $("#goPeanut").onclick = () => { buzz(10); openPeanut(); };
 $("#goPeanut").onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openPeanut(); } };
 $("#bImage").onclick = () => { buzz(8); chooseAdd(); };
 $("#bLayout").onclick = () => { buzz(8); editing ? closeEditor() : openEditor(); };
+$("#bCut").onclick = () => { buzz(8); openCut(); };
 let replacing = false;
 function pickImage(){ replacing = false; $("#pupFile").click(); }
 function replaceImage(){ replacing = true; $("#pupFile").click(); }
