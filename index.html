@@ -324,6 +324,7 @@ select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;
 #pfBar b{color:var(--ink)}
 #pfBar .pfsize{display:flex;align-items:center;gap:12px;margin:0 4px;font-size:14px;color:var(--ink)}
 #pfBar .pfsize input{flex:1;accent-color:var(--nut)}
+#pfBar .pfsize span{width:52px;flex:none}
 #pfBar .rbtns{display:flex;gap:8px} #pfBar .pill{flex:1;height:44px;font-size:14px}
 #rigBar p{margin:0 4px;color:var(--mute);font-size:13px;line-height:1.4}
 #rigBar .rbtns{display:flex;gap:8px}
@@ -540,8 +541,10 @@ body.rigging #hud *{pointer-events:none!important}
   </div>
 </div>
 <div id="pfBar" hidden>
-  <p>Drag the target onto the spot <b>between the model's eyes</b>. The target sits above your finger so you can see it.</p>
-  <label class="pfsize">Face size <input type="range" id="pfSize" min="0.3" max="3" step="0.02"></label>
+  <p>Drag the <b>eyes</b> and the <b>mouth</b> onto the model. Drag anywhere else to move the whole face.</p>
+  <label class="pfsize"><span>Face</span> <input type="range" id="pfSize" min="0.3" max="3" step="0.02" aria-label="Face size"></label>
+  <label class="pfsize"><span>Eyes</span> <input type="range" id="pfEye" min="0.3" max="2" step="0.02" aria-label="Eye size"></label>
+  <label class="pfsize"><span>Mouth</span> <input type="range" id="pfMouth" min="0.3" max="2" step="0.02" aria-label="Mouth size"></label>
   <div class="rbtns">
     <button class="pill press" id="pfAuto">Auto-find</button>
     <button class="pill hot press" id="pfDone">Done</button>
@@ -601,7 +604,7 @@ const DEFAULTS = {
   nX:0, nY:0, nScale:1, nRot:0, nSpin:0, nTilt:0,
   world:false, wBiome:"auto", wMorph:20, wSpeed:0.35, wRes:240, wJitter:0.5, wAffine:true, wDither:0.7, wDepth:15, wFog:0.5, wParallax:0.6,
   coachSeen:false, psx:"modern", body:false,
-  faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mEyeZ:0, mMouthZ:0, mEyeRot:0, mMouthRot:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true,
+  faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mEyeZ:0, mMouthZ:0, mEyeRot:0, mMouthRot:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true, mFrame:"full",
   mirror:true, pip_on:true, deviceId:"", facing:"user"
 };
 const WORLD_OPTS = [["auto","Auto-morph"],["meadow","Meadow"],["canyon","Canyon"],["city","Neon City"],["islands","Islands"],["snow","Snowfield"],["alien","Alien"],
@@ -613,7 +616,7 @@ const SCOPED = ["bg","bgColor","world","wBiome","wMorph","wSpeed","wRes","wJitte
   "skinMatch","depth","retouch","blend","eyeMargin","mouthMargin","feather","symFill","light","zoom"];
 const NUT_KEYS = ["nX","nY","nScale","nRot","nSpin","nTilt"];
 const CHAR_KEYS = ["pX","pY","pScale","pRot","pEyeSize","pMouthSize","pMove","pStick","pShadow"];
-const MODEL_KEYS = ["faceMode","mEyeSpacing","mEyeY","mMouthY","mEyeSize","mMouthSize","mFaceZ","mEyeZ","mMouthZ","mEyeRot","mMouthRot","mCurve","mFaceK","mTurn","mHeadBone"];
+const MODEL_KEYS = ["faceMode","mEyeSpacing","mEyeY","mMouthY","mEyeSize","mMouthSize","mFaceZ","mEyeZ","mMouthZ","mEyeRot","mMouthRot","mCurve","mFaceK","mTurn","mHeadBone","mFrame"];
 const charType = id => CHARS.find(c => c.id === id)?.type || "image";
 let scopeId = "peanut";
 const scopeKeys = id => id === "peanut" ? [...SCOPED, ...NUT_KEYS] : id === "x" ? [...SCOPED, ...CHAR_KEYS, ...NUT_KEYS, ...MODEL_KEYS]
@@ -1128,8 +1131,9 @@ function fitFace(){
   mbody.add(faceAnchor); mrig.updateWorldMatrix(true, true);
   if (rig.head && S.mHeadBone) rig.head.attach(faceAnchor);
   M.face = {z0, R, f:Math.max(0.05, r/0.9)};
+  M.faceRest = new THREE.Vector3(cx, cy, z0);                        // in the body's frame (= world with the model at rest)
   M.tint = new THREE.Color().setRGB(...tint);
-  if (stageMode === "model") tintU.value.copy(M.tint);
+  if (stageMode === "model"){ tintU.value.copy(M.tint); resize(); }
 }
 
 /* ---------- rigging tool: give a boneless model a skeleton (two-legged humanoid or four-legged pet) ----------
@@ -1668,14 +1672,33 @@ function showStage(which){
   applyBg(); resize();
 }
 
+// The camera: a base framing of what's on stage (set by resize) and optional overrides (placing the face,
+// studio cameras) that it glides to. VIEW.over returns {pos, tgt} each frame, or null for the base framing.
+const VIEW = {pos:new THREE.Vector3(0, 0.15, 10), tgt:new THREE.Vector3(0, 0.05, 0), basePos:new THREE.Vector3(0, 0.15, 10), baseTgt:new THREE.Vector3(0, 0.05, 0), over:null};
+const tanHalfFov = () => Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+const fitDist = (halfH, halfW) => Math.max(halfH/tanHalfFov(), halfW/(tanHalfFov()*camera.aspect));
+function applyView(){ camera.position.copy(VIEW.pos); camera.lookAt(VIEW.tgt); camera.updateProjectionMatrix(); }
+function stepView(dt){
+  const o = VIEW.over?.() || null, wp = o ? o.pos : VIEW.basePos, wt = o ? o.tgt : VIEW.baseTgt;
+  if (VIEW.pos.distanceToSquared(wp) + VIEW.tgt.distanceToSquared(wt) < 1e-10) return;
+  const k = 1 - Math.exp(-dt*7);
+  VIEW.pos.lerp(wp, k); VIEW.tgt.lerp(wt, k); applyView();
+}
 function resize(){
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false); camera.aspect = w/h;
-  const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
-  let halfH = 2.45, halfW = 1.5, cy = 0.15, ly = 0.05;
+  let halfH = 2.45, halfW = 1.5, cy = 0.15, ly = 0.05, cx = 0;
   if (stageMode === "puppet" && PUP){ halfH = PUP_H/2 + 1.0; halfW = PUP.canvas.width * PUP.s / 2 + 0.4; cy = 0; ly = 0; }
-  const dist = Math.max(halfH/tanV, halfW/(tanV*camera.aspect)) / S.zoom;
-  camera.position.set(0, cy, dist); camera.lookAt(0, ly, 0); camera.updateProjectionMatrix();
+  else if (stageMode === "model" && MDL?.faceRest && S.mFrame !== "full"){
+    // closer framings centre on the face (the full-body view leaves a tiny face on tall models)
+    const fr = MDL.faceRest, f = MDL.face.f * S.mFaceK; cx = fr.x;
+    if (S.mFrame === "head"){ halfH = f*2.8; halfW = f*2.1; cy = ly = fr.y - f*0.45; }
+    else { const top = fr.y + Math.max(f*1.8, 0.35), bot = Math.max(MDL.bx.min.y, fr.y - Math.max(f*7, 1.4)); halfH = (top - bot)/2 + 0.1; halfW = halfH*0.75; cy = ly = (top + bot)/2; }
+  }
+  const dist = fitDist(halfH, halfW) / S.zoom;
+  VIEW.basePos.set(cx, cy, dist); VIEW.baseTgt.set(cx, ly, 0);
+  if (!VIEW.over){ VIEW.pos.copy(VIEW.basePos); VIEW.tgt.copy(VIEW.baseTgt); }
+  applyView();
 }
 addEventListener("resize", () => { resize(); menuPose(); });
 const MENU = {y:1, s:0.7};
@@ -2510,7 +2533,10 @@ async function addModel(picked){
              cfg:{...pick(scopeKeys("x"), DEFAULTS), bg:"studio"}, created:Date.now()};
   CHARS.unshift(c); await persistChar(c); await persistIndex(); renderChars();
   await openChar(c.id);
-  if (MDL && MDL.id === c.id) toast(MDL.vrm ? "VRM loaded: your expressions drive its face." : MDL.arkit ? "Face shapes found: your expressions drive them." : "Model loaded. If the eyes and mouth are off, use Settings › Face › Place face on model.", 4200);
+  if (MDL && MDL.id === c.id){
+    if (MDL.vrm || MDL.arkit) toast(MDL.vrm ? "VRM loaded: your expressions drive its face." : "Face shapes found: your expressions drive them.", 4200);
+    else { placeFaceStart(); toast("Check where the eyes and mouth go, then tap Done.", 4200); }
+  }
 }
 function chooseAdd(){
   openModal("Add a character", b => {
@@ -2774,11 +2800,11 @@ const TABS = {
   model: [
     MODEL_LOOK,
     ["face","Face",[CH("faceMode","Face",[["overlay","Your eyes & mouth"],["model","Model's own face"],["both","Both"]]),
-      {t:"if", when:() => S.faceMode !== "model", items:[SEC("Placement"), {t:"faceplace"}, RG("mFaceK","Face size",0.3,3,0.02,fmtX), RG("mEyeSpacing","Eye spacing",-0.3,0.3,0.005,fmtN), RG("mEyeY","Eye height",-0.6,0.6,0.005,fmtN), RG("mMouthY","Mouth height",-0.6,0.6,0.005,fmtN),
+      {t:"if", when:() => S.faceMode !== "model", items:[SEC("Placement"), {t:"faceplace"}, RG("mFaceK","Face size",0.3,3,0.02,fmtX), RG("mEyeSpacing","Eye spacing",-0.3,0.5,0.005,fmtN), RG("mEyeY","Eye height",-0.6,0.6,0.005,fmtN), RG("mMouthY","Mouth height",-0.6,0.6,0.005,fmtN),
         RG("mEyeSize","Eye size",0.3,2,0.02,fmtX), RG("mMouthSize","Mouth size",0.3,2,0.02,fmtX), RG("mFaceZ","Face depth (both)",-1,1,0.01,fmtN), RG("mEyeZ","Eye depth",-1,1,0.01,fmtN), RG("mMouthZ","Mouth depth",-1,1,0.01,fmtN), RG("mEyeRot","Eye tilt",-0.6,0.6,0.0087,fmtDeg), RG("mMouthRot","Mouth tilt",-0.6,0.6,0.0087,fmtDeg), RG("mCurve","Face roundness",0.3,3,0.02,fmtX),
         {t:"resetface"},
         ...faceShared("Blend skin into model")]}]],
-    ["model","Model",[CH("mTurn","Facing",[[0,"Front"],[1,"Left"],[2,"Back"],[3,"Right"]]), TG("mHeadBone","Turn only the head (if it has one)"), {t:"rigtools"}, {t:"modelinfo"}]],
+    ["model","Model",[CH("mFrame","Framing",[["full","Full body"],["upper","Upper body"],["head","Head"]]), CH("mTurn","Facing",[[0,"Front"],[1,"Left"],[2,"Back"],[3,"Right"]]), TG("mHeadBone","Turn only the head (if it has one)"), {t:"rigtools"}, {t:"modelinfo"}]],
     motionTab, cameraTab
   ]
 };
@@ -2816,7 +2842,7 @@ function afterChange(k){
   save();
 }
 function onChange(k){
-  if (k === "zoom") resize();
+  if (k === "zoom" || k === "mFrame") resize();
   if (k === "light"){ key.intensity = 2.2*S.light; rim.intensity = 1.4*S.light; hemi.intensity = 0.6*S.light; }
   if (k === "bump") nutMat.bumpScale = S.bump;
   if (k === "floor") applyBg();
@@ -2893,7 +2919,7 @@ function buildItem(it){
     const b1 = el("button", "pill hot press", "Place face on model"); b1.onclick = () => { buzz(8); placeFaceStart(); };
     const b2 = el("button", "pill press", "Auto-find"); b2.onclick = async () => { buzz(8); const c = CHARS.find(x => x.id === scopeId); if (c){ delete c.cfg.facePt; await persistChar(c); if (MDL) MDL.cfg = c.cfg; } fitFace(); toast("Face re-found"); };
     row.append(b1, b2); w.append(row);
-    w.append(el("p", "note", "Drag a target onto the spot between the model's eyes. Your eyes and mouth snap onto its surface there."));
+    w.append(el("p", "note", "Zooms in on the face: drag the eyes and the mouth onto the model, or drag anywhere to move the whole face."));
     return w;
   }
   if (it.t === "rigtools"){
@@ -3120,18 +3146,38 @@ for (const h of editor.querySelectorAll(".h")){
   h.addEventListener("pointerup", up); h.addEventListener("pointercancel", up);
 }
 
-/* ---------- place the face on a model ---------- */
-const PF = {on:false, drag:false, fx:0, fy:0, t:0, ok:true};
+/* ---------- place the face on a model ----------
+   The camera glides in to the face. Drag an eye or the mouth to move it on the model's surface (the eyes
+   stay mirrored); drag anywhere else to move the whole face, with a target riding above your finger. */
+const PF = {on:false, drag:null, fx:0, fy:0, gx:0, gy:0, t:0, ok:true};
+const _pfv = new THREE.Vector3(), _pfa = new Float32Array(3), _pfn = new Float32Array(3), _pfm = new THREE.Matrix4(), _pfray = new THREE.Ray();
+function placeView(){
+  if (!MDL?.face) return null;
+  const f = MDL.face.f * S.mFaceK, halfH = f*2.2, halfW = f*1.6;
+  const tgt = faceAnchor.localToWorld(new THREE.Vector3(0, -0.32*f, MDL.face.z0));
+  tgt.y -= halfH*0.4;                                                 // the face sits above the bar at the bottom
+  return {pos:tgt.clone().add(new THREE.Vector3(0, 0, fitDist(halfH, halfW))), tgt};
+}
 function placeFaceStart(){
   if (!MDL) return; closeSheet();
-  PF.on = true; PF.drag = false; document.body.classList.add("placing"); rigCv.hidden = false; $("#pfBar").hidden = false;
-  $("#pfSize").value = S.mFaceK; buzz(10);
+  if (S.faceMode === "model"){ S.faceMode = "overlay"; save(); }
+  PF.on = true; PF.drag = null; document.body.classList.add("placing"); rigCv.hidden = false; $("#pfBar").hidden = false;
+  $("#pfSize").value = S.mFaceK; $("#pfEye").value = S.mEyeSize; $("#pfMouth").value = S.mMouthSize;
+  VIEW.over = placeView; buzz(10);
 }
-function placeFaceEnd(){ PF.on = false; document.body.classList.remove("placing"); rigCv.hidden = true; $("#pfBar").hidden = true; save(); }
-$("#pfDone").onclick = () => { buzz(8); placeFaceEnd(); toast("Face placed. Fine-tune it in Settings → Face."); };
-$("#pfAuto").onclick = async () => { buzz(8); const c = CHARS.find(x => x.id === scopeId); if (c){ delete c.cfg.facePt; await persistChar(c); } MDL.cfg = c?.cfg || MDL.cfg; fitFace(); };
+function placeFaceEnd(){ PF.on = false; PF.drag = null; VIEW.over = null; document.body.classList.remove("placing"); rigCv.hidden = true; $("#pfBar").hidden = true; save(); }
+$("#pfDone").onclick = () => { buzz(8); placeFaceEnd(); toast("Face placed. Fine-tune it in Settings › Face."); };
+$("#pfAuto").onclick = async () => {
+  buzz(8); const c = CHARS.find(x => x.id === scopeId); if (c){ delete c.cfg.facePt; await persistChar(c); } MDL.cfg = c?.cfg || MDL.cfg;
+  for (const k of ["mEyeSpacing","mEyeY","mMouthY"]) S[k] = DEFAULTS[k];
+  fitFace(); save();
+};
 $("#pfSize").oninput = e => { S.mFaceK = +e.target.value; };
+$("#pfEye").oninput = e => { S.mEyeSize = +e.target.value; };
+$("#pfMouth").oninput = e => { S.mMouthSize = +e.target.value; };
+for (const id of ["#pfSize", "#pfEye", "#pfMouth"]) $(id).onchange = () => save();
 const _pr = new THREE.Raycaster(), _pn = new THREE.Vector2();
+// the whole face: the point under the target on the model becomes the face's centre
 function placeAt(x, y, final){
   _pn.set(x/innerWidth*2 - 1, -(y/innerHeight*2 - 1)); _pr.setFromCamera(_pn, camera);
   const hit = _pr.intersectObject(MDL.root, true).find(h => { for (let o = h.object; o; o = o.parent) if (o === faceAnchor) return false; return true; });
@@ -3142,11 +3188,62 @@ function placeAt(x, y, final){
   if (final || now - PF.t > 140){ PF.t = now; fitFace(); }
   if (final) persistChar(c);
 }
+// a screen point on the face's own plane, in the face's coordinates (what the eye and mouth settings are measured in)
+function faceLocalAt(x, y){
+  _pn.set(x/innerWidth*2 - 1, -(y/innerHeight*2 - 1)); _pr.setFromCamera(_pn, camera);
+  _pfm.copy(faceAnchor.matrixWorld).invert(); _pfray.copy(_pr.ray).applyMatrix4(_pfm);
+  const z0 = MDL.face.z0 + S.mFaceZ*MDL.face.f*0.35, t = (z0 - _pfray.origin.z) / _pfray.direction.z;
+  return t > 0 ? _pfray.at(t, new THREE.Vector3()) : null;
+}
+// where the eyes and mouth are on screen
+function faceHandles(){
+  const f = MDL.face.f * S.mFaceK, sp = (0.36 + S.mEyeSpacing)*f, ey = (0.02 + S.mEyeY)*f, my = (-0.66 + S.mMouthY)*f;
+  const at = (x, y) => { onModel(x, y, _pfa, 0, _pfn, 0); _pfv.set(_pfa[0], _pfa[1], _pfa[2]); faceAnchor.localToWorld(_pfv).project(camera);
+    return {x:(_pfv.x + 1)/2*innerWidth, y:(1 - _pfv.y)/2*innerHeight}; };
+  return {eyeR:at(-sp, ey), eyeL:at(sp, ey), mouth:at(0, my), centre:at(0, ey)};
+}
+function pfDown(e){
+  const h = MDL?.face ? faceHandles() : null;
+  let best = null, bd = 36;
+  if (h) for (const k of ["eyeR", "eyeL", "mouth"]){ const d = Math.hypot(h[k].x - e.clientX, h[k].y - e.clientY); if (d < bd){ bd = d; best = k; } }
+  PF.fx = e.clientX; PF.fy = e.clientY;
+  if (best){ PF.drag = best.startsWith("eye") ? "eye" : "mouth"; PF.gx = h[best].x - e.clientX; PF.gy = h[best].y - e.clientY; PF.side = best; }
+  else { PF.drag = "face"; placeAt(e.clientX, e.clientY - 70, false); }
+  rigCv.setPointerCapture(e.pointerId); buzz(6);
+}
+function pfMove(e){
+  if (!PF.drag) return;
+  PF.fx = e.clientX; PF.fy = e.clientY;
+  if (PF.drag === "face"){ placeAt(e.clientX, e.clientY - 70, false); return; }
+  const p = faceLocalAt(e.clientX + PF.gx, e.clientY + PF.gy); if (!p) return;
+  const f = MDL.face.f * S.mFaceK;
+  if (PF.drag === "eye"){ S.mEyeSpacing = clamp(Math.abs(p.x)/f - 0.36, -0.3, 0.5); S.mEyeY = clamp(p.y/f - 0.02, -0.6, 0.6); }
+  else S.mMouthY = clamp(p.y/f + 0.66, -0.6, 0.6);
+}
+function pfUp(){
+  if (PF.drag === "face") placeAt(PF.fx, PF.fy - 70, true);
+  if (PF.drag){ buzz(4); save(); }
+  PF.drag = null;
+}
 function drawPlace(){
   const dpr = Math.min(devicePixelRatio, 2);
   if (rigCv.width !== Math.round(innerWidth*dpr)){ rigCv.width = Math.round(innerWidth*dpr); rigCv.height = Math.round(innerHeight*dpr); }
   rctx.setTransform(dpr, 0, 0, dpr, 0, 0); rctx.clearRect(0, 0, innerWidth, innerHeight);
-  if (!PF.drag) return;
+  if (!MDL?.face) return;
+  const h = faceHandles(), on = k => PF.drag === k;
+  const ring = (p, r, label, active) => {
+    rctx.lineWidth = 2.5; rctx.strokeStyle = "rgba(0,0,0,.55)"; rctx.beginPath(); rctx.arc(p.x, p.y, r + 1.5, 0, 7); rctx.stroke();
+    rctx.strokeStyle = active ? "#fff" : "#ffcf8a"; rctx.beginPath(); rctx.arc(p.x, p.y, r, 0, 7); rctx.stroke();
+    rctx.fillStyle = active ? "rgba(255,207,138,.35)" : "rgba(255,207,138,.12)"; rctx.fill();
+    rctx.font = "600 12px system-ui, sans-serif"; rctx.textAlign = "center";
+    rctx.fillStyle = "rgba(0,0,0,.6)"; rctx.fillText(label, p.x + 1, p.y - r - 7); rctx.fillStyle = "#ffe7c4"; rctx.fillText(label, p.x, p.y - r - 8);
+  };
+  ring(h.eyeR, 15, "Eye", on("eye")); ring(h.eyeL, 15, "Eye", on("eye")); ring(h.mouth, 18, "Mouth", on("mouth"));
+  if (PF.drag !== "face"){                                            // a small mark for the face's centre
+    rctx.strokeStyle = "rgba(255,207,138,.7)"; rctx.lineWidth = 1.5; const c = h.centre;
+    rctx.beginPath(); rctx.moveTo(c.x - 6, c.y); rctx.lineTo(c.x + 6, c.y); rctx.moveTo(c.x, c.y - 6); rctx.lineTo(c.x, c.y + 6); rctx.stroke();
+    return;
+  }
   const x = PF.fx, y = PF.fy - 70, col = PF.ok ? "#ffcf8a" : "#ff6b6b";
   rctx.lineWidth = 2; rctx.strokeStyle = "rgba(0,0,0,.55)"; rctx.beginPath(); rctx.arc(x, y, 17, 0, 7); rctx.stroke();
   rctx.strokeStyle = col; rctx.beginPath(); rctx.arc(x, y, 15, 0, 7); rctx.stroke();
@@ -3224,14 +3321,14 @@ function drawRig(){
 }
 const _rp = new THREE.Plane(), _rr = new THREE.Raycaster(), _rh = new THREE.Vector3(), _rn = new THREE.Vector2();
 rigCv.addEventListener("pointerdown", e => {
-  if (PF.on){ PF.drag = true; PF.fx = e.clientX; PF.fy = e.clientY; rigCv.setPointerCapture(e.pointerId); placeAt(e.clientX, e.clientY - 70, false); buzz(6); return; }
+  if (PF.on){ pfDown(e); return; }
   let best = null, bd = 34;
   for (const [n] of RIG_T[RIGE.type]){ const q = jointScreen(n), d = Math.hypot(q.x - e.clientX, q.y - e.clientY); if (d < bd){ bd = d; best = n; } }
   RIGE.sel = best; if (!best) return;
   RIGE.drag = true; RIGE.fx = e.clientX; RIGE.fy = e.clientY; rigCv.setPointerCapture(e.pointerId); buzz(6);
 });
 rigCv.addEventListener("pointermove", e => {
-  if (PF.on){ if (PF.drag){ PF.fx = e.clientX; PF.fy = e.clientY; placeAt(e.clientX, e.clientY - 70, false); } return; }
+  if (PF.on){ pfMove(e); return; }
   if (!RIGE.drag || !RIGE.sel) return;
   RIGE.fx = e.clientX; RIGE.fy = e.clientY;
   const sx = e.clientX, sy = e.clientY - 60;                        // the joint rides above the fingertip
@@ -3250,7 +3347,7 @@ rigCv.addEventListener("pointermove", e => {
   }
 });
 const rigUp = () => {
-  if (PF.on){ if (PF.drag){ placeAt(PF.fx, PF.fy - 70, true); buzz(4); } PF.drag = false; return; }
+  if (PF.on){ pfUp(); return; }
   if (RIGE.drag) buzz(4); RIGE.drag = false; };
 rigCv.addEventListener("pointerup", rigUp); rigCv.addEventListener("pointercancel", rigUp);
 
@@ -3282,7 +3379,8 @@ function enterMode(m){
   mode = m; document.body.dataset.mode = m;
   showStage(m === "puppet" ? "puppet" : m === "model" ? "model" : "peanut");
   closeSheet(); buzz(12); syncArms(); ensureBody();
-  if (!S.coachSeen){ S.coachSeen = true; save(); setTimeout(showGestures, 700); }
+  // first time: show the touch tips, unless a tool (placing the face, editing) has opened in the meantime
+  if (!S.coachSeen) setTimeout(() => { if (S.coachSeen || PF.on || RIGE.on || editing || mode === "menu") return; S.coachSeen = true; save(); showGestures(); }, 700);
 }
 async function goMenu(){
   if (RIGE.on) rigEnd();
@@ -3362,7 +3460,7 @@ $("#bFlip").onclick = async () => {
 $("#bClean").onclick = () => { buzz(8); closeSheet(); document.body.classList.add("clean"); toast("Tap anywhere to show controls", 1800); };
 /* ---------- touch controls (both the peanut and characters) ---------- */
 let suppressClick = false, holding = false;
-const perPx = () => 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov/2)) * camera.position.z / innerHeight;
+const perPx = () => 2 * tanHalfFov() * camera.position.distanceTo(VIEW.tgt) / innerHeight;
 const canGesture = () => (mode === "puppet" && PUP || mode === "peanut" || mode === "model" && MDL) && !editing && !RIGE.on && !PF.on;
 const G = {pts:new Map(), n:0, max:0, t0:0, moved:false, base:null, swipe:{x:0, y:0}, lastTap2:0};
 const isPup = () => mode === "puppet";
@@ -4268,6 +4366,7 @@ function loop(now){
     if (NUT_ARMS && S.body) driveArms(NUT_ARMS, now, Math.min(1, dt*14));
   } else if (stageMode === "model" && MDL && (RIGE.on || PF.on)){
     mrig.position.set(0, 0, 0); mrig.rotation.set(0, 0, 0); mrig.scale.set(1, 1, 1);
+    if (PF.on && MDL.head){ const R = MDL.rig, k0 = Math.min(1, dt*8); if (R.neck) turnWorld(R, R.neck, 0, 0, 0, k0); turnWorld(R, R.head, 0, 0, 0, k0); }   // face straight on while placing
   } else if (stageMode === "model" && MDL){
     const useHead = MDL.head && S.mHeadBone, bodyK = useHead ? 0.2 : 1;
     const idle = (seen ? 0 : Math.sin(now/900) * 0.05) + mk * Math.sin(now/1600) * 0.35;
@@ -4303,6 +4402,7 @@ function loop(now){
   set(F_MOUTH.real, faceVis * (1 - W.mouth)); set(F_MOUTH.alt, faceVis * W.mouth);
   if (stageMode === "model" && S.faceMode === "model") [...EYE_MESHES, ...MOUTH_MESHES].forEach(m => m.visible = false);
 
+  stepView(dt);
   const worldOn = S.world && (mode !== "menu" || scopeId === "peanut");
   PSXU.uPsxJ.value = S.psx === "modern" ? 0 : S.wJitter;
   if (S.psx !== "modern"){
