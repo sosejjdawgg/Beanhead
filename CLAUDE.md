@@ -12,6 +12,7 @@ Peanut Cam puts the user's real eyes and mouth, tracked live from the front came
 - `android/` is a thin Java wrapper (`MainActivity.java`).
   - A WebView serves the page from `assets/www` at `https://appassets.androidplatform.net/` through `shouldInterceptRequest`.
   - It also has: a camera/mic permission bridge, a multi-file chooser (ClipData), a share-intent image served at `/__shared`, and a `PeanutNative` JS bridge (begin/append/finish/prepare/hasShared/clearShared) that saves recordings and pictures to MediaStore Pictures/Movies/PeanutCam.
+  - `live/` is live streaming, self-contained: the `PeanutLive` bridge (`LiveController`), RTMP (`RtmpPublisher`, `LiveSession`, `Amf0`, pure Java), mic AAC (`MicEncoder`) and a foreground service (`LiveService`). MainActivity only registers it, forwards permission results and calls `release()`. See `docs/LIVE_STREAMING.md`.
 - `.github/workflows/android.yml` runs on every push to `main`. It:
   - npm-installs three, tasks-vision and three-vrm;
   - copies `index.html`, the libraries, the loaders and the MediaPipe models into `android/app/src/main/assets/www`, and bundles third-party licence texts into `www/licenses/`;
@@ -22,7 +23,7 @@ Peanut Cam puts the user's real eyes and mouth, tracked live from the front came
 
 ## How index.html is organised
 
-Sections start with `/* ---------- name ---------- */`; grep for that to navigate. In order: settings, three.js scene, peanut, PSX snapping, imported 3D models, face placement on models (`fitFace`), rigging tool, puppet (2D), face features, stage, background, camera, MediaPipe, arm/hand tracking, per-frame face geometry (`track`), picture upload + scan, outlines/cut-out editor, character gallery, about & legal, settings sheet, layout editor, place-face tool, joint editor, menu/modes/HUD, touch gestures, recording, screenshots, PSX 3D world, render loop, boot.
+Sections start with `/* ---------- name ---------- */`; grep for that to navigate. In order: settings, three.js scene, peanut, PSX snapping, imported 3D models, face placement on models (`fitFace`), rigging tool, puppet (2D), face features, stage, background, camera, MediaPipe, arm/hand tracking, per-frame face geometry (`track`), picture upload + scan, outlines/cut-out editor, character gallery, about & legal, settings sheet, layout editor, place-face tool, joint editor, menu/modes/HUD, touch gestures, recording, screenshots, live streaming, PSX 3D world, render loop, boot.
 
 Key ideas:
 
@@ -81,18 +82,16 @@ There is no Android device or emulator here. Test the page in Chromium with Play
 - The face auto-find on models uses the silhouette (neck) for bipeds and the most forward point for pets. The user can always fix it with Place face.
 - Characters saved without their original photo can't use Restore in the cut-out editor.
 
-## Next up: live streaming (RTMP to TikTok Live Studio / OBS)
+## Live streaming (4.5)
 
-The user has a plan to add StreamPack (Kotlin, RTMP) streaming of the rendered scene.
+Full write-up: `docs/LIVE_STREAMING.md`. In short:
 
-- **Spike the capture path on a device first.** A WebView can't draw directly into an encoder Surface. The options are:
-  1. MediaProjection screen capture (StreamPack has a screen source). Robust, but needs user consent each session.
-  2. A second WebView in a `Presentation` on a VirtualDisplay backed by the encoder Surface. No consent needed, but the scene renders twice.
-  3. Frames pushed from JS (`canvas` → native). Simple but slow.
-- **Add a clean "stream mode"** that hides the HUD, menu and camera preview.
-- **OBS can't receive RTMP pushed straight from the phone.** It needs a local RTMP server (e.g. MediaMTX) on the PC that OBS pulls from. Document this in the app.
-- **Stream keys stay on the device only.** Never put them in the repo.
-- **Keep the feature modular** and don't break face tracking. Confirm the current StreamPack version before pinning it.
+- **The page encodes; the app publishes.** `liveFrame()` (render loop, after `recFrame()`) composes background + scene into a stream-sized 2D canvas and encodes it with WebCodecs `VideoEncoder`, which is hardware H.264 in Android's WebView. Chunks go to `PeanutLive.video()` as base64. The app adds mic AAC and speaks RTMP/RTMPS itself, with no StreamPack or other dependency. This was chosen over a native capture source because a WebView can't render into an encoder Surface: that route means MediaProjection (consent, captures the HUD) or rendering twice.
+- **The stream is clean by construction.** Only the composed canvas is sent, so there's no separate "stream mode". The HUD stays usable while live.
+- **Stream keys** are stored only in `localStorage["peanutcam.live"]`, kept apart from `S` and character records. Never log or commit them; `RtmpPublisher.Target.toString()` hides the key.
+- **Robustness lives in `LiveSession`.** Reconnect with backoff (2 min), drop-to-keyframe plus lower bitrate when the upload falls behind (the page reconfigures the encoder on `bitrate` events), and a stall watchdog. The page rebuilds the encoder if Android reclaims it.
+- **Testing.** The RTMP layer is pure Java: compile it with `javac` and drive it from a harness against MediaMTX (build with `go build` after creating `internal/core/VERSION` and `internal/servers/hls/hls.min.js`) or `ffmpeg -listen 1`. For the page, stub `window.PeanutLive` in Playwright and forward calls to that harness. Headless Chromium has a software H.264 encoder. Software rendering only reaches about 3 fps here, so judge real frame rate on a phone (the stats show it).
+- **Not done yet.** No on-device test of the hardware encoder path. SRT isn't supported. The picture freezes while the app is in the background, because Android stops drawing the WebView.
 
 ## Commits
 

@@ -31,6 +31,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.beanhead.peanutcam.live.LiveController;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -56,6 +58,7 @@ public class MainActivity extends Activity {
     private static final int REQ_STORAGE = 3;
 
     private WebView web;
+    private LiveController live;
     private PermissionRequest pendingRequest;
     private ValueCallback<Uri[]> fileCallback;
     private volatile Uri sharedUri;
@@ -81,11 +84,18 @@ public class MainActivity extends Activity {
         WebView.setWebContentsDebuggingEnabled(true);
 
         web.addJavascriptInterface(new NativeBridge(), "PeanutNative");
+        live = new LiveController(this, web);
+        web.addJavascriptInterface(live, "PeanutLive");
 
         web.setWebViewClient(new WebViewClient() {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 return serveAsset(request.getUrl());
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
+                live.release();             // a reloaded page can't feed a stream it doesn't know about
             }
 
             @Override
@@ -233,6 +243,7 @@ public class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
+        if (requestCode == LiveController.REQ_PERMISSIONS) { live.onPermissionsResult(); return; }
         if (requestCode != REQ_CAMERA || pendingRequest == null) return;
         grantAllowed(pendingRequest);
         pendingRequest = null;
@@ -301,6 +312,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (live != null) live.release();
         if (web != null) web.destroy();
         super.onDestroy();
     }

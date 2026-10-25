@@ -197,6 +197,48 @@ body.sheet-open #rec,body.sheet-open #micBtn,body.sheet-open #shot,body.sheet-op
 body[data-mode=puppet] .puppet-only{display:flex!important}
 .clean #hud{opacity:0!important}
 .clean #hud *{pointer-events:none!important}
+/* live streaming */
+#liveBtn{position:absolute;right:calc(27px + env(safe-area-inset-right,0px));bottom:calc(252px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:16px;
+  display:grid;place-items:center;background:var(--panel);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px var(--line),0 8px 20px rgba(0,0,0,.35);color:var(--ink)}
+#liveBtn.on{background:var(--ember);color:#1d1109;box-shadow:0 8px 24px rgba(255,138,76,.4)}
+body.sheet-open #liveBtn{transform:translateY(calc(100% + 230px));opacity:0}
+#liveBtn{transition:transform .45s var(--spring),opacity .3s,background .3s}
+#liveChip{position:fixed;z-index:35;left:50%;top:calc(18px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:99px;
+  background:var(--ember);color:#1d1109;font:600 12.5px var(--mono);letter-spacing:.06em;box-shadow:0 8px 24px rgba(255,138,76,.35);white-space:nowrap}
+#liveChip b{width:8px;height:8px;border-radius:50%;background:#1d1109;animation:blink 1s steps(2) infinite}
+#liveChip.wait{background:var(--raise);color:var(--nut2);box-shadow:inset 0 0 0 1px var(--line)}
+#liveChip.wait b{background:var(--nut2)}
+body[data-mode=menu] #liveChip{top:calc(10px + env(safe-area-inset-top,0px))}
+body.live[data-mode=menu] .m-top{margin-top:34px}
+body.live #recChip{top:calc(62px + env(safe-area-inset-top,0px))}
+body.live #chip{top:calc(116px + env(safe-area-inset-top,0px))}
+.clean #liveChip{opacity:.0;pointer-events:none}
+.lvstat{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:2px 10px;padding:12px 14px;border-radius:16px;background:rgba(0,0,0,.28);margin:6px 0 2px}
+.lvstat i{grid-row:1/span 2;width:10px;height:10px;border-radius:50%;background:var(--mute)}
+.lvstat b{font-size:15px}
+.lvstat span{font:500 12px var(--mono);color:var(--mute);min-height:1em}
+.lvstat[data-s=live] i{background:var(--ember);animation:ping 1.6s infinite}
+.lvstat[data-s=connecting] i,.lvstat[data-s=reconnecting] i,.lvstat[data-s=starting] i,.lvstat[data-s=stopping] i{background:var(--nut2);animation:blink 1s steps(2) infinite}
+.lvstat[data-s=error] i{background:#ff5a4c}
+.lvstat[data-s=error] span{color:#ffb39a}
+.lvfield{display:block;margin:10px 0 0}
+.lvfield > span{display:block;font-size:13px;color:var(--mute);margin:0 0 6px 2px}
+.lvkey{display:flex;gap:8px}
+.lvkey .namein{flex:1;min-width:0;font:500 14px var(--mono)}
+.lvkey .pill{flex:none;height:48px;padding:0 14px}
+.lvfield .namein:disabled{opacity:.55}
+.chip small{font:500 10.5px var(--mono);opacity:.75}
+.chip:disabled{opacity:.45}
+.lvgo{width:100%;height:52px;margin-top:14px;font-size:16px}
+.lvgo.end{background:#ff5a4c;color:#fff}
+details.lvhelp{margin:10px 0 0;border-radius:14px;background:rgba(0,0,0,.2);padding:0 14px}
+details.lvhelp summary{cursor:pointer;padding:13px 0;font-weight:600;font-size:14.5px;list-style:none}
+details.lvhelp summary::-webkit-details-marker{display:none}
+details.lvhelp summary::after{content:"+";float:right;color:var(--nut2)}
+details.lvhelp[open] summary::after{content:"–"}
+details.lvhelp ol{margin:0 0 12px;padding-left:20px;font-size:13.5px;line-height:1.55;color:var(--ink)}
+details.lvhelp li{margin:4px 0}
+details.lvhelp code{font:12px var(--mono);color:var(--nut2);-webkit-user-select:text;user-select:text;word-break:break-all}
 
 /* ---------- settings sheet ---------- */
 #sheet{position:fixed;left:0;right:0;bottom:0;z-index:20;height:min(46vh,430px);display:flex;flex-direction:column;
@@ -400,6 +442,7 @@ body.rigging #hud *{pointer-events:none!important}
   <symbol id="move" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></symbol>
   <symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
   <symbol id="micoff" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M4 4l16 16"/></symbol>
+  <symbol id="live" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M8.5 15.5a5 5 0 0 1 0-7M15.5 8.5a5 5 0 0 1 0 7M5.6 18.4a9 9 0 0 1 0-12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></symbol>
   <symbol id="dots" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/></symbol>
   <symbol id="hand" viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10V4.5a1.5 1.5 0 0 1 3 0V11M14 10.5V6a1.5 1.5 0 0 1 3 0v7.5c0 4-2.5 7-6 7s-5-1.8-6.5-4.5L3 12.8a1.5 1.5 0 0 1 2.5-1.6L8 14"/></symbol>
   <symbol id="cube" viewBox="0 0 24 24"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></symbol>
@@ -450,6 +493,7 @@ body.rigging #hud *{pointer-events:none!important}
   <button id="rec" aria-label="Start recording"><i></i></button>
   <button class="press" id="shot" aria-label="Take a picture"><svg class="i"><use href="#t-camera"/></svg></button>
   <button class="press" id="resetBtn" aria-label="Reset position"><svg class="i"><use href="#recentre"/></svg></button>
+  <button class="press" id="liveBtn" aria-label="Go live" hidden><svg class="i"><use href="#live"/></svg></button>
   <nav id="bar" aria-label="Controls">
     <button class="bb press" id="bSettings"><svg class="i"><use href="#sliders"/></svg>Settings</button>
     <button class="bb press puppet-only" id="bLayout"><svg class="i"><use href="#move"/></svg>Layout</button>
@@ -478,6 +522,7 @@ body.rigging #hud *{pointer-events:none!important}
 </div>
 
 <div id="modal" hidden><div class="mback"></div><div class="mpanel" role="dialog" aria-modal="true"><div class="mhead"><h2 id="mTitle"></h2><button class="sh-x press" id="mClose" aria-label="Close"><svg class="i"><use href="#x"/></svg></button></div><div id="mBody"></div></div></div>
+<button id="liveChip" hidden aria-label="Live stream"><b></b><span id="liveTxt">LIVE</span></button>
 <div id="flash" aria-live="polite"></div>
 <div id="shutter" aria-hidden="true"></div>
 <img id="shotPrev" alt="" hidden>
@@ -2569,7 +2614,7 @@ function openModal(title, build){
   $("#modal").hidden = false;
 }
 /* ---------- about & legal ---------- */
-const VERSION = "4.4";
+const VERSION = "4.5";
 function openLegal(){
   openModal("About & legal", b => {
     const d = el("div", "legal");
@@ -2582,7 +2627,7 @@ function openLegal(){
         <li>The app's own 3D Peanut, art, icons, animation, interface, text and logo.</li>
         <li>The name "Peanut Cam" and its logo, used as trade marks of James Scott.</li></ul>
       <h3>Your content</h3>
-      <p>Pictures, models, videos and screenshots you add or make are yours. Your camera, pictures and models are processed on this device and are not uploaded. Only add pictures and models you have the right to use, and don't use Peanut Cam to impersonate, harass or mislead anyone.</p>
+      <p>Pictures, models, videos and screenshots you add or make are yours. Your camera, pictures and models are processed on this device and are not uploaded. If you go live, only the finished picture (your character and background) and, if you turn it on, your microphone sound are sent, and only to the streaming server you enter. Only add pictures and models you have the right to use, and don't use Peanut Cam to impersonate, harass or mislead anyone.</p>
       <h3>You may</h3>
       <ul><li>Use the app and share the official link.</li>
         <li>Use what you make with it anywhere, including monetised streams, without selling or redistributing the app itself or suggesting we endorse you. "Made with Peanut Cam" is appreciated.</li>
@@ -3566,6 +3611,237 @@ $("#micBtn").onclick = () => {
   toast(S.recMic ? "Recordings include your voice" : "Recordings are silent");
 };
 
+/* ---------- live streaming: the scene, encoded here, published over RTMP by the Android app ----------
+   Viewers see what recordings capture (background + scene), never the menus, buttons or camera preview.
+   The page encodes it with WebCodecs, which uses the phone's hardware H.264 encoder, and hands each
+   compressed frame to the app (window.PeanutLive, android/.../live/), which adds the microphone (AAC)
+   and publishes over RTMP or RTMPS. The server URL and stream key are kept only on this phone. */
+const LIVE_Q = {low:{label:"Low", sub:"720p · 2 Mbps", h:720, kbps:2000}, std:{label:"Standard", sub:"720p · 3.5 Mbps", h:720, kbps:3500},
+                high:{label:"High", sub:"1080p · 6 Mbps", h:1080, kbps:6000}};
+const LIVE_SAY = {idle:"Not live", starting:"Starting…", connecting:"Connecting…", live:"Live", reconnecting:"Reconnecting…", stopping:"Ending…", error:"Couldn't stream"};
+const LC = {url:"", key:"", q:"std", fps:30, shape:"portrait", sound:true, delay:100};
+try{ Object.assign(LC, JSON.parse(localStorage.getItem("peanutcam.live") || "{}")); }catch(e){}
+const saveLive = () => { try{ localStorage.setItem("peanutcam.live", JSON.stringify(LC)); }catch(e){} };
+const LIVE = {state:"idle", msg:"", enc:null, encCfg:null, c:null, x:null, bg:null, bgKey:"", w:0, h:0, fps:30, kbps:0, t0:0, last:0, lastKey:-1e9,
+              wantKey:true, desc:"", rebuildAt:0, fails:0, failAt:0, stats:null};
+const liveOn = () => ["connecting", "live", "reconnecting"].includes(LIVE.state);
+const liveBusy = () => liveOn() || LIVE.state === "starting" || LIVE.state === "stopping";
+const livePanelOpen = () => !$("#modal").hidden && !!$("#lvStat");
+function u8b64(u){ let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
+function liveSize(){ const s = LIVE_Q[LC.q].h, l = Math.round(s*16/9/2)*2; return LC.shape === "landscape" ? [l, s] : [s, l]; }
+
+// best H.264 setup this phone offers: hardware first, Main then Baseline profile, constant bitrate if it can
+async function liveEncoderConfig(w, h, fps, kbps){
+  const lvl = w*h > 1280*720 ? (fps > 30 ? "2A" : "28") : (fps > 30 ? "20" : "1F");
+  for (const hw of ["prefer-hardware", "no-preference"]) for (const p of ["4D40", "42E0"]) for (const bm of ["constant", "variable"]){
+    const cfg = {codec:`avc1.${p}${lvl}`, width:w, height:h, bitrate:kbps*1000, framerate:fps, hardwareAcceleration:hw, latencyMode:"realtime", bitrateMode:bm, avc:{format:"avc"}};
+    try{ if ((await VideoEncoder.isConfigSupported(cfg)).supported) return cfg; }catch(e){}
+  }
+  return null;
+}
+function liveMakeEncoder(){
+  const N = window.PeanutLive;
+  LIVE.desc = ""; LIVE.wantKey = true;
+  const enc = new VideoEncoder({
+    output: (chunk, meta) => {
+      if (!liveOn() || enc !== LIVE.enc) return;
+      const d = meta?.decoderConfig?.description;
+      if (d){
+        const b = u8b64(d instanceof ArrayBuffer ? new Uint8Array(d) : new Uint8Array(d.buffer, d.byteOffset, d.byteLength));
+        if (b !== LIVE.desc){ LIVE.desc = b; N.config(b); }
+      }
+      const u = new Uint8Array(chunk.byteLength); chunk.copyTo(u);
+      N.video(u8b64(u), chunk.timestamp / 1000, chunk.type === "key");
+    },
+    // Android can take the hardware encoder back (another app, or a while in the background): make a new one
+    error: e => {
+      console.error("live encoder:", e);
+      if (enc !== LIVE.enc) return;
+      LIVE.enc = null;
+      const t = performance.now(); LIVE.fails = t - LIVE.failAt < 30000 ? LIVE.fails + 1 : 1; LIVE.failAt = t;
+      if (LIVE.fails > 3 && liveOn()){ window.PeanutLive?.stop(); liveEnd("error", "The video encoder keeps failing (" + (e?.message || e) + "). Try a lower quality."); }
+    }
+  });
+  enc.configure({...LIVE.encCfg, bitrate:LIVE.kbps*1000});
+  LIVE.enc = enc;
+}
+// the frame viewers get: background, then the scene fitted inside it (3D worlds fill the frame instead)
+function liveCompose(){
+  const {x, w, h} = LIVE, cw = canvas.width, ch = canvas.height;
+  if (S.world){ const k = Math.max(w/cw, h/ch); x.drawImage(canvas, (w - cw*k)/2, (h - ch*k)/2, cw*k, ch*k); return; }
+  const key = `${S.bg}|${S.bgColor}|${bgImg?.src || ""}`;
+  if (key !== LIVE.bgKey){ paintBg(LIVE.bg.getContext("2d"), w, h); LIVE.bgKey = key; }
+  x.drawImage(LIVE.bg, 0, 0);
+  const k = Math.min(w/cw, h/ch); x.drawImage(canvas, (w - cw*k)/2, (h - ch*k)/2, cw*k, ch*k);
+}
+function liveFrame(){                                    // runs right after each render
+  if (!liveOn()) return;
+  const now = performance.now();
+  if (now - LIVE.last < 800 / LIVE.fps) return;
+  if (!LIVE.enc){
+    if (now - LIVE.rebuildAt < 1000) return;
+    LIVE.rebuildAt = now;
+    try{ liveMakeEncoder(); }catch(e){ console.error(e); return; }
+  }
+  if (LIVE.enc.state !== "configured") return;
+  LIVE.last = now;
+  if (LIVE.enc.encodeQueueSize > 2) return;            // encoder is behind: skip this frame rather than add delay
+  liveCompose();
+  const key = LIVE.wantKey || now - LIVE.lastKey >= 2000;
+  if (key){ LIVE.wantKey = false; LIVE.lastKey = now; }
+  let f = null;
+  try{ f = new VideoFrame(LIVE.c, {timestamp:Math.round((now - LIVE.t0)*1000)}); LIVE.enc.encode(f, {keyFrame:key}); }
+  catch(e){ console.error(e); }
+  finally{ f?.close(); }
+}
+async function liveStart(){
+  const N = window.PeanutLive;
+  if (!N || liveBusy()) return;
+  if (!window.VideoEncoder || !window.VideoFrame){ liveEnd("error", "This phone's web engine is too old to stream. Update “Android System WebView” (or Chrome) from the Play Store."); return; }
+  if (!LC.url.trim()){ liveEnd("error", "Enter the server URL first."); return; }
+  const [w, h] = liveSize(), q = LIVE_Q[LC.q];
+  LIVE.state = "starting"; LIVE.msg = ""; liveRender();
+  const cfg = await liveEncoderConfig(w, h, LC.fps, q.kbps);
+  if (LIVE.state !== "starting") return;               // cancelled while checking
+  if (!cfg){ liveEnd("error", `This phone can't encode ${w}×${h} H.264 video. Try a lower quality or 30 fps.`); return; }
+  Object.assign(LIVE, {encCfg:cfg, w, h, fps:LC.fps, kbps:q.kbps, last:0, lastKey:-1e9, rebuildAt:0, fails:0, stats:null, bgKey:""});
+  LIVE.c = document.createElement("canvas"); LIVE.c.width = w; LIVE.c.height = h; LIVE.x = LIVE.c.getContext("2d", {alpha:false});
+  LIVE.bg = document.createElement("canvas"); LIVE.bg.width = w; LIVE.bg.height = h;
+  try{ liveMakeEncoder(); }catch(e){ liveEnd("error", "Couldn't start the video encoder: " + (e?.message || e)); return; }
+  LIVE.t0 = performance.now();                           // the app starts its clock in the same moment
+  const err = N.start(JSON.stringify({url:LC.url, key:LC.key, width:w, height:h, fps:LC.fps, kbps:q.kbps, sound:LC.sound, offsetMs:LC.delay}));
+  if (err){ liveEnd("error", err); return; }
+  LIVE.state = "connecting"; liveRender();
+}
+function liveStop(){
+  if (LIVE.state === "starting"){ liveEnd("idle"); return; }
+  if (!liveOn()) return;
+  LIVE.state = "stopping"; liveRender();
+  window.PeanutLive?.stop();
+}
+function liveEnd(state, msg){
+  try{ if (LIVE.enc && LIVE.enc.state !== "closed") LIVE.enc.close(); }catch(e){}
+  Object.assign(LIVE, {state, msg:msg || "", enc:null, encCfg:null, c:null, x:null, bg:null, stats:null});
+  liveRender();
+}
+// events from the app (android/.../live/LiveController.java)
+window.onLive = e => {
+  if (!e) return;
+  if (e.type === "state"){
+    if (e.state === "stopped" || e.state === "error"){
+      const was = LIVE.state;
+      if (was === "idle" || was === "error") return;      // an earlier stream finishing late
+      liveEnd(e.state === "error" ? "error" : "idle", e.msg);
+      if (e.state === "error"){ if (!livePanelOpen()) toast(e.msg || "The stream stopped.", 5000); }
+      else if (was !== "stopping") toast("The stream has ended.");
+      buzz([15, 60, 15]);
+    } else if (liveOn() || LIVE.state === "starting"){
+      const was = LIVE.state;
+      if (e.state === "live" && was !== "live"){ buzz(25); if (!livePanelOpen()) toast(was === "reconnecting" ? "Back live" : "You're live!"); }
+      if (e.state === "reconnecting" && was === "live"){ buzz([20, 80, 20]); if (!livePanelOpen()) toast("Connection lost. Reconnecting…", 3500); }
+      LIVE.state = e.state; LIVE.msg = e.msg || ""; liveRender();
+    }
+  } else if (e.type === "stats"){ LIVE.stats = e; liveRender(); }
+  else if (e.type === "key") LIVE.wantKey = true;
+  else if (e.type === "bitrate"){
+    LIVE.kbps = e.kbps;                                  // the upload can't keep up (or has recovered)
+    try{ if (LIVE.enc?.state === "configured") LIVE.enc.configure({...LIVE.encCfg, bitrate:e.kbps*1000}); }catch(err){ console.error(err); }
+  } else if (e.type === "mic") toast("The microphone isn't available, so the stream is silent for now.", 4000);
+};
+const clock = s => `${Math.floor(s/3600) ? Math.floor(s/3600) + ":" : ""}${String(Math.floor(s/60) % 60).padStart(Math.floor(s/3600) ? 2 : 1, "0")}:${String(s % 60).padStart(2, "0")}`;
+function liveRender(){
+  const on = liveOn() || LIVE.state === "stopping", st = LIVE.stats;
+  document.body.classList.toggle("live", on);
+  const chip = $("#liveChip");
+  chip.hidden = !on;
+  chip.classList.toggle("wait", LIVE.state !== "live");
+  $("#liveTxt").textContent = LIVE.state === "live" ? `LIVE ${clock(st?.secs || 0)}` : LIVE_SAY[LIVE.state];
+  $("#liveBtn").classList.toggle("on", on);
+  const box = $("#lvStat"); if (!box) return;           // the Go live panel isn't open
+  box.dataset.s = LIVE.state;
+  $("#lvState").textContent = LIVE_SAY[LIVE.state] + (LIVE.state === "live" && st ? " · " + clock(st.secs) : "");
+  $("#lvInfo").textContent = LIVE.state === "live" && st
+    ? `${(st.kbps/1000).toFixed(1)} Mbps · ${st.fps} fps${st.target < LIVE_Q[LC.q].kbps ? " · lowered for your connection" : ""}${st.dropped ? " · " + st.dropped + " frames skipped" : ""}`
+    : LIVE.msg || (LIVE.state === "idle" ? `${liveSize().join("×")} · ${LC.fps} fps · ${LIVE_Q[LC.q].kbps/1000} Mbps` : "");
+  const busy = liveBusy();
+  $("#mBody").querySelectorAll("[data-lock]").forEach(n => n.disabled = busy);
+  const go = $("#lvGo");
+  go.textContent = busy ? (LIVE.state === "stopping" ? "Ending…" : "End stream") : "Go live";
+  go.classList.toggle("end", busy); go.disabled = LIVE.state === "stopping";
+}
+function openLive(){
+  openModal("Go live", b => {
+    const field = (label, input) => { const l = el("label", "lvfield"); l.append(el("span", "", label), input); return l; };
+    const inp = (type, val, ph) => { const i = el("input", "namein"); Object.assign(i, {type, value:val, placeholder:ph, autocomplete:"off", spellcheck:false});
+      i.setAttribute("autocapitalize", "off"); i.setAttribute("autocorrect", "off"); i.dataset.lock = ""; return i; };
+    const chips = (opts, cur, set) => {
+      const c = el("div", "chips");
+      for (const [v, label, sub] of opts){
+        const k = el("button", "chip press", label + (sub ? ` <small>${sub}</small>` : "")); k.dataset.lock = ""; k.setAttribute("aria-pressed", v === cur());
+        k.onclick = () => { set(v); saveLive(); buzz(6); c.querySelectorAll(".chip").forEach((n, i) => n.setAttribute("aria-pressed", opts[i][0] === cur())); liveRender(); };
+        c.append(k);
+      }
+      return c;
+    };
+    b.insertAdjacentHTML("beforeend", `<div class="lvstat" id="lvStat"><i></i><b id="lvState"></b><span id="lvInfo"></span></div>`);
+
+    b.append(el("div", "sec", "Where to"));
+    const url = inp("url", LC.url, "rtmp://…  or  rtmps://…");
+    url.oninput = () => { LC.url = url.value.trim(); saveLive(); };
+    b.append(field("Server URL", url));
+    const key = inp("password", LC.key, "Stream key");
+    key.oninput = () => { LC.key = key.value.trim(); saveLive(); };
+    const show = el("button", "pill press", "Show");
+    show.onclick = () => { const h = key.type === "password"; key.type = h ? "text" : "password"; show.textContent = h ? "Hide" : "Show"; };
+    const kr = el("div", "lvkey"); kr.append(key, show);
+    b.append(field("Stream key", kr));
+    const go = el("button", "pill hot press lvgo"); go.id = "lvGo";
+    go.onclick = () => { buzz(10); liveBusy() ? liveStop() : liveStart(); };
+    b.append(go);
+
+    b.append(el("div", "sec", "Picture"));
+    b.append(chips([["portrait", "Portrait", "9:16"], ["landscape", "Landscape", "16:9"]], () => LC.shape, v => LC.shape = v));
+    b.append(chips(Object.entries(LIVE_Q).map(([k, q]) => [k, q.label, q.sub]), () => LC.q, v => LC.q = v));
+    b.append(chips([[30, "30 fps"], [60, "60 fps", "smoother, more battery"]], () => LC.fps, v => LC.fps = v));
+
+    b.append(el("div", "sec", "Sound"));
+    const r1 = el("div", "srow"); r1.append(el("span", "slabel", "Microphone"));
+    const sw = el("button", "switch press"); sw.setAttribute("role", "switch"); sw.setAttribute("aria-label", "Microphone"); sw.setAttribute("aria-checked", LC.sound);
+    sw.onclick = () => { LC.sound = !LC.sound; saveLive(); sw.setAttribute("aria-checked", LC.sound); buzz(6); if (liveOn()) window.PeanutLive?.sound(LC.sound); };
+    r1.append(sw); b.append(r1);
+    const r2 = el("div", "srow"); r2.append(el("span", "slabel", "Sound delay <small style='color:var(--mute)'>(lip sync)</small>"));
+    const ctl = el("div", "sctl"), val = el("span", "sval", ""), mk = (icon, d) => { const s = el("button", "step press", `<svg class="i"><use href="#${icon}"/></svg>`);
+      s.setAttribute("aria-label", d < 0 ? "Less delay" : "More delay");
+      s.onclick = () => { LC.delay = clamp(LC.delay + d, 0, 500); saveLive(); upd(); buzz(5); if (liveOn()) window.PeanutLive?.soundDelay(LC.delay); }; return s; };
+    const upd = () => { val.textContent = LC.delay + " ms"; val.style.display = "grid"; val.style.placeItems = "center"; };
+    ctl.append(mk("minus", -50), val, mk("plus", 50)); upd(); r2.append(ctl); b.append(r2);
+
+    b.append(el("p", "note", "Only your character and its background are sent. Menus, buttons and the camera preview never appear on the stream. Your server URL and stream key are saved only on this phone."));
+
+    b.insertAdjacentHTML("beforeend", `
+      <details class="lvhelp"><summary>Stream to TikTok</summary><ol>
+        <li>If your TikTok account can use streaming software, TikTok shows a <b>Server URL</b> and <b>Stream key</b> where you set up the LIVE. Copy them into the boxes above.</li>
+        <li>Pick <b>Portrait</b>, then tap <b>Go live</b> here first, then start the LIVE in TikTok.</li>
+        <li>TikTok's keys often work only once. If it won't connect, get a fresh key and paste it again.</li>
+        <li>Using <b>TikTok LIVE Studio</b> on a computer? Bring Peanut Cam in through OBS (below) and add OBS's <b>Virtual Camera</b> in LIVE Studio as a camera.</li></ol></details>
+      <details class="lvhelp"><summary>Stream into OBS on your computer</summary><ol>
+        <li>OBS can't receive a stream by itself. On the computer, download and run <b>MediaMTX</b> (free, from github.com/bluenviron/mediamtx). It listens on port 1935.</li>
+        <li>Find the computer's local IP address (Windows: <code>ipconfig</code>; Mac: System Settings › Wi-Fi › Details), for example 192.168.1.20.</li>
+        <li>Here, set the server URL to <code>rtmp://192.168.1.20/live</code> and the stream key to <code>peanut</code>, then tap Go live. The phone and computer must be on the same Wi-Fi. If your firewall asks, allow MediaMTX.</li>
+        <li>In OBS: Sources › + › <b>Media Source</b>, untick “Local File”, set Input to <code>rtmp://localhost/live/peanut</code>, and tick “Use hardware decoding when available”.</li>
+        <li>For a green-screen key in OBS, choose the <b>Green screen</b> background in Peanut Cam and add a Chroma Key filter.</li></ol></details>
+      <details class="lvhelp"><summary>YouTube, Twitch, Kick and others</summary><ol>
+        <li>Any service that gives you an RTMP or RTMPS server URL and stream key works the same way: paste both and go live.</li>
+        <li>Use Landscape for most of them, and a quality your upload speed can carry with room to spare. If the connection struggles, Peanut Cam lowers the quality by itself and raises it again later.</li></ol></details>`);
+    liveRender();
+  });
+}
+if (window.PeanutLive){ $("#liveBtn").hidden = false; }
+$("#liveBtn").onclick = () => { buzz(8); openLive(); };
+$("#liveChip").onclick = () => { buzz(8); openLive(); };
+// leaving the page (reload / app closing) ends the stream; the app does the same on its side
+addEventListener("pagehide", () => { if (liveBusy()) window.PeanutLive?.stop(); });
+
 /* ---------- 3D world: PS1-style background, built with a modern pipeline ----------
    Low-resolution render target + nearest upscale, vertex snapping in clip space, affine (warped) textures,
    ordered dithering with colour-depth reduction, per-vertex lighting and fog. The terrain, props and sky are
@@ -4036,6 +4312,7 @@ function loop(now){
     renderer.autoClear = false; renderer.clearDepth(); renderer.render(scene, camera); renderer.autoClear = true;
   } else renderer.render(scene, camera);
   recFrame();
+  liveFrame();
   if (SHOT.pending) takeShot();
   if (THUMB.pending) takeThumb();
   if (editing && PUP){ placeEditor(); drawLoupe(); }

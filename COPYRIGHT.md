@@ -20,7 +20,7 @@ This includes, but is not limited to:
 
 ## Your content
 
-Pictures, 3D models, videos and screenshots that you add to or make with Peanut Cam are yours. The App processes your camera, pictures and models on your device; it does not upload them anywhere.
+Pictures, 3D models, videos and screenshots that you add to or make with Peanut Cam are yours. The App processes your camera, pictures and models on your device; it does not upload them anywhere. If you go live, the App sends only the finished picture (your character and its background) and, if you turn it on, your microphone sound, and only to the streaming server you enter. Your server address and stream key are kept only on your device.
 
 Only add pictures and models that you have the right to use, and do not use the App to impersonate, harass or mislead people.
 
