@@ -24,7 +24,8 @@ import java.util.List;
  * phone's hardware encoder) and passes each compressed frame here; this adds the microphone and
  * publishes over RTMP. Status goes back to the page as window.onLive({type: ...}) events:
  * state (connecting, live, reconnecting, stopped, error), stats, key (send a key frame next),
- * bitrate (encode at this rate) and mic (the microphone isn't available).
+ * bitrate (encode at this rate) and mic (the microphone isn't available). The page can also send its
+ * video sound with pcm(), which is mixed into the stream's audio.
  *
  * Everything streaming lives in this package; MainActivity only registers this object, forwards
  * permission results and calls {@link #release()}. Stream keys only pass through memory here.
@@ -151,6 +152,17 @@ public final class LiveController {
         } else if (on) {
             LiveService.start(act, true);      // upgrade the service so the mic keeps working in the background
         }
+    }
+
+    /** The page's video sound: 48 kHz stereo 16-bit PCM, interleaved, little-endian, base64. Mixed with the mic. */
+    @JavascriptInterface
+    public void pcm(String b64) {
+        MicEncoder m = mic;
+        if (m == null) return;
+        byte[] d = Base64.decode(b64, Base64.DEFAULT);
+        short[] s = new short[d.length / 2];
+        for (int i = 0; i < s.length; i++) s[i] = (short) ((d[i * 2] & 0xFF) | (d[i * 2 + 1] << 8));
+        m.mixIn(s, s.length);
     }
 
     @JavascriptInterface

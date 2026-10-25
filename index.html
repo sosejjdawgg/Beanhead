@@ -197,6 +197,28 @@ body.sheet-open #rec,body.sheet-open #micBtn,body.sheet-open #shot,body.sheet-op
 body[data-mode=puppet] .puppet-only{display:flex!important}
 .clean #hud{opacity:0!important}
 .clean #hud *{pointer-events:none!important}
+/* videos */
+#bgVid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+#tvBar{position:fixed;z-index:22;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px));width:min(300px,calc(100% - 176px));padding:6px 8px;border-radius:20px;
+  background:var(--panel2);backdrop-filter:blur(16px);box-shadow:inset 0 0 0 1px var(--line),0 14px 40px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:4px;animation:up .4s var(--spring) both}
+.tvrow{display:flex;align-items:center;gap:4px}
+#tvInfo{font:500 11px var(--mono);color:var(--mute);padding-left:4px;min-width:30px}
+.tvb{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:var(--ink);flex:none}
+.tvrow.ctl{justify-content:space-between}
+.tvb.big{background:var(--ink);color:#1d1109}
+.tvb.off{color:var(--mute)}
+#tvVol{flex:1;min-width:0;accent-color:var(--nut)}
+body.sheet-open #tvBar,body.placing #tvBar,.clean #tvBar{display:none}
+.vlist{display:flex;flex-direction:column;gap:6px;margin:10px 0 2px}
+.vrow{display:flex;align-items:center;gap:4px;border-radius:14px;background:rgba(0,0,0,.22);padding:4px}
+.vrow.on{box-shadow:inset 0 0 0 2px var(--nut)}
+.vname{flex:1;min-width:0;display:flex;align-items:center;gap:10px;height:44px;padding:0 8px;text-align:left}
+.vname b{font:600 12px var(--mono);color:var(--nut2);width:18px}
+.vname span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:14.5px}
+.vname small{font:500 11.5px var(--mono);color:var(--mute)}
+.vrow .step{width:38px;height:38px;border-radius:12px}
+.vvol{display:flex;align-items:center;gap:12px;font-size:15px;margin:8px 0 2px}
+.vvol input{flex:1;accent-color:var(--nut)}
 /* live streaming */
 #liveBtn{position:absolute;right:calc(27px + env(safe-area-inset-right,0px));bottom:calc(252px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:16px;
   display:grid;place-items:center;background:var(--panel);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px var(--line),0 8px 20px rgba(0,0,0,.35);color:var(--ink)}
@@ -444,6 +466,18 @@ body.rigging #hud *{pointer-events:none!important}
   <symbol id="mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
   <symbol id="micoff" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M4 4l16 16"/></symbol>
   <symbol id="live" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M8.5 15.5a5 5 0 0 1 0-7M15.5 8.5a5 5 0 0 1 0 7M5.6 18.4a9 9 0 0 1 0-12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></symbol>
+  <symbol id="play" viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5z"/></symbol>
+  <symbol id="pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+  <symbol id="next" viewBox="0 0 24 24"><path d="M6 6l9 6-9 6zM18 6v12"/></symbol>
+  <symbol id="prev" viewBox="0 0 24 24"><path d="M18 6l-9 6 9 6zM6 6v12"/></symbol>
+  <symbol id="speaker" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
+  <symbol id="speakeroff" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></symbol>
+  <symbol id="list" viewBox="0 0 24 24"><path d="M9 7h11M9 12h11M9 17h11"/><circle cx="4.5" cy="7" r=".8"/><circle cx="4.5" cy="12" r=".8"/><circle cx="4.5" cy="17" r=".8"/></symbol>
+  <symbol id="trash" viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 12.5h9l1-12.5"/></symbol>
+  <symbol id="up" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></symbol>
+  <symbol id="down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="tv" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="12.5" rx="2.5"/><path d="M8.5 3l3.5 4 3.5-4"/></symbol>
+  <symbol id="film" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M7.5 4.5v15M16.5 4.5v15M3.5 9h4M3.5 14.5h4M16.5 9h4M16.5 14.5h4"/></symbol>
   <symbol id="dots" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/></symbol>
   <symbol id="hand" viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10V4.5a1.5 1.5 0 0 1 3 0V11M14 10.5V6a1.5 1.5 0 0 1 3 0v7.5c0 4-2.5 7-6 7s-5-1.8-6.5-4.5L3 12.8a1.5 1.5 0 0 1 2.5-1.6L8 14"/></symbol>
   <symbol id="cube" viewBox="0 0 24 24"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></symbol>
@@ -457,7 +491,8 @@ body.rigging #hud *{pointer-events:none!important}
   <symbol id="t-puppet" viewBox="0 0 24 24"><path d="M5 12a7 7 0 0 1 14 0"/><path d="M5 12l-1-4M19 12l1-4"/><path d="M5 14h14v2a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5z"/></symbol>
 </svg>
 
-<div id="stage"><canvas id="gl"></canvas></div>
+<div id="stage"><video id="bgVid" playsinline loop muted hidden></video><canvas id="gl"></canvas></div>
+<video id="tvVid" playsinline hidden></video>
 
 <!-- ===== menu ===== -->
 <div id="menu">
@@ -524,6 +559,10 @@ body.rigging #hud *{pointer-events:none!important}
 
 <div id="modal" hidden><div class="mback"></div><div class="mpanel" role="dialog" aria-modal="true"><div class="mhead"><h2 id="mTitle"></h2><button class="sh-x press" id="mClose" aria-label="Close"><svg class="i"><use href="#x"/></svg></button></div><div id="mBody"></div></div></div>
 <button id="liveChip" hidden aria-label="Live stream"><b></b><span id="liveTxt">LIVE</span></button>
+<div id="tvBar" hidden role="toolbar" aria-label="TV controls">
+  <div class="tvrow"><span id="tvInfo"></span><input type="range" id="tvVol" min="0" max="1" step="0.01" aria-label="TV volume"><button class="tvb press" id="tvList" aria-label="TV videos"><svg class="i"><use href="#list"/></svg></button><button class="tvb press" id="tvClose" aria-label="Close TV controls"><svg class="i"><use href="#x"/></svg></button></div>
+  <div class="tvrow ctl"><button class="tvb press" id="tvPrev" aria-label="Previous video"><svg class="i"><use href="#prev"/></svg></button><button class="tvb big press" id="tvPlay" aria-label="Play"><svg class="i"><use href="#play"/></svg></button><button class="tvb press" id="tvNext" aria-label="Next video"><svg class="i"><use href="#next"/></svg></button><button class="tvb press" id="tvHear" aria-label="Hear video sound on this phone"><svg class="i"><use href="#speaker"/></svg></button><button class="tvb press" id="tvOff" aria-label="Remove the TV"><svg class="i"><use href="#trash"/></svg></button></div>
+</div>
 <div id="flash" aria-live="polite"></div>
 <div id="shutter" aria-hidden="true"></div>
 <img id="shotPrev" alt="" hidden>
@@ -583,6 +622,7 @@ body.rigging #hud *{pointer-events:none!important}
 <input type="file" id="bgFile" accept="image/*" hidden>
 <input type="file" id="modelFile" multiple hidden>
 <input type="file" id="texFiles" multiple accept="image/*,.zip" hidden>
+<input type="file" id="vidFiles" multiple accept="video/*" hidden>
 
 <script type="module">
 /* Peanut Cam - Copyright (c) 2026 James Scott. All rights reserved. Unauthorised copying or reuse is prohibited. */
@@ -605,7 +645,8 @@ const DEFAULTS = {
   world:false, wBiome:"auto", wMorph:20, wSpeed:0.35, wRes:240, wJitter:0.5, wAffine:true, wDither:0.7, wDepth:15, wFog:0.5, wParallax:0.6,
   coachSeen:false, psx:"modern", body:false,
   faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mEyeZ:0, mMouthZ:0, mEyeRot:0, mMouthRot:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true, mFrame:"full",
-  mirror:true, pip_on:true, deviceId:"", facing:"user"
+  mirror:true, pip_on:true, deviceId:"", facing:"user", hearVideos:true,
+  bgList:[], bgMode:"all", bgVol:0, tv:{on:false, x:1.05, y:1.3, z:0.4, s:0.7, r:-0.35, list:[], mode:"all", vol:0.8, i:0, playing:true}
 };
 const WORLD_OPTS = [["auto","Auto-morph"],["meadow","Meadow"],["canyon","Canyon"],["city","Neon City"],["islands","Islands"],["snow","Snowfield"],["alien","Alien"],
   ["haunted","Haunted Wood"],["volcano","Volcano"],["reef","Reef"],["drive","Sunset Drive"]];
@@ -613,7 +654,8 @@ let S = {...DEFAULTS};
 try{ Object.assign(S, JSON.parse(localStorage.getItem("peanutcam") || "{}")); }catch(e){}
 // settings that belong to "what's on screen": the peanut has its own copy, every character has its own
 const SCOPED = ["bg","bgColor","world","wBiome","wMorph","wSpeed","wRes","wJitter","wAffine","wDither","wDepth","wFog","wParallax","psx",
-  "skinMatch","depth","retouch","blend","eyeMargin","mouthMargin","feather","symFill","light","zoom"];
+  "skinMatch","depth","retouch","blend","eyeMargin","mouthMargin","feather","symFill","light","zoom",
+  "bgList","bgMode","bgVol","tv"];
 const NUT_KEYS = ["nX","nY","nScale","nRot","nSpin","nTilt"];
 const CHAR_KEYS = ["pX","pY","pScale","pRot","pEyeSize","pMouthSize","pMove","pStick","pShadow"];
 const MODEL_KEYS = ["faceMode","mEyeSpacing","mEyeY","mMouthY","mEyeSize","mMouthSize","mFaceZ","mEyeZ","mMouthZ","mEyeRot","mMouthRot","mCurve","mFaceK","mTurn","mHeadBone","mFrame"];
@@ -639,7 +681,7 @@ async function loadScope(id){
   const cfg = scopeCfg(id);
   for (const k of scopeKeys(id)) S[k] = k in cfg ? cfg[k] : DEFAULTS[k];
   await loadBgPhoto();
-  applyBg(); onChange("light"); resize(); WORLD.configure(); syncNutStyle();
+  applyBg(); onChange("light"); resize(); WORLD.configure(); syncNutStyle(); syncTV();
 }
 
 /* ---------- small helpers: haptics, toast, busy ---------- */
@@ -1732,7 +1774,9 @@ async function loadBgPhoto(){
   if (bgImageURL){ bgImg = new Image(); bgImg.src = bgImageURL; }
 }
 function applyBg(){
+  syncBgVideo();
   if (S.world){ stage.style.background = "#000"; floor.visible = false; return; }
+  if (S.bg === "video"){ stage.style.background = "#000"; floor.visible = S.floor; return; }
   if (S.bg === "image" && bgImageURL) stage.style.background = `#000 url("${bgImageURL}") center/cover no-repeat`;
   else if (S.bg === "custom" || S.bg === "image") stage.style.background = S.bgColor;
   else stage.style.background = BGS[S.bg] || BGS.roastery;
@@ -1744,6 +1788,307 @@ $("#bgFile").onchange = e => {
   bgImageURL = URL.createObjectURL(f); bgImg = new Image(); bgImg.src = bgImageURL; S.bg = "image"; S.world = false; applyBg(); WORLD.configure(); save(); renderBody(); e.target.value = "";
   idb.set("bgphoto:" + scopeId, f);
 };
+
+/* ---------- videos: background playlists, the mini TV and the sound mixer ----------
+   Clips live in IndexedDB ("media:<id>"). A playlist is a list of clip ids that plays one clip on a loop
+   or every clip in order, looping. All video sound goes through one WebAudio mixer, so recordings carry
+   it, and on Android it's handed to the app, which mixes it into the live stream with the microphone. */
+const own = k => { if (S[k] === DEFAULTS[k]) S[k] = structuredClone(DEFAULTS[k]); return S[k]; };   // scoped objects: never edit the shared default
+const AUD = {ctx:null, bus:null, speaker:null, rec:null, tap:null, gains:new Map()};
+function audioCtx(){
+  if (!AUD.ctx){
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+    try{ AUD.ctx = new AC({sampleRate:48000, latencyHint:"interactive"}); }catch(e){ AUD.ctx = new AC(); }
+    AUD.bus = AUD.ctx.createGain(); AUD.speaker = AUD.ctx.createGain(); AUD.speaker.gain.value = S.hearVideos ? 1 : 0;
+    AUD.bus.connect(AUD.speaker); AUD.speaker.connect(AUD.ctx.destination);
+  }
+  if (AUD.ctx.state === "suspended") AUD.ctx.resume().catch(() => {});
+  return AUD.ctx;
+}
+addEventListener("pointerdown", () => {                               // browsers start sound only after a touch
+  if (AUD.ctx?.state === "suspended") AUD.ctx.resume().catch(() => {});
+  for (const P of [BGP, TVP]) if (P.on && P.el.muted && P.vol > 0){ P.el.muted = false; P.el.play().catch(() => {}); }
+}, true);
+// each video element gets its own volume into the mixer (created the first time it plays with sound)
+function setVolume(P, v){
+  P.vol = v;
+  if (v > 0 && !AUD.gains.has(P.el)){
+    const ctx = audioCtx();
+    if (ctx){ const g = ctx.createGain(); g.gain.value = 0; ctx.createMediaElementSource(P.el).connect(g).connect(AUD.bus); AUD.gains.set(P.el, g); syncLiveTap(); }
+  }
+  const g = AUD.gains.get(P.el);
+  if (g){ g.gain.setTargetAtTime(v, AUD.ctx.currentTime, 0.03); P.el.muted = false; P.el.volume = 1; }
+  else { P.el.volume = clamp(v, 0, 1); P.el.muted = v <= 0; }
+}
+function syncHear(){ if (AUD.speaker) AUD.speaker.gain.setTargetAtTime(S.hearVideos ? 1 : 0, AUD.ctx.currentTime, 0.03); }
+class Playlist {
+  constructor(el){
+    this.el = el; this.ids = []; this.mode = "all"; this.i = 0; this.url = null; this.cur = null; this.on = false; this.vol = 0; this.onchange = null;
+    el.addEventListener("ended", () => this.next(true));
+    el.addEventListener("error", () => { if (this.ids.length > 1) setTimeout(() => this.next(true), 400); });
+    el.addEventListener("loadedmetadata", () => this.onchange?.());
+  }
+  // the list, how it loops, which clip; keeps playing the current clip when it's still in the list
+  async set(ids, mode, i = 0){
+    this.ids = [...(ids || [])]; this.mode = mode;
+    const keep = this.ids.indexOf(this.cur);
+    this.i = keep >= 0 ? keep : clamp(i | 0, 0, Math.max(0, this.ids.length - 1));
+    this.el.loop = mode === "one" || this.ids.length === 1;
+    await this.load();
+  }
+  async load(){
+    const id = this.ids[this.i] ?? null;
+    if (id === this.cur){ if (this.on && id) this.play(); return; }
+    this.cur = id;
+    if (this.url){ URL.revokeObjectURL(this.url); this.url = null; }
+    if (!id){ this.el.removeAttribute("src"); this.el.load(); this.onchange?.(); return; }
+    const m = await idb.get("media:" + id);
+    if (id !== this.cur || !m?.blob) return;
+    this.url = URL.createObjectURL(m.blob); this.el.src = this.url;
+    if (this.on) this.play();
+    this.onchange?.();
+  }
+  play(){
+    this.on = true; if (!this.cur) return;
+    this.el.play()?.catch?.(() => { this.el.muted = true; this.el.play().catch(() => {}); });   // no touch yet: start silent
+  }
+  pause(){ this.on = false; this.el.pause(); this.onchange?.(); }
+  toggle(){ this.on && !this.el.paused ? this.pause() : this.play(); this.onchange?.(); }
+  jump(i){
+    if (!this.ids.length) return;
+    this.i = (i + this.ids.length) % this.ids.length;
+    if (this.ids[this.i] === this.cur){ this.el.currentTime = 0; if (this.on) this.play(); this.onchange?.(); return; }
+    this.load();
+  }
+  next(auto){ if (auto && this.mode === "one"){ this.el.currentTime = 0; this.play(); return; } this.jump(this.i + 1); }
+  prev(){ this.el.currentTime > 3 ? (this.el.currentTime = 0) : this.jump(this.i - 1); }
+  stop(){ this.pause(); this.ids = []; this.cur = null; if (this.url){ URL.revokeObjectURL(this.url); this.url = null; } this.el.removeAttribute("src"); this.el.load(); }
+  get ready(){ return this.cur && this.el.readyState >= 2; }
+}
+const BGP = new Playlist($("#bgVid")), TVP = new Playlist($("#tvVid"));
+
+// background video: plays behind the 3D scene (and is painted into recordings and streams)
+function syncBgVideo(){
+  const on = S.bg === "video" && !S.world;
+  $("#bgVid").hidden = !on;
+  if (!on){ if (BGP.cur || BGP.on) BGP.stop(); return; }
+  BGP.set(own("bgList"), S.bgMode, 0).then(() => { setVolume(BGP, S.bgVol); BGP.play(); });
+}
+
+// ---- the mini TV: a little retro set in the scene with its own playlist
+const TV = {g:new THREE.Group(), screen:null, glass:null, tex:null, idle:null};
+(() => {
+  const plastic = new THREE.MeshStandardMaterial({color:0x3a2a20, roughness:0.5, metalness:0.05});
+  const trim = new THREE.MeshStandardMaterial({color:0xd8c3a0, roughness:0.4, metalness:0.2});
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.34, 0.9, 0.5), plastic); body.position.z = -0.27;
+  const bezel = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.76, 0.04), trim); bezel.position.z = -0.02;
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(1.14, 0.66), new THREE.MeshBasicMaterial({color:0x050505, toneMapped:false})); glass.position.z = 0.002;
+  // "no videos" card shown on the screen until a clip plays
+  const c = document.createElement("canvas"); c.width = 512; c.height = 296; const x = c.getContext("2d");
+  const g = x.createLinearGradient(0, 0, 0, 296); g.addColorStop(0, "#23170f"); g.addColorStop(1, "#0d0805"); x.fillStyle = g; x.fillRect(0, 0, 512, 296);
+  x.fillStyle = "#e3ad6b"; x.font = "700 34px system-ui, sans-serif"; x.textAlign = "center"; x.fillText("Tap the TV", 256, 140); x.fillStyle = "#b39a7e"; x.font = "500 22px system-ui, sans-serif"; x.fillText("to add videos", 256, 180);
+  TV.idle = new THREE.CanvasTexture(c); TV.idle.colorSpace = THREE.SRGBColorSpace;
+  TV.tex = new THREE.VideoTexture($("#tvVid")); TV.tex.colorSpace = THREE.SRGBColorSpace;
+  TV.screen = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({map:TV.idle, toneMapped:false})); TV.screen.position.z = 0.004; TV.screen.scale.set(1.14, 0.66, 1);
+  const leg = s => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.02, 0.32, 6), trim); m.position.set(s*0.48, -0.56, -0.27); m.rotation.z = s*0.22; return m; };
+  const ant = s => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.62, 5), trim); m.position.set(s*0.17, 0.72, -0.3); m.rotation.z = -s*0.5; return m; };
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), trim); knob.position.set(0, 0.47, -0.3);
+  TV.g.add(body, bezel, glass, TV.screen, leg(-1), leg(1), ant(-1), ant(1), knob);
+  TV.g.traverse(o => { if (o.material && !o.material.isShaderMaterial) psxPatch(o.material); });
+  TV.g.visible = false; scene.add(TV.g);
+})();
+TVP.onchange = () => {
+  const v = TVP.el, a = TVP.ready && v.videoWidth ? v.videoWidth / v.videoHeight : 0;
+  TV.screen.material.map = a ? TV.tex : TV.idle; TV.screen.material.needsUpdate = true;
+  const W = 1.14, Hh = 0.66;                                           // fit the clip inside the screen
+  if (!a) TV.screen.scale.set(W, Hh, 1); else if (a > W/Hh) TV.screen.scale.set(W, W/a, 1); else TV.screen.scale.set(Hh*a, Hh, 1);
+  syncTvBar();
+};
+$("#tvVid").addEventListener("playing", () => TVP.onchange());
+function tvCfg(){ return own("tv"); }
+function syncTV(){
+  const t = tvCfg(), show = t.on && mode !== "menu";
+  TV.g.visible = show;
+  TV.g.position.set(t.x, t.y, t.z); TV.g.scale.setScalar(t.s); TV.g.rotation.set(0, t.r, 0);
+  if (!show){ if (TVP.on) TVP.pause(); $("#tvBar").hidden = true; return; }
+  TVP.set(t.list, t.mode, t.i).then(() => { setVolume(TVP, t.vol); if (t.playing !== false) TVP.play(); syncTvBar(); });
+}
+// a new TV goes where you can see it: upper right of the current view, a little behind the character
+function addTV(){
+  const t = tvCfg();
+  if (!t.placed){
+    const z = -0.5, d = camera.position.distanceTo(VIEW.tgt) - z, hh = tanHalfFov()*d, hw = hh*camera.aspect;
+    t.s = clamp(hw*0.8/1.34, 0.3, 1.6); t.x = VIEW.tgt.x + hw - t.s*0.75; t.y = VIEW.tgt.y + hh*0.36; t.z = z; t.r = -0.3; t.placed = true;
+  }
+  t.on = true; save(); syncTV(); openTvBar(); if (!t.list.length) mediaSheet("tv");
+}
+
+// ---- the TV's controls: tap the TV to show them
+function openTvBar(){ $("#tvBar").hidden = false; syncTvBar(); }
+function syncTvBar(){
+  const bar = $("#tvBar"); if (bar.hidden) return;
+  const t = tvCfg(), playing = TVP.on && !TVP.el.paused;
+  $("#tvPlay").innerHTML = ico(playing ? "pause" : "play"); $("#tvPlay").setAttribute("aria-label", playing ? "Pause" : "Play");
+  $("#tvVol").value = t.vol;
+  $("#tvHear").classList.toggle("off", !S.hearVideos); $("#tvHear").innerHTML = ico(S.hearVideos ? "speaker" : "speakeroff");
+  const m = t.list.length ? `${TVP.i + 1}/${t.list.length}` : "—";
+  $("#tvInfo").textContent = m;
+}
+$("#tvPlay").onclick = () => { buzz(6); const t = tvCfg(); if (!t.list.length){ mediaSheet("tv"); return; } TVP.toggle(); t.playing = TVP.on; save(); syncTvBar(); };
+$("#tvNext").onclick = () => { buzz(6); TVP.next(); tvCfg().i = TVP.i; save(); };
+$("#tvPrev").onclick = () => { buzz(6); TVP.prev(); tvCfg().i = TVP.i; save(); };
+$("#tvVol").oninput = e => { const t = tvCfg(); t.vol = +e.target.value; setVolume(TVP, t.vol); };
+$("#tvVol").onchange = () => save();
+$("#tvHear").onclick = () => { buzz(6); S.hearVideos = !S.hearVideos; syncHear(); save(); syncTvBar(); toast(S.hearVideos ? "Video sound plays on this phone" : "Video sound goes only into recordings and the stream"); };
+$("#tvList").onclick = () => { buzz(6); mediaSheet("tv"); };
+$("#tvClose").onclick = () => { buzz(6); $("#tvBar").hidden = true; };
+$("#tvOff").onclick = () => { buzz(8); tvCfg().on = false; save(); syncTV(); toast("TV removed. Add it again in Settings › Look."); };
+TVP.el.addEventListener("play", syncTvBar); TVP.el.addEventListener("pause", syncTvBar);
+TVP.el.addEventListener("ended", () => { tvCfg().i = TVP.i; });
+
+// ---- touching the TV: drag to move it, pinch to resize, twist to turn it, tap for its controls
+const TVG = {pts:new Map(), base:null, moved:false, t0:0, max:0};
+const _tvr = new THREE.Raycaster(), _tvn = new THREE.Vector2();
+function tvHit(x, y){
+  if (!TV.g.visible) return false;
+  _tvn.set(x/innerWidth*2 - 1, -(y/innerHeight*2 - 1)); _tvr.setFromCamera(_tvn, camera);
+  return _tvr.intersectObject(TV.g, true).length > 0;
+}
+function tvBaseline(){
+  const p = [...TVG.pts.values()], t = tvCfg(), n = p.length;
+  TVG.base = {n, cx:p.reduce((a, q) => a + q.x, 0)/n, cy:p.reduce((a, q) => a + q.y, 0)/n, d:n > 1 ? Math.max(20, Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y)) : 1,
+    a:n > 1 ? Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x) : 0, x:t.x, y:t.y, z:t.z, s:t.s, r:t.r};
+}
+canvas.addEventListener("pointerdown", e => {
+  if (!TVG.pts.size && !tvHit(e.clientX, e.clientY)) return;
+  e.stopImmediatePropagation();
+  if (!TVG.pts.size){ TVG.moved = false; TVG.t0 = performance.now(); TVG.max = 0; }
+  TVG.pts.set(e.pointerId, {x:e.clientX, y:e.clientY}); TVG.max = Math.max(TVG.max, TVG.pts.size);
+  try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
+  tvBaseline();
+});
+canvas.addEventListener("pointermove", e => {
+  if (!TVG.pts.has(e.pointerId)) return;
+  e.stopImmediatePropagation();
+  TVG.pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  const p = [...TVG.pts.values()], b = TVG.base, t = tvCfg(); if (p.length !== b.n) return;
+  const cx = p.reduce((a, q) => a + q.x, 0)/b.n, cy = p.reduce((a, q) => a + q.y, 0)/b.n, dx = cx - b.cx, dy = cy - b.cy;
+  if (!TVG.moved && Math.hypot(dx, dy) < 6 && b.n === 1) return;
+  if (!TVG.moved){ TVG.moved = true; buzz(5); }
+  // move in the camera's own plane, at the TV's distance
+  const k = 2 * tanHalfFov() * camera.position.distanceTo(TV.g.position) / innerHeight;
+  const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion), up = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+  t.x = b.x + (right.x*dx - up.x*dy)*k; t.y = b.y + (right.y*dx - up.y*dy)*k; t.z = b.z + (right.z*dx - up.z*dy)*k;
+  if (b.n >= 2){
+    const d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); let da = Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x) - b.a;
+    if (da > Math.PI) da -= 2*Math.PI; if (da < -Math.PI) da += 2*Math.PI;
+    t.s = clamp(b.s * d / b.d, 0.2, 3); t.r = b.r - da;
+  }
+  TV.g.position.set(t.x, t.y, t.z); TV.g.scale.setScalar(t.s); TV.g.rotation.y = t.r;
+}, true);
+const tvEnd = e => {
+  if (!TVG.pts.delete(e.pointerId)) return;
+  e.stopImmediatePropagation();
+  if (TVG.pts.size){ tvBaseline(); return; }
+  if (!TVG.moved && TVG.max === 1 && performance.now() - TVG.t0 < 400){ buzz(8); $("#tvBar").hidden ? openTvBar() : ($("#tvBar").hidden = true); }
+  suppressClick = true; save();
+};
+canvas.addEventListener("pointerup", tvEnd, true); canvas.addEventListener("pointercancel", tvEnd, true);
+
+// ---- the playlist panel, shared by the background video and the TV
+const fmtDur = s => !isFinite(s) || s <= 0 ? "" : `${Math.floor(s/60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
+let mediaFor = "tv";
+function mediaSheet(kind){
+  mediaFor = kind;
+  const P = kind === "tv" ? TVP : BGP;
+  const st = () => kind === "tv" ? tvCfg() : {get list(){ return own("bgList"); }, get mode(){ return S.bgMode; }, set mode(v){ S.bgMode = v; }, get vol(){ return S.bgVol; }, set vol(v){ S.bgVol = v; }};
+  const apply = () => { save(); if (kind === "tv") syncTV(); else { if (S.bg !== "video" || S.world){ S.bg = "video"; S.world = false; applyBg(); WORLD.configure(); } else syncBgVideo(); } };
+  openModal(kind === "tv" ? "TV videos" : "Background video", b => {
+    const list = el("div", "vlist"), draw = async () => {
+      const ids = st().list; list.innerHTML = "";
+      if (!ids.length) list.append(el("p", "note", kind === "tv" ? "No videos yet. Add some and they play on the TV in the scene." : "No videos yet. Add some and they play behind your character."));
+      for (let i = 0; i < ids.length; i++){
+        const m = await idb.get("media:" + ids[i]);
+        const r = el("div", "vrow" + (P.cur === ids[i] ? " on" : ""));
+        r.innerHTML = `<button class="vname press"><b>${i + 1}</b><span></span><small>${fmtDur(m?.dur)}</small></button>
+          <button class="step press" aria-label="Move up">${ico("up")}</button><button class="step press" aria-label="Move down">${ico("down")}</button><button class="step press" aria-label="Remove">${ico("x")}</button>`;
+        r.querySelector("span").textContent = m?.name || "Video";
+        const [nm, up, dn, rm] = r.querySelectorAll("button");
+        nm.onclick = () => { buzz(6); P.on = true; P.jump(i); if (kind === "tv") st().i = i; save(); setTimeout(draw, 150); };
+        up.onclick = () => { if (i){ [ids[i-1], ids[i]] = [ids[i], ids[i-1]]; buzz(5); apply(); draw(); } };
+        dn.onclick = () => { if (i < ids.length - 1){ [ids[i+1], ids[i]] = [ids[i], ids[i+1]]; buzz(5); apply(); draw(); } };
+        rm.onclick = () => { const [id] = ids.splice(i, 1); idb.set("media:" + id, null); buzz(8); apply(); draw(); };
+        list.append(r);
+      }
+    };
+    const add = el("button", "pill hot press", `${ico("plus")}Add videos`); add.style.width = "100%";
+    add.onclick = () => { buzz(8); $("#vidFiles").click(); };
+    b.append(add, list);
+    b.append(el("div", "sec", "Playing"));
+    const chips = el("div", "chips");
+    for (const [v, label] of [["all", "Play all in order, loop"], ["one", "Loop one video"]]){
+      const c = el("button", "chip press", label); c.setAttribute("aria-pressed", st().mode === v);
+      c.onclick = () => { st().mode = v; buzz(6); chips.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === c)); apply(); };
+      chips.append(c);
+    }
+    b.append(chips);
+    const vr = el("label", "vvol", `<span>Sound</span><input type="range" min="0" max="1" step="0.01" aria-label="Video volume">`), vi = vr.querySelector("input");
+    vi.value = st().vol; vi.oninput = () => { st().vol = +vi.value; setVolume(P, st().vol); }; vi.onchange = () => save();
+    b.append(vr);
+    const hr = el("div", "srow", `<span class="slabel">Hear video sound on this phone</span>`), hs = el("button", "switch");
+    hs.setAttribute("role", "switch"); hs.setAttribute("aria-checked", !!S.hearVideos);
+    hs.onclick = () => { S.hearVideos = !S.hearVideos; hs.setAttribute("aria-checked", S.hearVideos); syncHear(); save(); syncTvBar(); buzz(6); };
+    hr.append(hs); b.append(hr);
+    b.append(el("p", "note", "Video sound is included in recordings and live streams. If you stream with the microphone on, wear headphones so the mic doesn't pick the video up a second time."));
+    if (kind === "tv"){ const off = el("button", "pill press danger", "Remove the TV"); off.style.width = "100%"; off.onclick = () => { closeModal(); $("#tvOff").click(); }; b.append(off); }
+    mediaSheet.redraw = draw; draw();
+  });
+}
+$("#vidFiles").onchange = async e => {
+  const files = [...e.target.files].filter(f => f.type.startsWith("video/") || /\.(mp4|webm|mov|m4v|mkv|3gp)$/i.test(f.name)); e.target.value = "";
+  if (!files.length){ toast("Pick video files (MP4 or WebM work best)."); return; }
+  busy("Adding videos…");
+  const ids = mediaFor === "tv" ? tvCfg().list : own("bgList");
+  for (const f of files){
+    const dur = await new Promise(res => { const v = document.createElement("video"); v.preload = "metadata"; v.onloadedmetadata = () => { res(v.duration); URL.revokeObjectURL(v.src); }; v.onerror = () => res(0); v.src = URL.createObjectURL(f); setTimeout(() => res(0), 5000); });
+    const id = newId(); await idb.set("media:" + id, {id, name:f.name.replace(/\.[a-z0-9]+$/i, "").slice(0, 40), blob:f, dur}); ids.push(id);
+  }
+  busy(); save();
+  if (mediaFor === "tv"){ const t = tvCfg(); t.on = true; t.playing = true; syncTV(); TVP.on = true; }
+  else { S.bg = "video"; S.world = false; applyBg(); WORLD.configure(); }
+  mediaSheet.redraw?.(); toast(files.length === 1 ? "Video added" : files.length + " videos added");
+};
+
+// ---- video sound into the live stream: 20 ms blocks of 48 kHz stereo PCM, base64, to the app
+const TAP_SRC = `class PcTap extends AudioWorkletProcessor{ process(ins, outs){ const i = ins[0]; if (i && i.length){ this.port.postMessage([i[0].slice(0), (i[1] || i[0]).slice(0)]); } return true; } } registerProcessor("pc-tap", PcTap);`;
+const PCM = {buf:new Int16Array(960*2), n:0, frac:0};
+async function syncLiveTap(){
+  const N = window.PeanutLive, want = !!(AUD.ctx && AUD.gains.size && N?.pcm && typeof liveOn === "function" && liveOn());
+  if (want && !AUD.tap){
+    try{
+      if (!AUD.tapReady){ const u = URL.createObjectURL(new Blob([TAP_SRC], {type:"text/javascript"})); await AUD.ctx.audioWorklet.addModule(u); AUD.tapReady = true; }
+      if (AUD.tap || !liveOn()) return;
+      const node = new AudioWorkletNode(AUD.ctx, "pc-tap", {numberOfInputs:1, numberOfOutputs:1, outputChannelCount:[2]});
+      const sink = AUD.ctx.createGain(); sink.gain.value = 0; node.connect(sink).connect(AUD.ctx.destination);   // keeps it running, silently
+      node.port.onmessage = e => pushPcm(e.data[0], e.data[1]);
+      AUD.bus.connect(node); AUD.tap = {node, sink};
+    }catch(e){ console.warn("video sound can't reach the stream:", e); }
+  } else if (!want && AUD.tap){
+    try{ AUD.bus.disconnect(AUD.tap.node); AUD.tap.node.disconnect(); AUD.tap.sink.disconnect(); }catch(e){}
+    AUD.tap.node.port.onmessage = null; AUD.tap = null; PCM.n = 0;
+  }
+}
+function pushPcm(L, R){
+  const N = window.PeanutLive; if (!N?.pcm) return;
+  const step = AUD.ctx.sampleRate / 48000;                              // resample if the phone wouldn't run at 48 kHz
+  let t = PCM.frac;
+  for (; t < L.length; t += step){
+    const i = t | 0;
+    PCM.buf[PCM.n*2] = clamp(L[i], -1, 1) * 32767; PCM.buf[PCM.n*2 + 1] = clamp(R[i], -1, 1) * 32767;
+    if (++PCM.n === 960){ N.pcm(u8b64(new Uint8Array(PCM.buf.buffer))); PCM.n = 0; }
+  }
+  PCM.frac = t - L.length;
+}
 
 /* ---------- camera ---------- */
 const video = $("#pip");
@@ -2603,8 +2948,9 @@ async function deleteChar(id){
   if (scopeId === id){ scopeId = "peanut"; clearPuppet(); PUP = null; if (mode === "puppet" || mode === "model") goMenu(); }
   renderChars(); toast("Character deleted");
 }
+const VIDEO_CSS = "repeating-linear-gradient(90deg,#1a1410 0 10px,#2b2018 10px 12px),#000";
 const bgCss = cfg => cfg.world ? "linear-gradient(180deg,#3a1250 0%,#ff4fd8 52%,#1b0f2e 52%,#120a20 100%)"
-  : cfg.bg === "custom" || cfg.bg === "image" ? (cfg.bgColor || "#333") : (BGS[cfg.bg] || BGS.roastery);
+  : cfg.bg === "video" ? VIDEO_CSS : cfg.bg === "custom" || cfg.bg === "image" ? (cfg.bgColor || "#333") : (BGS[cfg.bg] || BGS.roastery);
 function renderChars(){
   const row = $("#charRow"); if (!row) return;
   row.innerHTML = "";
@@ -2711,7 +3057,8 @@ function bgPicker(id, host){
     cs.setAttribute("aria-pressed", !cfg.world && cfg.bg === "custom");
     cs.querySelector("input").onchange = e => { cfg.bgColor = e.target.value; cfg.bg = "custom"; cfg.world = false; commit(); };
     row.append(cs);
-    if (live){ const ph = el("button", "sw press", `<i style="background:var(--raise);display:grid;place-items:center">${ico("image")}</i>Photo`); ph.setAttribute("aria-pressed", !cfg.world && cfg.bg === "image"); ph.onclick = () => $("#bgFile").click(); row.append(ph); }
+    if (live){ const ph = el("button", "sw press", `<i style="background:var(--raise);display:grid;place-items:center">${ico("image")}</i>Photo`); ph.setAttribute("aria-pressed", !cfg.world && cfg.bg === "image"); ph.onclick = () => $("#bgFile").click(); row.append(ph);
+      const vs = el("button", "sw press", `<i style="background:var(--raise);display:grid;place-items:center">${ico("film")}</i>Video`); vs.setAttribute("aria-pressed", !cfg.world && cfg.bg === "video"); vs.onclick = () => mediaSheet("bg"); row.append(vs); }
     host.append(row);
     if (cfg.world){
       host.append(el("div", "sec", "3D world"));
@@ -2771,14 +3118,14 @@ const MODEL_LOOK = ["look","Look",[CH("psx","Style",[["modern","Modern"],["ps2",
     RG("wFog","Fog",0,1,0.01), RG("wParallax","Head parallax",0,1,0.01), TG("wAffine","Texture warp")]},
   {t:"if", when:() => S.world || S.psx !== "modern", items:[SEC("Retro rendering"), CH("wRes","Resolution",[[200,"200p"],[240,"240p"],[360,"360p"],[480,"480p"]]), RG("wJitter","Vertex wobble",0,1,0.01),
     RG("wDither","Dithering",0,1,0.01), CH("wDepth","Colour depth",[[15,"15-bit"],[12,"12-bit"],[9,"9-bit"]])]},
-  RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX)]];
+  RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX), {t:"tv"}]];
 const TABS = {
   peanut: [
     ["look","Look",[CH("psx","Style",[["modern","Modern"],["ps2","PS2"],["ps1","PS1"]]), {t:"bg"}, {t:"if", when:() => S.world, items:[SEC("3D world"), CH("wBiome","World",WORLD_OPTS), RG("wMorph","Morph every",5,60,1,v => Math.round(v) + "s"), RG("wSpeed","Fly speed",0,1,0.01),
       RG("wFog","Fog",0,1,0.01), RG("wParallax","Head parallax",0,1,0.01), TG("wAffine","Texture warp")]},
     {t:"if", when:() => S.world || S.psx !== "modern", items:[SEC("Retro rendering"), CH("wRes","Resolution",[[200,"200p"],[240,"240p"],[360,"360p"],[480,"480p"]]), RG("wJitter","Vertex wobble",0,1,0.01),
       RG("wDither","Dithering",0,1,0.01), CH("wDepth","Colour depth",[[15,"15-bit"],[12,"12-bit"],[9,"9-bit"]])]}, CH("roast","Roast",[[0.08,"Raw","#e6c08f"],[0.35,"Golden","#c8945a"],[0.6,"Roasted","#9a6337"],[0.92,"Burnt","#4b2c17"]]),
-      RG("bump","Shell texture",0,3,0.05,fmtX), RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX), TG("floor","Floor shadow")]],
+      RG("bump","Shell texture",0,3,0.05,fmtX), RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX), TG("floor","Floor shadow"), {t:"tv"}]],
     ["face","Face",[SEC("Placement"), RG("eyeSize","Eye size",0.5,1.8,0.02,fmtX), RG("eyeSpacing","Eye spacing",0.2,0.6,0.01,fmtN), RG("eyeHeight","Eye height",0.6,1.6,0.02,fmtN),
       RG("mouthSize","Mouth size",0.5,1.8,0.02,fmtX), RG("mouthHeight","Mouth height",0,1.2,0.02,fmtN), ...faceShared("Blend skin into shell")]],
     motionTab, cameraTab
@@ -2792,7 +3139,7 @@ const TABS = {
     ["look","Look",[CH("psx","Style",[["modern","Modern"],["ps2","PS2"],["ps1","PS1"]]), {t:"bg"}, {t:"if", when:() => S.world, items:[SEC("3D world"), CH("wBiome","World",WORLD_OPTS), RG("wMorph","Morph every",5,60,1,v => Math.round(v) + "s"), RG("wSpeed","Fly speed",0,1,0.01),
       RG("wFog","Fog",0,1,0.01), RG("wParallax","Head parallax",0,1,0.01), TG("wAffine","Texture warp")]},
     {t:"if", when:() => S.world || S.psx !== "modern", items:[SEC("Retro rendering"), CH("wRes","Resolution",[[200,"200p"],[240,"240p"],[360,"360p"],[480,"480p"]]), RG("wJitter","Vertex wobble",0,1,0.01),
-      RG("wDither","Dithering",0,1,0.01), CH("wDepth","Colour depth",[[15,"15-bit"],[12,"12-bit"],[9,"9-bit"]])]}, RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX)]],
+      RG("wDither","Dithering",0,1,0.01), CH("wDepth","Colour depth",[[15,"15-bit"],[12,"12-bit"],[9,"9-bit"]])]}, RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX), {t:"tv"}]],
     ["face","Face",[SEC("Placement"), RG("pEyeSize","Eye size",0.5,2,0.02,fmtX), RG("pMouthSize","Mouth size",0.5,2,0.02,fmtX), {t:"btns", items:[["Move eyes and mouth","layout"]]},
       ...faceShared("Blend skin into picture")]],
     motionTab, cameraTab
@@ -2890,7 +3237,9 @@ function buildItem(it){
     ci.onchange = save;
     const im = el("button", "sw press", `<i style="background:var(--raise);display:grid;place-items:center">${ico("image")}</i>Photo`); im.dataset.bg = "image";
     im.onclick = () => $("#bgFile").click();
-    row.append(cs, im); mark();
+    const vs = el("button", "sw press", `<i style="background:var(--raise);display:grid;place-items:center">${ico("film")}</i>Video`); vs.dataset.bg = "video";
+    vs.onclick = () => { buzz(6); if (own("bgList").length){ S.bg = "video"; S.world = false; applyBg(); WORLD.configure(); save(); mark(); } mediaSheet("bg"); };
+    row.append(cs, im, vs); mark();
     wrap.append(row); return wrap;
   }
   if (it.t === "btns"){
@@ -2903,6 +3252,15 @@ function buildItem(it){
     return row;
   }
   if (it.t === "note") return el("p", "note", it.text);
+  if (it.t === "tv"){
+    const w = el("div"); w.append(el("div", "sec", "Mini TV"));
+    const t = tvCfg(), row = el("div", "btnrow");
+    const a = el("button", "pill press" + (t.on ? "" : " hot"), `${ico("tv")}${t.on ? "TV videos" : "Add a TV"}`); a.onclick = () => { buzz(8); if (t.on) mediaSheet("tv"); else { closeSheet(); addTV(); } };
+    row.append(a);
+    if (t.on){ const r = el("button", "pill press", "Remove TV"); r.onclick = () => { buzz(8); t.on = false; save(); syncTV(); renderBody(); }; row.append(r); }
+    w.append(row, el("p", "note", "A little TV in the scene that plays your videos, so your character can watch and react. Drag it to move it, pinch to resize, twist to turn it, tap it for play, volume and the playlist."));
+    return w;
+  }
   if (it.t === "gestures"){
     const w = el("div"); w.append(el("div", "sec", "Touch controls"), gestureList());
     const r = el("div", "btnrow"); const b = el("button", "pill press", "Reset position"); b.onclick = () => { buzz(8); resetPose(); }; r.append(b); w.append(r);
@@ -3378,7 +3736,7 @@ async function ensureCamera(){
 function enterMode(m){
   mode = m; document.body.dataset.mode = m;
   showStage(m === "puppet" ? "puppet" : m === "model" ? "model" : "peanut");
-  closeSheet(); buzz(12); syncArms(); ensureBody();
+  closeSheet(); buzz(12); syncArms(); ensureBody(); syncTV();
   // first time: show the touch tips, unless a tool (placing the face, editing) has opened in the meantime
   if (!S.coachSeen) setTimeout(() => { if (S.coachSeen || PF.on || RIGE.on || editing || mode === "menu") return; S.coachSeen = true; save(); showGestures(); }, 700);
 }
@@ -3386,7 +3744,7 @@ async function goMenu(){
   if (RIGE.on) rigEnd();
   if (PF.on) placeFaceEnd();
   closeEditor(); closeSheet(); stopRec();
-  mode = "menu"; document.body.dataset.mode = "menu";
+  mode = "menu"; document.body.dataset.mode = "menu"; syncTV();
   await loadScope("peanut");
   showStage("peanut"); menuPose(); renderChars(); buzz(8);
 }
@@ -3573,6 +3931,9 @@ function paintBg(x, w, h){
     case "night": fill(rad([[0,"#34508f"],[0.7,"#0a0e1f"],[1,"#0a0e1f"]], w*0.5, h*1.15, R*1.1)); break;
     case "green": fill("#00ff00"); break;
     case "blue": fill("#0047bb"); break;
+    case "video":
+      if (BGP.ready){ const v = BGP.el, k = Math.max(w / v.videoWidth, h / v.videoHeight), iw = v.videoWidth*k, ih = v.videoHeight*k; fill("#000"); x.drawImage(v, (w - iw)/2, (h - ih)/2, iw, ih); }
+      else fill("#000"); break;
     case "image":
       if (bgImg?.complete && bgImg.naturalWidth){ const k = Math.max(w / bgImg.naturalWidth, h / bgImg.naturalHeight), iw = bgImg.naturalWidth*k, ih = bgImg.naturalHeight*k; fill("#000"); x.drawImage(bgImg, (w - iw)/2, (h - ih)/2, iw, ih); }
       else fill(S.bgColor); break;
@@ -3582,7 +3943,7 @@ function paintBg(x, w, h){
 function recFrame(){
   if (!REC.on) return;
   const w = REC.c.width, h = REC.c.height, k = `${S.bg}|${S.bgColor}|${bgImg?.src || ""}|${w}x${h}`;
-  if (k !== REC.bgKey){ paintBg(REC.bg.getContext("2d"), w, h); REC.bgKey = k; }
+  if (k !== REC.bgKey || S.bg === "video"){ paintBg(REC.bg.getContext("2d"), w, h); REC.bgKey = k; }   // a video background changes every frame
   if (S.world){ REC.x.drawImage(canvas, 0, 0, w, h); return; }
   REC.x.drawImage(REC.bg, 0, 0);
   REC.x.drawImage(canvas, 0, 0, w, h);
@@ -3599,9 +3960,15 @@ async function startRec(){
   REC.bg = document.createElement("canvas"); REC.bg.width = w; REC.bg.height = h; REC.bgKey = "";
   const tracks = [...REC.c.captureStream(30).getVideoTracks()];
   if (S.recMic){
-    try{ REC.mic = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}}); tracks.push(...REC.mic.getAudioTracks()); }
+    try{ REC.mic = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}}); }
     catch(e){ REC.mic = null; toast("Microphone is blocked, so this recording has no sound."); }
   }
+  if (AUD.gains.size){
+    // videos are playing sound: record the mixer (videos + microphone) instead of the bare microphone
+    if (!AUD.rec){ AUD.rec = AUD.ctx.createMediaStreamDestination(); AUD.bus.connect(AUD.rec); }
+    if (REC.mic){ REC.micNode = AUD.ctx.createMediaStreamSource(REC.mic); REC.micNode.connect(AUD.rec); }
+    tracks.push(...AUD.rec.stream.getAudioTracks());
+  } else if (REC.mic) tracks.push(...REC.mic.getAudioTracks());
   try{ window.PeanutNative?.prepare?.(); }catch(e){}
   try{ REC.mr = new MediaRecorder(new MediaStream(tracks), {mimeType:REC.mime, videoBitsPerSecond:6_000_000}); }
   catch(e){ REC.mic?.getTracks().forEach(t => t.stop()); toast("Couldn't start recording."); return; }
@@ -3616,6 +3983,7 @@ async function startRec(){
 function stopRec(){
   if (!REC.on) return;
   REC.on = false; REC.mr.stop(); REC.mic?.getTracks().forEach(t => t.stop()); REC.mic = null;
+  try{ REC.micNode?.disconnect(); }catch(e){} REC.micNode = null;
   $("#rec").classList.remove("on"); $("#rec").setAttribute("aria-label", "Start recording"); $("#recChip").hidden = true;
   buzz([15, 60, 15]);
 }
@@ -3768,7 +4136,7 @@ function liveCompose(){
   const {x, w, h} = LIVE, cw = canvas.width, ch = canvas.height;
   if (S.world){ const k = Math.max(w/cw, h/ch); x.drawImage(canvas, (w - cw*k)/2, (h - ch*k)/2, cw*k, ch*k); return; }
   const key = `${S.bg}|${S.bgColor}|${bgImg?.src || ""}`;
-  if (key !== LIVE.bgKey){ paintBg(LIVE.bg.getContext("2d"), w, h); LIVE.bgKey = key; }
+  if (key !== LIVE.bgKey || S.bg === "video"){ paintBg(LIVE.bg.getContext("2d"), w, h); LIVE.bgKey = key; }
   x.drawImage(LIVE.bg, 0, 0);
   const k = Math.min(w/cw, h/ch); x.drawImage(canvas, (w - cw*k)/2, (h - ch*k)/2, cw*k, ch*k);
 }
@@ -3848,6 +4216,7 @@ window.onLive = e => {
 };
 const clock = s => `${Math.floor(s/3600) ? Math.floor(s/3600) + ":" : ""}${String(Math.floor(s/60) % 60).padStart(Math.floor(s/3600) ? 2 : 1, "0")}:${String(s % 60).padStart(2, "0")}`;
 function liveRender(){
+  syncLiveTap();
   const on = liveOn() || LIVE.state === "stopping", st = LIVE.stats;
   document.body.classList.toggle("live", on);
   const chip = $("#liveChip");

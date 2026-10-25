@@ -55,6 +55,44 @@ final class MicEncoder {
     /** Delays the sound against the picture (the picture is a little behind, after face tracking). */
     void setOffsetMs(int ms) { offsetMs = Math.max(0, Math.min(1000, ms)); }
 
+    // ---- other sound mixed in (the page's video sound): 48 kHz stereo, interleaved, through a small jitter buffer.
+    // The page and the mic run on slightly different clocks, so the buffer trims itself when it grows and
+    // waits to refill when it runs dry, instead of drifting.
+    private final short[] ring = new short[RATE * CHANNELS];             // one second
+    private int ringHead, ringCount;
+    private boolean ringPrimed;
+    private static final int RING_START = RATE * CHANNELS * 60 / 1000;   // 60 ms before mixing starts
+    private static final int RING_MAX = RATE * CHANNELS * 300 / 1000;    // more than this: drop the oldest down to 100 ms
+
+    void mixIn(short[] pcm, int n) {
+        synchronized (ring) {
+            for (int i = 0; i < n; i++) {
+                if (ringCount == ring.length) { ringHead = (ringHead + 1) % ring.length; ringCount--; }
+                ring[(ringHead + ringCount) % ring.length] = pcm[i];
+                ringCount++;
+            }
+        }
+    }
+
+    /** Fills dst with up to n mixed-in samples; returns how many are real (the rest are left as they are). */
+    private int pullMix(short[] dst, int n) {
+        synchronized (ring) {
+            if (ringCount > RING_MAX) {
+                int drop = (ringCount - RATE * CHANNELS / 10) & ~1;
+                ringHead = (ringHead + drop) % ring.length; ringCount -= drop;
+            }
+            if (!ringPrimed) {
+                if (ringCount < RING_START) return 0;
+                ringPrimed = true;
+            }
+            int k = Math.min(n, ringCount);
+            for (int i = 0; i < k; i++) dst[i] = ring[(ringHead + i) % ring.length];
+            ringHead = (ringHead + k) % ring.length; ringCount -= k;
+            if (k < n) ringPrimed = false;                                 // ran dry: wait to refill
+            return k;
+        }
+    }
+
     void start() {
         running = true;
         thread = new Thread(this::run, "live-audio");
@@ -80,6 +118,7 @@ final class MicEncoder {
             codec.start();
 
             short[] mono = new short[FRAME];
+            short[] mix = new short[FRAME * CHANNELS];
             MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
             byte[] out = new byte[8192];
             long startNs = System.nanoTime(), samples = 0, nextMicTry = 0;
@@ -129,7 +168,13 @@ final class MicEncoder {
                     ByteBuffer in = codec.getInputBuffer(ix);
                     in.clear();
                     in.order(ByteOrder.LITTLE_ENDIAN);
-                    for (int i = 0; i < n; i++) { short v = mono[i]; in.putShort(v); in.putShort(v); }
+                    int mixed = pullMix(mix, n * CHANNELS);
+                    for (int i = 0; i < n; i++) {
+                        int l = mono[i], r = mono[i];
+                        if (i * 2 + 1 < mixed) { l += mix[i * 2]; r += mix[i * 2 + 1]; }
+                        in.putShort((short) Math.max(-32768, Math.min(32767, l)));
+                        in.putShort((short) Math.max(-32768, Math.min(32767, r)));
+                    }
                     long ptsUs = (startNs - t0Nanos) / 1000 + samples * 1_000_000L / RATE;
                     codec.queueInputBuffer(ix, 0, n * CHANNELS * 2, Math.max(0, ptsUs), 0);
                 }
