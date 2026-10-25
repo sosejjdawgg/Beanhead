@@ -199,10 +199,13 @@ body[data-mode=puppet] .puppet-only{display:flex!important}
 .clean #hud *{pointer-events:none!important}
 /* videos */
 #bgVid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+#tvAmb{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;filter:blur(22px) brightness(.55) saturate(1.4);transform:scale(1.15)}
 #tvBar{position:fixed;z-index:22;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(92px + env(safe-area-inset-bottom,0px));width:min(300px,calc(100% - 176px));padding:6px 8px;border-radius:20px;
   background:var(--panel2);backdrop-filter:blur(16px);box-shadow:inset 0 0 0 1px var(--line),0 14px 40px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:4px;animation:up .4s var(--spring) both}
 .tvrow{display:flex;align-items:center;gap:4px}
-#tvInfo{font:500 11px var(--mono);color:var(--mute);padding-left:4px;min-width:30px}
+.tvt{font:500 11px var(--mono);color:var(--mute);min-width:32px;text-align:center}
+#tvSeek{flex:1;min-width:0;accent-color:var(--nut)}
+.tvb.on{background:var(--nut);color:#1d1109}
 .tvb{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:var(--ink);flex:none}
 .tvrow.ctl{justify-content:space-between}
 .tvb.big{background:var(--ink);color:#1d1109}
@@ -506,7 +509,7 @@ body.rigging #hud *{pointer-events:none!important}
   <symbol id="t-puppet" viewBox="0 0 24 24"><path d="M5 12a7 7 0 0 1 14 0"/><path d="M5 12l-1-4M19 12l1-4"/><path d="M5 14h14v2a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5z"/></symbol>
 </svg>
 
-<div id="stage"><video id="bgVid" playsinline loop muted hidden></video><canvas id="gl"></canvas></div>
+<div id="stage"><video id="bgVid" playsinline loop muted hidden></video><canvas id="tvAmb" hidden aria-hidden="true"></canvas><canvas id="gl"></canvas></div>
 <video id="tvVid" playsinline hidden></video>
 
 <!-- ===== menu ===== -->
@@ -575,8 +578,9 @@ body.rigging #hud *{pointer-events:none!important}
 <div id="modal" hidden><div class="mback"></div><div class="mpanel" role="dialog" aria-modal="true"><div class="mhead"><h2 id="mTitle"></h2><button class="sh-x press" id="mClose" aria-label="Close"><svg class="i"><use href="#x"/></svg></button></div><div id="mBody"></div></div></div>
 <button id="liveChip" hidden aria-label="Live stream"><b></b><span id="liveTxt">LIVE</span></button>
 <div id="tvBar" hidden role="toolbar" aria-label="TV controls">
-  <div class="tvrow"><span id="tvInfo"></span><input type="range" id="tvVol" min="0" max="1" step="0.01" aria-label="TV volume"><button class="tvb press" id="tvList" aria-label="TV videos"><svg class="i"><use href="#list"/></svg></button><button class="tvb press" id="tvClose" aria-label="Close TV controls"><svg class="i"><use href="#x"/></svg></button></div>
-  <div class="tvrow ctl"><button class="tvb press" id="tvPrev" aria-label="Previous video"><svg class="i"><use href="#prev"/></svg></button><button class="tvb big press" id="tvPlay" aria-label="Play"><svg class="i"><use href="#play"/></svg></button><button class="tvb press" id="tvNext" aria-label="Next video"><svg class="i"><use href="#next"/></svg></button><button class="tvb press" id="tvHear" aria-label="Hear video sound on this phone"><svg class="i"><use href="#speaker"/></svg></button><button class="tvb press" id="tvOff" aria-label="Remove the TV"><svg class="i"><use href="#trash"/></svg></button></div>
+  <div class="tvrow"><span class="tvt" id="tvTime">0:00</span><input type="range" id="tvSeek" min="0" max="1" step="0.1" aria-label="Position in the video"><span class="tvt" id="tvDur">0:00</span></div>
+  <div class="tvrow ctl"><button class="tvb press" id="tvPrev" aria-label="Previous video"><svg class="i"><use href="#prev"/></svg></button><button class="tvb big press" id="tvPlay" aria-label="Play"><svg class="i"><use href="#play"/></svg></button><button class="tvb press" id="tvNext" aria-label="Next video"><svg class="i"><use href="#next"/></svg></button><button class="tvb press" id="tvCam" aria-label="Camera on the TV"><svg class="i"><use href="#t-camera"/></svg></button><button class="tvb press" id="tvSet" aria-label="TV settings"><svg class="i"><use href="#sliders"/></svg></button></div>
+  <div class="tvrow"><input type="range" id="tvVol" min="0" max="1" step="0.01" aria-label="TV volume"><button class="tvb press" id="tvHear" aria-label="Hear video sound on this phone"><svg class="i"><use href="#speaker"/></svg></button><button class="tvb press" id="tvList" aria-label="TV videos"><svg class="i"><use href="#list"/></svg></button><button class="tvb press" id="tvClose" aria-label="Close TV controls"><svg class="i"><use href="#x"/></svg></button></div>
 </div>
 <nav id="shotBar" hidden aria-label="Cameras"></nav>
 <div id="camPad" hidden></div>
@@ -666,7 +670,8 @@ const DEFAULTS = {
   faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mEyeZ:0, mMouthZ:0, mEyeRot:0, mMouthRot:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true, mFrame:"full",
   mirror:true, pip_on:true, deviceId:"", facing:"user", hearVideos:true,
   studio:{cast:[], shots:[], shot:-1, smooth:true, lock:false},
-  bgList:[], bgMode:"all", bgVol:0, tv:{on:false, x:1.05, y:1.3, z:0.4, s:0.7, r:-0.35, list:[], mode:"all", vol:0.8, i:0, playing:true}
+  bgList:[], bgMode:"all", bgVol:0, tv:{on:false, x:1.05, y:1.3, z:0.4, s:0.7, r:-0.35, list:[], mode:"all", vol:0.8, i:0, playing:true,
+    model:"retro", tilt:0, lean:0, fit:"fit", trim:true, zoom:1, sharp:0.35, bright:0.03, contrast:1.08, sat:1.12, scan:null, amb:false, speed:1, front:true}
 };
 const WORLD_OPTS = [["auto","Auto-morph"],["meadow","Meadow"],["canyon","Canyon"],["city","Neon City"],["islands","Islands"],["snow","Snowfield"],["alien","Alien"],
   ["haunted","Haunted Wood"],["volcano","Volcano"],["reef","Reef"],["drive","Sunset Drive"]];
@@ -1889,7 +1894,7 @@ class Playlist {
     if (!id){ this.el.removeAttribute("src"); this.el.load(); this.onchange?.(); return; }
     const m = await idb.get("media:" + id);
     if (id !== this.cur || !m?.blob) return;
-    this.url = URL.createObjectURL(m.blob); this.el.src = this.url;
+    this.url = URL.createObjectURL(m.blob); this.el.src = this.url; this.name = m.name;
     if (this.on) this.play();
     this.onchange?.();
   }
@@ -1920,45 +1925,150 @@ function syncBgVideo(){
   BGP.set(own("bgList"), S.bgMode, 0).then(() => { setVolume(BGP, S.bgVol); BGP.play(); });
 }
 
-// ---- the mini TV: a little retro set in the scene with its own playlist
-const TV = {g:new THREE.Group(), screen:null, glass:null, tex:null, idle:null};
+// ---- the mini TV: a set in the scene with its own playlist. Four models; the picture goes through a screen
+// shader (black-bar trimming, fit/fill, zoom, sharpness, brightness, contrast, colour, CRT scanlines)
+const TV = {g:new THREE.Group(), frame:new THREE.Group(), screen:null, mat:null, tex:null, idle:null, model:null};
+// "always in front": the TV renders in this scene after everything else, with its own copy of the lights
+const tvScene = new THREE.Scene(), tvHemi = hemi.clone(), tvKey = key.clone(), tvRim = rim.clone();
+tvScene.add(tvHemi, tvKey, tvRim); tvScene.environment = scene.environment;
+function renderTvFront(){
+  if (TV.g.parent !== tvScene || !TV.g.visible) return;
+  tvHemi.intensity = hemi.intensity; tvKey.intensity = key.intensity; tvRim.intensity = rim.intensity;
+  renderer.autoClear = false; renderer.clearDepth(); renderer.render(tvScene, camera); renderer.autoClear = true;
+}
+const TV_MODELS = {
+  retro:{label:"Retro", W:1.14, H:0.66},
+  flat:{label:"Flat screen", W:1.6, H:0.9},
+  crt:{label:"Big CRT", W:1.24, H:0.93, curve:1},
+  monitor:{label:"Computer monitor", W:1.44, H:0.9}
+};
 (() => {
-  const plastic = new THREE.MeshStandardMaterial({color:0x3a2a20, roughness:0.5, metalness:0.05});
-  const trim = new THREE.MeshStandardMaterial({color:0xd8c3a0, roughness:0.4, metalness:0.2});
-  const body = new THREE.Mesh(new THREE.BoxGeometry(1.34, 0.9, 0.5), plastic); body.position.z = -0.27;
-  const bezel = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.76, 0.04), trim); bezel.position.z = -0.02;
-  const glass = new THREE.Mesh(new THREE.PlaneGeometry(1.14, 0.66), new THREE.MeshBasicMaterial({color:0x050505, toneMapped:false})); glass.position.z = 0.002;
   // "no videos" card shown on the screen until a clip plays
   const c = document.createElement("canvas"); c.width = 512; c.height = 296; const x = c.getContext("2d");
   const g = x.createLinearGradient(0, 0, 0, 296); g.addColorStop(0, "#23170f"); g.addColorStop(1, "#0d0805"); x.fillStyle = g; x.fillRect(0, 0, 512, 296);
   x.fillStyle = "#e3ad6b"; x.font = "700 34px system-ui, sans-serif"; x.textAlign = "center"; x.fillText("Tap the TV", 256, 140); x.fillStyle = "#b39a7e"; x.font = "500 22px system-ui, sans-serif"; x.fillText("to add videos", 256, 180);
   TV.idle = new THREE.CanvasTexture(c); TV.idle.colorSpace = THREE.SRGBColorSpace;
+  // the video, with mipmaps and anisotropic filtering so it stays clean when the TV is small on screen
   TV.tex = new THREE.VideoTexture($("#tvVid")); TV.tex.colorSpace = THREE.SRGBColorSpace;
-  TV.screen = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({map:TV.idle, toneMapped:false})); TV.screen.position.z = 0.004; TV.screen.scale.set(1.14, 0.66, 1);
-  const leg = s => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.02, 0.32, 6), trim); m.position.set(s*0.48, -0.56, -0.27); m.rotation.z = s*0.22; return m; };
-  const ant = s => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.62, 5), trim); m.position.set(s*0.17, 0.72, -0.3); m.rotation.z = -s*0.5; return m; };
-  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), trim); knob.position.set(0, 0.47, -0.3);
-  TV.g.add(body, bezel, glass, TV.screen, leg(-1), leg(1), ant(-1), ant(1), knob);
-  TV.g.traverse(o => { if (o.material && !o.material.isShaderMaterial) psxPatch(o.material); });
-  TV.g.visible = false; scene.add(TV.g);
+  TV.tex.generateMipmaps = true; TV.tex.minFilter = THREE.LinearMipmapLinearFilter; TV.tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  TV.mat = new THREE.ShaderMaterial({
+    toneMapped:false,
+    uniforms:{map:{value:TV.idle}, crop:{value:new THREE.Vector4(0, 0, 1, 1)}, scl:{value:new THREE.Vector2(1, 1)}, zoom:{value:1},
+      bright:{value:0}, contrast:{value:1}, sat:{value:1}, sharp:{value:0}, texel:{value:new THREE.Vector2(1/512, 1/296)}, scan:{value:0}, lines:{value:240}, curve:{value:0}},
+    vertexShader:`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader:`
+      uniform sampler2D map; uniform vec4 crop; uniform vec2 scl, texel; uniform float zoom, bright, contrast, sat, sharp, scan, lines, curve;
+      varying vec2 vUv;
+      void main(){
+        vec2 q = (vUv - 0.5) * scl / zoom + 0.5;                      // screen -> picture (fit leaves bars, fill crops)
+        if (q.x < 0.0 || q.x > 1.0 || q.y < 0.0 || q.y > 1.0){ gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); return; }
+        vec2 uv = mix(crop.xy, crop.zw, q);                            // inside the part of the clip that isn't black bars
+        vec3 c = texture2D(map, uv).rgb;
+        if (sharp > 0.001){
+          vec3 b = (texture2D(map, uv + vec2(texel.x, 0.0)).rgb + texture2D(map, uv - vec2(texel.x, 0.0)).rgb +
+                    texture2D(map, uv + vec2(0.0, texel.y)).rgb + texture2D(map, uv - vec2(0.0, texel.y)).rgb) * 0.25;
+          c += (c - b) * sharp * 1.6;
+        }
+        c = (c - 0.5) * contrast + 0.5 + bright;
+        float l = dot(c, vec3(0.299, 0.587, 0.114)); c = mix(vec3(l), c, sat);
+        if (scan > 0.001) c *= 1.0 - scan * 0.22 * (0.5 + 0.5 * sin(vUv.y * lines * 6.2831853));
+        if (curve > 0.001){ vec2 d = vUv - 0.5; c *= 1.0 - curve * 0.55 * dot(d, d) * 2.0; }
+        gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
+        #include <colorspace_fragment>
+      }`
+  });
+  TV.g.add(TV.frame); TV.g.visible = false; scene.add(TV.g);
 })();
-TVP.onchange = () => {
-  const v = TVP.el, a = TVP.ready && v.videoWidth ? v.videoWidth / v.videoHeight : 0;
-  if (a || !TVP.ids.length){                                           // between clips, keep the last picture rather than flash the card
-    const map = a ? TV.tex : TV.idle; if (TV.screen.material.map !== map){ TV.screen.material.map = map; TV.screen.material.needsUpdate = true; }
-    const W = 1.14, Hh = 0.66;                                         // fit the clip inside the screen
-    if (!a) TV.screen.scale.set(W, Hh, 1); else if (a > W/Hh) TV.screen.scale.set(W, W/a, 1); else TV.screen.scale.set(Hh*a, Hh, 1);
+// build the chosen model's body and a screen of the right size (the TV's origin is the middle of the screen)
+function buildTvModel(key){
+  const md = TV_MODELS[key] || TV_MODELS.retro; if (TV.model === key && TV.screen) return md;
+  TV.model = key;
+  for (const o of [...TV.frame.children]){ TV.frame.remove(o); o.traverse(m => { if (m.isMesh){ m.geometry.dispose(); if (m.material !== TV.mat) m.material.dispose(); } }); }
+  const W = md.W, H = md.H, mat = (color, rough = 0.5, metal = 0.05) => new THREE.MeshStandardMaterial({color, roughness:rough, metalness:metal});
+  const box = (w, h, d, m, x, y, z) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); TV.frame.add(o); return o; };
+  const cyl = (r0, r1, h, m, x, y, z, rz = 0, rx = 0) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(r0, r1, h, 10), m); o.position.set(x, y, z); o.rotation.set(rx, 0, rz); TV.frame.add(o); return o; };
+  if (key === "flat"){
+    const black = mat(0x0c0c0e, 0.3, 0.4);
+    box(W + 0.07, H + 0.07, 0.05, black, 0, 0, -0.028); box(W*0.8, H*0.7, 0.05, black, 0, 0, -0.07);
+    box(0.12, 0.26, 0.04, black, 0, -H/2 - 0.13, -0.08); box(0.62, 0.025, 0.28, mat(0x1a1a1d, 0.35, 0.5), 0, -H/2 - 0.27, -0.06);
+  } else if (key === "crt"){
+    const shell = mat(0x9a9384, 0.75), dark = mat(0x2a2826, 0.5);
+    box(W + 0.28, H + 0.34, 0.9, shell, 0, -0.03, -0.47); box(W*0.72, H*0.72, 0.42, shell, 0, -0.03, -1.1);
+    box(W + 0.08, H + 0.08, 0.03, dark, 0, 0, -0.012);
+    box(W + 0.24, 0.12, 0.02, dark, 0, -H/2 - 0.12, -0.005);
+    for (const kx of [0.32, 0.46]) cyl(0.03, 0.03, 0.04, mat(0x777066, 0.4, 0.3), W/2 + 0.12 - kx, -H/2 - 0.12, 0.02, 0, Math.PI/2);
+  } else if (key === "monitor"){
+    const grey = mat(0x1d1f22, 0.35, 0.3);
+    box(W + 0.05, H + 0.05, 0.04, grey, 0, 0, -0.022); box(W*0.45, H*0.45, 0.08, grey, 0, 0, -0.07);
+    box(0.07, 0.44, 0.05, grey, 0, -H/2 - 0.18, -0.12); box(0.56, 0.025, 0.32, mat(0x2a2c30, 0.3, 0.5), 0, -H/2 - 0.4, -0.08);
+  } else {
+    const plastic = mat(0x3a2a20, 0.5), trim = mat(0xd8c3a0, 0.4, 0.2);
+    box(W + 0.2, H + 0.24, 0.5, plastic, 0, 0, -0.27); box(W + 0.08, H + 0.1, 0.04, trim, 0, 0, -0.02);
+    cyl(0.025, 0.02, 0.32, trim, -(W/2 - 0.09), -H/2 - 0.23, -0.27, -0.22); cyl(0.025, 0.02, 0.32, trim, W/2 - 0.09, -H/2 - 0.23, -0.27, 0.22);
+    cyl(0.012, 0.012, 0.62, trim, -0.17, H/2 + 0.39, -0.3, 0.5); cyl(0.012, 0.012, 0.62, trim, 0.17, H/2 + 0.39, -0.3, -0.5);
+    const knob = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), trim); knob.position.set(0, H/2 + 0.14, -0.3); TV.frame.add(knob);
   }
-  syncTvBar();
+  // the screen: a curved glass on the CRT, flat on the others
+  const geo = new THREE.PlaneGeometry(W, H, md.curve ? 24 : 1, md.curve ? 18 : 1);
+  if (md.curve){ const p = geo.attributes.position; for (let i = 0; i < p.count; i++){ const u = p.getX(i)/(W/2), v = p.getY(i)/(H/2); p.setZ(i, 0.05*(1 - u*u*0.5 - v*v*0.5)); } geo.computeVertexNormals(); }
+  TV.screen = new THREE.Mesh(geo, TV.mat); TV.screen.position.z = 0.003; TV.frame.add(TV.screen);
+  TV.frame.traverse(o => { if (o.material && !o.material.isShaderMaterial) psxPatch(o.material); });
+  return md;
+}
+// black bars: sample the clip now and then; rows/columns that stay near-black are trimmed off
+const TRIM = {cv:document.createElement("canvas"), x:null, rows:new Float32Array(96), cols:new Float32Array(96), n:0, clip:null, crop:[0, 0, 1, 1], t:0};
+TRIM.cv.width = TRIM.cv.height = 96; TRIM.x = TRIM.cv.getContext("2d", {willReadFrequently:true});
+function trimReset(){ TRIM.rows.fill(0); TRIM.cols.fill(0); TRIM.n = 0; TRIM.crop = [0, 0, 1, 1]; TRIM.clip = TVP.cur; }
+function trimSample(){
+  const v = TVP.el; if (!TVP.ready || v.paused) return;
+  if (TRIM.clip !== TVP.cur) trimReset();
+  try{ TRIM.x.drawImage(v, 0, 0, 96, 96); }catch(e){ return; }
+  const d = TRIM.x.getImageData(0, 0, 96, 96).data;
+  for (let y = 0; y < 96; y++) for (let x = 0; x < 96; x++){
+    const i = (y*96 + x)*4, l = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+    if (l > TRIM.rows[y]) TRIM.rows[y] = l; if (l > TRIM.cols[x]) TRIM.cols[x] = l;
+  }
+  if (++TRIM.n < 3) return;                                            // a few samples first, so a dark opening shot isn't taken for bars
+  const T = 26, first = a => a.findIndex(q => q > T), last = a => 95 - [...a].reverse().findIndex(q => q > T);
+  let top = first(TRIM.rows), bot = last(TRIM.rows), lef = first(TRIM.cols), rig = last(TRIM.cols);
+  if (top < 0 || lef < 0 || bot - top < 28 || rig - lef < 28){ TRIM.crop = [0, 0, 1, 1]; return; }   // mostly dark: leave it alone
+  if (top > 0) top++; if (bot < 95) bot--; if (lef > 0) lef++; if (rig < 95) rig--;   // trim the soft edge too
+  const c = [lef/96, 1 - (bot + 1)/96, (rig + 1)/96, 1 - top/96];
+  if (c.some((q, i) => Math.abs(q - TRIM.crop[i]) > 0.004)){ TRIM.crop = c; tvPicture(); }
+}
+// apply the picture settings to the screen
+function tvPicture(){
+  const t = tvCfg(), md = TV_MODELS[t.model] || TV_MODELS.retro, u = TV.mat.uniforms, v = TVP.el;
+  const live = TVP.ready && v.videoWidth, vw = live ? v.videoWidth : 512, vh = live ? v.videoHeight : 296;
+  const cr = live && t.trim ? TRIM.crop : [0, 0, 1, 1];
+  u.crop.value.set(...cr);
+  const A = ((cr[2] - cr[0])*vw) / ((cr[3] - cr[1])*vh), Sa = md.W/md.H, fill = live && t.fit === "fill";
+  if (fill) u.scl.value.set(A > Sa ? Sa/A : 1, A > Sa ? 1 : A/Sa); else u.scl.value.set(A > Sa ? 1 : Sa/A, A > Sa ? A/Sa : 1);
+  u.zoom.value = live ? t.zoom : 1;
+  u.bright.value = t.bright; u.contrast.value = t.contrast; u.sat.value = t.sat; u.sharp.value = t.sharp;
+  u.texel.value.set(1/vw, 1/vh);
+  u.scan.value = (t.scan ?? !!md.curve) ? 0.8 : 0; u.lines.value = 180; u.curve.value = md.curve ? 1 : 0;
+}
+TVP.onchange = () => {
+  const v = TVP.el, a = TVP.ready && v.videoWidth;
+  if (a || !TVP.ids.length){                                           // between clips, keep the last picture rather than flash the card
+    const map = a ? TV.tex : TV.idle; if (TV.mat.uniforms.map.value !== map) TV.mat.uniforms.map.value = map;
+    if (TRIM.clip !== TVP.cur) trimReset();
+    tvPicture();
+  }
+  syncTvBar(); syncMediaSession();
 };
 for (const ev of ["playing", "loadeddata", "canplay"]) $("#tvVid").addEventListener(ev, () => TVP.onchange());
-function tvCfg(){ return own("tv"); }
+function tvCfg(){ const t = own("tv"); for (const k in DEFAULTS.tv) if (!(k in t)) t[k] = structuredClone(DEFAULTS.tv[k]); return t; }
+function placeTV(){ const t = tvCfg(); TV.g.position.set(t.x, t.y, t.z); TV.g.scale.setScalar(t.s); TV.g.rotation.set(t.tilt, t.r, t.lean, "YXZ"); }
 function syncTV(){
   const t = tvCfg(), show = t.on && mode !== "menu";
+  buildTvModel(t.model); placeTV(); tvPicture();
+  const host = t.front ? tvScene : scene; if (TV.g.parent !== host) host.add(TV.g);
   TV.g.visible = show;
-  TV.g.position.set(t.x, t.y, t.z); TV.g.scale.setScalar(t.s); TV.g.rotation.set(0, t.r, 0);
-  if (!show){ if (TVP.on) TVP.pause(); $("#tvBar").hidden = true; return; }
-  TVP.set(t.list, t.mode, t.i).then(() => { setVolume(TVP, t.vol); if (t.playing !== false) TVP.play(); syncTvBar(); });
+  if (!t.list.length) AMB.drawn = false;
+  if (!show){ if (TVP.on) TVP.pause(); $("#tvBar").hidden = true; $("#tvAmb").hidden = true; return; }
+  TVP.set(t.list, t.mode, t.i).then(() => { setVolume(TVP, t.vol); TVP.el.defaultPlaybackRate = TVP.el.playbackRate = t.speed; if (t.playing !== false) TVP.play(); syncTvBar(); });
 }
 // a new TV goes where you can see it: upper right of the current view, a little behind the character
 function addTV(){
@@ -1969,8 +2079,41 @@ function addTV(){
   }
   t.on = true; save(); syncTV(); openTvBar(); if (!t.list.length) mediaSheet("tv");
 }
+// every frame: the blurred copy behind the scene, the seek bar, black-bar sampling
+const AMB = {cv:$("#tvAmb"), x:null, t:0, drawn:false};
+AMB.x = AMB.cv.getContext("2d", {alpha:false});
+const ambOn = () => { const t = tvCfg(); return t.on && t.amb && !S.world && mode !== "menu" && TV.g.visible && t.list.length > 0 && (!!TVP.ready || AMB.drawn); };
+function stepTV(now){
+  const on = ambOn();
+  if (AMB.cv.hidden === on) AMB.cv.hidden = !on;
+  if (on && TVP.ready && now - AMB.t > 66){
+    AMB.t = now; AMB.drawn = true;
+    const v = TVP.el, w = 72, h = Math.max(24, Math.round(72*innerHeight/innerWidth)), cr = tvCfg().trim ? TRIM.crop : [0, 0, 1, 1];
+    if (AMB.cv.width !== w || AMB.cv.height !== h){ AMB.cv.width = w; AMB.cv.height = h; }
+    const sx = cr[0]*v.videoWidth, sw = (cr[2] - cr[0])*v.videoWidth, sy = (1 - cr[3])*v.videoHeight, sh = (cr[3] - cr[1])*v.videoHeight;
+    const k = Math.max(w/sw, h/sh);                                    // cover the screen
+    AMB.x.drawImage(v, sx, sy, sw, sh, (w - sw*k)/2, (h - sh*k)/2, sw*k, sh*k);
+  }
+  if (TV.g.visible && tvCfg().trim && now - TRIM.t > 700){ TRIM.t = now; trimSample(); }
+  if (!$("#tvBar").hidden && !SEEK.drag && now - SEEK.t > 250){ SEEK.t = now; syncSeek(); }
+}
+// the blurred copy, painted into recordings and streams the same way it looks on screen
+function paintAmb(x, w, h){
+  x.save(); x.fillStyle = "#000"; x.fillRect(0, 0, w, h);
+  x.filter = `blur(${Math.round(Math.max(w, h)/40)}px) brightness(0.55) saturate(1.4)`;
+  const k = Math.max(w/AMB.cv.width, h/AMB.cv.height)*1.15;
+  x.drawImage(AMB.cv, (w - AMB.cv.width*k)/2, (h - AMB.cv.height*k)/2, AMB.cv.width*k, AMB.cv.height*k);
+  x.restore();
+}
 
 // ---- the TV's controls: tap the TV to show them
+const SEEK = {drag:false, t:0};
+const fmtT = s => !isFinite(s) ? "0:00" : `${Math.floor(s/60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+function syncSeek(){
+  const v = TVP.el, d = isFinite(v.duration) ? v.duration : 0, sk = $("#tvSeek");
+  sk.max = d || 1; sk.value = d ? v.currentTime : 0; sk.disabled = !d;
+  $("#tvTime").textContent = fmtT(v.currentTime); $("#tvDur").textContent = fmtT(d);
+}
 function openTvBar(){ $("#tvBar").hidden = false; syncTvBar(); }
 function syncTvBar(){
   const bar = $("#tvBar"); if (bar.hidden) return;
@@ -1978,20 +2121,107 @@ function syncTvBar(){
   $("#tvPlay").innerHTML = ico(playing ? "pause" : "play"); $("#tvPlay").setAttribute("aria-label", playing ? "Pause" : "Play");
   $("#tvVol").value = t.vol;
   $("#tvHear").classList.toggle("off", !S.hearVideos); $("#tvHear").innerHTML = ico(S.hearVideos ? "speaker" : "speakeroff");
-  const m = t.list.length ? `${TVP.i + 1}/${t.list.length}` : "—";
-  $("#tvInfo").textContent = m;
+  $("#tvCam").classList.toggle("on", tvShotIndex() === stuCfg().shot && stuCfg().shot >= 0);
+  syncSeek();
 }
 $("#tvPlay").onclick = () => { buzz(6); const t = tvCfg(); if (!t.list.length){ mediaSheet("tv"); return; } TVP.toggle(); t.playing = TVP.on; save(); syncTvBar(); };
 $("#tvNext").onclick = () => { buzz(6); TVP.next(); tvCfg().i = TVP.i; save(); };
 $("#tvPrev").onclick = () => { buzz(6); TVP.prev(); tvCfg().i = TVP.i; save(); };
 $("#tvVol").oninput = e => { const t = tvCfg(); t.vol = +e.target.value; setVolume(TVP, t.vol); };
 $("#tvVol").onchange = () => save();
+$("#tvSeek").oninput = e => { SEEK.drag = true; TVP.el.currentTime = +e.target.value; $("#tvTime").textContent = fmtT(+e.target.value); };
+$("#tvSeek").onchange = () => { SEEK.drag = false; };
 $("#tvHear").onclick = () => { buzz(6); S.hearVideos = !S.hearVideos; syncHear(); save(); syncTvBar(); toast(S.hearVideos ? "Video sound plays on this phone" : "Video sound goes only into recordings and the stream"); };
 $("#tvList").onclick = () => { buzz(6); mediaSheet("tv"); };
+$("#tvSet").onclick = () => { buzz(6); tvSettings(); };
+$("#tvCam").onclick = () => { buzz(8); tvCamera(); };
 $("#tvClose").onclick = () => { buzz(6); $("#tvBar").hidden = true; };
-$("#tvOff").onclick = () => { buzz(8); tvCfg().on = false; save(); syncTV(); toast("TV removed. Add it again in Settings › Look."); };
 TVP.el.addEventListener("play", syncTvBar); TVP.el.addEventListener("pause", syncTvBar);
 TVP.el.addEventListener("ended", () => { tvCfg().i = TVP.i; });
+
+// ---- a studio camera framing the TV, so viewers can see what's playing (your face stays where it is)
+function tvShotIndex(){ return stuCfg().shots.findIndex(s => s.rel === "tv"); }
+// straight at the screen (tilt included), close enough that the screen fills most of the view
+function tvFrame(out){
+  const md = TV_MODELS[tvCfg().model] || TV_MODELS.retro, s = tvCfg().s;
+  out.tgt.copy(TV.g.position);
+  const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(TV.g.quaternion);
+  out.pos.copy(out.tgt).addScaledVector(fwd, fitDist(md.H*s*0.6, md.W*s*0.56) + 0.05*s);
+  return out;
+}
+function tvCamera(){
+  const st = stuCfg();
+  let i = tvShotIndex();
+  if (i >= 0 && st.shot === i){ goShot(-1); syncTvBar(); return; }
+  if (i < 0){
+    const v = tvFrame({pos:new THREE.Vector3(), tgt:new THREE.Vector3()}), sh = {id:newId(), name:"TV", actor:null, rel:"tv"};
+    shotStore(sh, v.pos, v.tgt); st.shots.push(sh); i = st.shots.length - 1; save(); syncShotBar();
+  }
+  goShot(i); syncTvBar();
+}
+
+// ---- the TV panel: model, size and angle, picture, playback
+function tvSettings(){
+  const t = tvCfg();
+  openModal("TV", b => {
+    const chipRow = (opts, get, set) => {
+      const c = el("div", "chips");
+      for (const [v, label] of opts){ const k = el("button", "chip press", label); k.setAttribute("aria-pressed", get() === v);
+        k.onclick = () => { set(v); buzz(6); c.querySelectorAll(".chip").forEach((n, i) => n.setAttribute("aria-pressed", opts[i][0] === get())); save(); }; c.append(k); }
+      return c;
+    };
+    const slider = (label, k, min, max, step, fmt, after) => {
+      const r = el("label", "vvol", `<span style="width:84px">${label}</span><input type="range" min="${min}" max="${max}" step="${step}"><small style="width:44px;text-align:right;font:500 12px var(--mono);color:var(--mute)"></small>`);
+      const i = r.querySelector("input"), o = r.querySelector("small"), show = () => o.textContent = fmt(t[k]);
+      i.value = t[k]; show(); i.oninput = () => { t[k] = +i.value; show(); after(); }; i.onchange = () => save();
+      i.ondblclick = () => { t[k] = DEFAULTS.tv[k]; i.value = t[k]; show(); after(); save(); };
+      return r;
+    };
+    const deg = v => Math.round(v*180/Math.PI) + "°", x2 = v => "×" + (+v).toFixed(2), pc = v => Math.round(v*100) + "%";
+    b.append(el("div", "sec", "Model"), chipRow(Object.entries(TV_MODELS).map(([k, m]) => [k, m.label]), () => t.model, v => { t.model = v; buildTvModel(v); tvPicture(); }));
+    b.append(el("div", "sec", "Size and angle"),
+      slider("Size", "s", 0.2, 8, 0.01, x2, placeTV), slider("Tilt", "tilt", -0.8, 0.8, 0.01, deg, placeTV),
+      slider("Lean", "lean", -0.6, 0.6, 0.01, deg, placeTV), slider("Turn", "r", -Math.PI, Math.PI, 0.01, deg, placeTV));
+    const fr = el("div", "srow", `<span class="slabel">Always in front</span>`), fs = el("button", "switch");
+    fs.setAttribute("role", "switch"); fs.setAttribute("aria-checked", !!t.front);
+    fs.onclick = () => { t.front = !t.front; fs.setAttribute("aria-checked", t.front); syncTV(); save(); buzz(6); }; fr.append(fs); b.append(fr);
+    b.append(el("p", "note", "Tilt tips the screen forward or back. Always in front draws the TV over everything, so no character blocks it, and keeps it sharp in the PS1 and PS2 styles. You can also drag the TV to move it, pinch to resize it and twist to turn it."));
+    b.append(el("div", "sec", "Picture"), chipRow([["fit", "Fit (whole picture)"], ["fill", "Fill the screen"]], () => t.fit, v => { t.fit = v; tvPicture(); }));
+    const tr = el("div", "srow", `<span class="slabel">Trim black bars automatically</span>`), ts = el("button", "switch");
+    ts.setAttribute("role", "switch"); ts.setAttribute("aria-checked", !!t.trim);
+    ts.onclick = () => { t.trim = !t.trim; ts.setAttribute("aria-checked", t.trim); trimReset(); tvPicture(); save(); buzz(6); }; tr.append(ts);
+    b.append(tr, slider("Zoom", "zoom", 1, 2.5, 0.01, x2, tvPicture), slider("Sharpness", "sharp", 0, 1, 0.01, pc, tvPicture),
+      slider("Brightness", "bright", -0.3, 0.3, 0.01, v => (v > 0 ? "+" : "") + Math.round(v*100), tvPicture), slider("Contrast", "contrast", 0.5, 1.8, 0.01, x2, tvPicture),
+      slider("Colour", "sat", 0, 2, 0.01, pc, tvPicture));
+    const sc = el("div", "srow", `<span class="slabel">CRT scanlines</span>`), ss = el("button", "switch"), md = () => TV_MODELS[t.model] || TV_MODELS.retro;
+    ss.setAttribute("role", "switch"); ss.setAttribute("aria-checked", t.scan ?? !!md().curve);
+    ss.onclick = () => { t.scan = !(t.scan ?? !!md().curve); ss.setAttribute("aria-checked", t.scan); tvPicture(); save(); buzz(6); }; sc.append(ss); b.append(sc);
+    const am = el("div", "srow", `<span class="slabel">Blurred video behind the scene</span>`), as = el("button", "switch");
+    as.setAttribute("role", "switch"); as.setAttribute("aria-checked", !!t.amb);
+    as.onclick = () => { t.amb = !t.amb; as.setAttribute("aria-checked", t.amb); save(); buzz(6); }; am.append(as); b.append(am);
+    b.append(el("p", "note", "While the TV plays, a soft, dimmed copy of its video fills the background, in recordings and streams too."));
+    b.append(el("div", "sec", "Playback speed"), chipRow([[0.5, "0.5×"], [0.75, "0.75×"], [1, "1×"], [1.25, "1.25×"], [1.5, "1.5×"], [2, "2×"]], () => t.speed, v => { t.speed = v; TVP.el.defaultPlaybackRate = TVP.el.playbackRate = v; }));
+    const r = el("div", "btnrow");
+    const vids = el("button", "pill press", `${ico("list")}Videos`); vids.onclick = () => mediaSheet("tv");
+    const cam = el("button", "pill hot press", `${ico("t-camera")}Camera on TV`); cam.onclick = () => { closeModal(); tvCamera(); };
+    r.append(vids, cam); b.append(r);
+    const off = el("button", "pill press danger", "Remove the TV"); off.style.width = "100%"; off.onclick = () => { closeModal(); t.on = false; save(); syncTV(); toast("TV removed. Add it again in Settings › Look."); };
+    b.append(off);
+  });
+}
+
+// ---- headset buttons, lock screen and notification controls, where the browser offers them (Media Session API)
+function syncMediaSession(){
+  const ms = navigator.mediaSession; if (!ms || !TV.g.visible) return;
+  try{
+    if (window.MediaMetadata) ms.metadata = new MediaMetadata({title:TVP.name || "Video", artist:"Peanut Cam TV"});
+    const act = (a, f) => { try{ ms.setActionHandler(a, f); }catch(e){} };
+    act("play", () => { TVP.play(); tvCfg().playing = true; syncTvBar(); }); act("pause", () => { TVP.pause(); tvCfg().playing = false; syncTvBar(); });
+    act("nexttrack", () => $("#tvNext").click()); act("previoustrack", () => $("#tvPrev").click());
+    act("seekforward", () => { TVP.el.currentTime = Math.min(TVP.el.duration || 0, TVP.el.currentTime + 10); });
+    act("seekbackward", () => { TVP.el.currentTime = Math.max(0, TVP.el.currentTime - 10); });
+  }catch(e){}
+}
 
 // ---- touching the TV or a studio cast member: drag to move it, pinch to resize, twist to turn it, tap for its controls
 // (the target's cfg holds x, y, z, s, r; obj is the thing on screen)
@@ -2003,7 +2233,7 @@ function tvHit(x, y){
   return _tvr.intersectObject(TV.g, true).length > 0;
 }
 function grabTarget(x, y){
-  if (tvHit(x, y)) return {cfg:tvCfg(), obj:TV.g, apply:() => { const t = tvCfg(); TV.g.position.set(t.x, t.y, t.z); TV.g.scale.setScalar(t.s); TV.g.rotation.y = t.r; },
+  if (tvHit(x, y)) return {cfg:tvCfg(), obj:TV.g, maxS:8, apply:placeTV,
     tap:() => { $("#tvBar").hidden ? openTvBar() : ($("#tvBar").hidden = true); }};
   const X = castHit(x, y); if (!X) return null;
   if (X.uid === "host" && !stuCfg().host) stuCfg().host = {x:0, y:0, z:0, s:1, r:0};
@@ -2037,7 +2267,7 @@ canvas.addEventListener("pointermove", e => {
   if (b.n >= 2){
     const d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); let da = Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x) - b.a;
     if (da > Math.PI) da -= 2*Math.PI; if (da < -Math.PI) da += 2*Math.PI;
-    t.s = clamp(b.s * d / b.d, 0.2, 3); t.r = b.r - da;
+    t.s = clamp(b.s * d / b.d, 0.2, TVG.tgt.maxS || 3); t.r = b.r - da;
   }
   TVG.tgt.apply();
 }, true);
@@ -2095,7 +2325,7 @@ function mediaSheet(kind){
     hs.onclick = () => { S.hearVideos = !S.hearVideos; hs.setAttribute("aria-checked", S.hearVideos); syncHear(); save(); syncTvBar(); buzz(6); };
     hr.append(hs); b.append(hr);
     b.append(el("p", "note", "Video sound is included in recordings and live streams. If you stream with the microphone on, wear headphones so the mic doesn't pick the video up a second time."));
-    if (kind === "tv"){ const off = el("button", "pill press danger", "Remove the TV"); off.style.width = "100%"; off.onclick = () => { closeModal(); $("#tvOff").click(); }; b.append(off); }
+    if (kind === "tv"){ const st2 = el("button", "pill press", `${ico("sliders")}TV settings: model, size, picture`); st2.style.width = "100%"; st2.onclick = () => tvSettings(); b.append(st2); }
     mediaSheet.redraw = draw; draw();
   });
 }
@@ -3054,7 +3284,7 @@ function openModal(title, build){
   $("#modal").hidden = false;
 }
 /* ---------- about & legal ---------- */
-const VERSION = "4.6";
+const VERSION = "4.7";
 function openLegal(){
   openModal("About & legal", b => {
     const d = el("div", "legal");
@@ -3325,7 +3555,7 @@ function buildItem(it){
     const t = tvCfg(), row = el("div", "btnrow");
     const a = el("button", "pill press" + (t.on ? "" : " hot"), `${ico("tv")}${t.on ? "TV videos" : "Add a TV"}`); a.onclick = () => { buzz(8); if (t.on) mediaSheet("tv"); else { closeSheet(); addTV(); } };
     row.append(a);
-    if (t.on){ const r = el("button", "pill press", "Remove TV"); r.onclick = () => { buzz(8); t.on = false; save(); syncTV(); renderBody(); }; row.append(r); }
+    if (t.on){ const se = el("button", "pill press", "TV settings"); se.onclick = () => { buzz(8); tvSettings(); }; row.append(se); }
     w.append(row, el("p", "note", "A little TV in the scene that plays your videos, so your character can watch and react. Drag it to move it, pinch to resize, twist to turn it, tap it for play, volume and the playlist."));
     return w;
   }
@@ -3787,7 +4017,7 @@ const STU = {extras:new Map(), lead:"host", gen:0, swapping:false, rec:null, adj
 const stuCfg = () => own("studio");
 const charName = ref => ref === "peanut" ? "Peanut" : CHARS.find(c => c.id === ref)?.name || "Character";
 const castEntry = uid => uid === "host" ? null : stuCfg().cast.find(e => e.uid === uid);
-const slotOf = uid => uid === "host" ? (stuCfg().host || {x:0, y:0, z:0, s:1, r:0}) : castEntry(uid);
+const slotOf = uid => uid === "tv" ? tvCfg() : uid === "host" ? (stuCfg().host || {x:0, y:0, z:0, s:1, r:0}) : castEntry(uid);
 const refOf = uid => uid === "host" ? scopeId : castEntry(uid)?.ref;
 const leadKind = () => stageMode;
 // a character's own settings, filled in from the defaults (the peanut's face settings are app-wide)
@@ -4144,6 +4374,7 @@ function slotMatrix(uid){
   return _slotM.compose(new THREE.Vector3(sl.x, sl.y, sl.z), _slotQ.setFromEuler(_slotE.set(0, sl.r, 0)), new THREE.Vector3(sl.s, sl.s, sl.s));
 }
 function shotWorld(sh, out = _shotV){
+  if (sh.rel === "tv" && !sh.custom) return tvFrame(out);             // follows the TV's model, size and angle
   out.pos.fromArray(sh.pos); out.tgt.fromArray(sh.tgt);
   const m = sh.rel && slotMatrix(sh.rel); if (m){ out.pos.applyMatrix4(m); out.tgt.applyMatrix4(m); }
   return out;
@@ -4194,11 +4425,11 @@ function addShot(uid, size){
 }
 function goShot(i){
   const st = stuCfg(); st.shot = i; save();
-  const sh = st.shots[i], actor = sh ? sh.actor : "host";
+  const sh = st.shots[i], actor = sh ? sh.actor : "host";            // null: a camera that leaves your face where it is (the TV camera)
   if (!st.smooth){ const v = studioView(); if (v){ VIEW.pos.copy(v.pos); VIEW.tgt.copy(v.tgt); } else { VIEW.pos.copy(VIEW.basePos); VIEW.tgt.copy(VIEW.baseTgt); } applyView(); }
-  if (actor !== STU.lead && (actor === "host" || STU.extras.has(actor))) swapLead(actor);
-  syncShotBar(); buzz(8);
-  if (sh) flash(charName(refOf(actor)), sh.name.split(" · ")[0]);
+  if (actor && actor !== STU.lead && (actor === "host" || STU.extras.has(actor))) swapLead(actor);
+  syncShotBar(); syncTvBar(); buzz(8);
+  if (sh) flash(actor ? charName(refOf(actor)) : sh.name, actor ? sh.name.split(" · ")[0] : "Camera");
 }
 function syncShotBar(){
   const bar = $("#shotBar"); if (!bar) return;
@@ -4218,7 +4449,7 @@ function syncShotBar(){
 function shotOptions(i){
   const st = stuCfg(), sh = st.shots[i]; if (!sh) return;
   openModal(`Camera ${i + 1}`, b => {
-    b.append(el("p", "note", sh.name + (sh.actor !== "host" || STU.lead !== "host" ? ` · your face goes to ${charName(refOf(sh.actor))}` : "")));
+    b.append(el("p", "note", sh.name + (!sh.actor ? " · your face stays where it is" : sh.actor !== "host" || STU.lead !== "host" ? ` · your face goes to ${charName(refOf(sh.actor))}` : "")));
     const r = el("div", "btnrow");
     const go = el("button", "pill hot press", "Go"); go.onclick = () => { closeModal(); goShot(i); };
     const adj = el("button", "pill press", "Adjust view"); adj.onclick = () => { closeModal(); camAdjust(i); };
@@ -4245,7 +4476,7 @@ function camAdjust(i){
 }
 function camAdjustEnd(keep){
   const A = STU.adj; if (!A) return;
-  if (keep){ const sh = stuCfg().shots[A.i]; shotStore(sh, A.view.pos, A.view.tgt); save(); toast("Camera saved"); }
+  if (keep){ const sh = stuCfg().shots[A.i]; sh.custom = true; shotStore(sh, A.view.pos, A.view.tgt); save(); toast("Camera saved"); }
   STU.adj = null; document.body.classList.remove("adjusting"); $("#camBar").hidden = true; $("#camPad").hidden = true;
 }
 $("#camSave").onclick = () => { buzz(8); camAdjustEnd(true); };
@@ -4316,7 +4547,7 @@ function openStudio(){
     const cl = el("div", "vlist");
     st.shots.forEach((sh, i) => {
       const r = el("div", "vrow" + (st.shot === i ? " on" : ""), `<button class="vname press"><b>${i + 1}</b><span></span><small></small></button><button class="step press" aria-label="Adjust view">${ico("move")}</button><button class="step press" aria-label="Delete camera">${ico("x")}</button>`);
-      r.querySelector("span").textContent = sh.name; r.querySelector("small").textContent = charName(refOf(sh.actor));
+      r.querySelector("span").textContent = sh.name; r.querySelector("small").textContent = sh.actor ? charName(refOf(sh.actor)) : "";
       const [go, adj, del] = r.querySelectorAll("button");
       go.onclick = () => { closeModal(); goShot(i); }; adj.onclick = () => { closeModal(); camAdjust(i); };
       del.onclick = () => { st.shots.splice(i, 1); if (st.shot === i) goShot(-1); else if (st.shot > i) st.shot--; save(); syncShotBar(); openStudio(); };
@@ -4591,7 +4822,9 @@ function pickMime(){
   return null;
 }
 // the backgrounds are CSS on the page, so recordings repaint them onto the video frame
+const bgDynamic = () => S.bg === "video" || ambOn();          // backgrounds that change every frame
 function paintBg(x, w, h){
+  if (ambOn()){ paintAmb(x, w, h); return; }
   const lin = (stops, x0, y0, x1, y1) => { const g = x.createLinearGradient(x0, y0, x1, y1); stops.forEach(([o, c]) => g.addColorStop(o, c)); return g; };
   const rad = (stops, cx, cy, r) => { const g = x.createRadialGradient(cx, cy, 0, cx, cy, r); stops.forEach(([o, c]) => g.addColorStop(o, c)); return g; };
   const R = Math.hypot(w, h) * 0.62;
@@ -4620,7 +4853,7 @@ function paintBg(x, w, h){
 function recFrame(){
   if (!REC.on) return;
   const w = REC.c.width, h = REC.c.height, k = `${S.bg}|${S.bgColor}|${bgImg?.src || ""}|${w}x${h}`;
-  if (k !== REC.bgKey || S.bg === "video"){ paintBg(REC.bg.getContext("2d"), w, h); REC.bgKey = k; }   // a video background changes every frame
+  if (k !== REC.bgKey || bgDynamic()){ paintBg(REC.bg.getContext("2d"), w, h); REC.bgKey = k; }   // a video background changes every frame
   if (S.world){ REC.x.drawImage(canvas, 0, 0, w, h); return; }
   REC.x.drawImage(REC.bg, 0, 0);
   REC.x.drawImage(canvas, 0, 0, w, h);
@@ -4813,7 +5046,7 @@ function liveCompose(){
   const {x, w, h} = LIVE, cw = canvas.width, ch = canvas.height;
   if (S.world){ const k = Math.max(w/cw, h/ch); x.drawImage(canvas, (w - cw*k)/2, (h - ch*k)/2, cw*k, ch*k); return; }
   const key = `${S.bg}|${S.bgColor}|${bgImg?.src || ""}`;
-  if (key !== LIVE.bgKey || S.bg === "video"){ paintBg(LIVE.bg.getContext("2d"), w, h); LIVE.bgKey = key; }
+  if (key !== LIVE.bgKey || bgDynamic()){ paintBg(LIVE.bg.getContext("2d"), w, h); LIVE.bgKey = key; }
   x.drawImage(LIVE.bg, 0, 0);
   const k = Math.min(w/cw, h/ch); x.drawImage(canvas, (w - cw*k)/2, (h - ch*k)/2, cw*k, ch*k);
 }
@@ -5448,7 +5681,7 @@ function loop(now){
   set(F_MOUTH.real, faceVis * (1 - W.mouth)); set(F_MOUTH.alt, faceVis * W.mouth);
   if (stageMode === "model" && S.faceMode === "model") [...EYE_MESHES, ...MOUTH_MESHES].forEach(m => m.visible = false);
 
-  try{ stepStudio(now, dt); loopCapture(now); }catch(e){ console.error(e); }
+  try{ stepStudio(now, dt); loopCapture(now); stepTV(now); }catch(e){ console.error(e); }
   stepView(dt);
   const worldOn = S.world && (mode !== "menu" || scopeId === "peanut");
   PSXU.uPsxJ.value = S.psx === "modern" ? 0 : S.wJitter;
@@ -5458,6 +5691,7 @@ function loop(now){
     WORLD.render(dt, now);
     renderer.autoClear = false; renderer.clearDepth(); renderer.render(scene, camera); renderer.autoClear = true;
   } else renderer.render(scene, camera);
+  renderTvFront();
   recFrame();
   liveFrame();
   if (SHOT.pending) takeShot();

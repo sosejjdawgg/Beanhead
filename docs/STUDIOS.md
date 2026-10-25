@@ -29,7 +29,16 @@ Every scene in Peanut Cam is a studio: the character you opened plus any others 
 ## Videos
 
 - **Background › Video** plays a playlist behind your character. **Loop one video** repeats the current clip; **Play all in order, loop** plays the list and starts again.
-- **Settings › Look › Add a TV** puts a small retro TV in the scene with its own playlist, so your character can watch and react. Tap the TV for play/pause, next/previous, volume and the list.
+- **Settings › Look › Add a TV** puts a TV in the scene with its own playlist, so your character can watch and react. Tap the TV for its controls: a seek bar, play/pause, next/previous, **Camera on TV**, volume, the list and **TV settings**.
+- **TV settings:**
+  - **Model:** Retro, Flat screen, Big CRT (curved glass, scanlines) or Computer monitor.
+  - **Size and angle:** size up to 8×, tilt (tip it forward or back), lean and turn.
+  - **Always in front** (on by default) draws the TV over everything, so no character blocks it, and keeps it sharp in the PS1/PS2 styles.
+  - **Picture:** Fit or Fill, **Trim black bars automatically**, zoom, sharpness, brightness, contrast, colour and CRT scanlines.
+  - **Blurred video behind the scene:** while the TV plays, a soft, dimmed copy fills the background, in recordings and streams too.
+  - **Playback speed:** 0.5× to 2×.
+- **Camera on TV** frames the screen so viewers can see what's playing; your face stays where it is. It follows the TV's model, size and angle unless you adjust it by hand.
+- Headset buttons and lock-screen controls can play, pause, skip and seek the TV where the browser supports them (Media Session).
 - Video sound is included in recordings and live streams. **Hear video sound on this phone** turns off only the phone's speaker. Wear headphones when streaming with the microphone on, so the mic doesn't pick the video up a second time.
 
 ## Placing a face on a 3D model
