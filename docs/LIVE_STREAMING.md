@@ -66,7 +66,8 @@ The page already has the exact frame (recordings use the same composition). WebC
   - `RtmpPublisher`: handshake, connect, publish, chunking, AMF0 and FLV tags.
   - `MicEncoder`: always sends an audio track. When sound is off or the mic is unavailable, it encodes silence on the same clock, because some servers won't start a stream without audio.
   - `LiveService`: a foreground service (microphone, or dataSync without mic permission) with an *End stream* notification and Wi-Fi/CPU locks.
-- The bridge protocol: `start(json)`, which returns `""` or an error message; `config(b64 avcC)`; `video(b64, tsMs, isKey)`; `sound(on)`; `soundDelay(ms)`; `stop()`. Events are `{type: state|stats|key|bitrate|mic}`.
+- The bridge protocol: `start(json)`, which returns `""` or an error message; `config(b64 avcC)`; `video(b64, tsMs, isKey)`; `pcm(b64)` (the page's video sound: 48 kHz stereo 16-bit little-endian, 20 ms blocks); `sound(on)`; `soundDelay(ms)`; `stop()`. Events are `{type: state|stats|key|bitrate|mic}`.
+- Video sound (background videos, the mini TV) is mixed into the stream: the page taps its WebAudio mixer with an AudioWorklet and sends PCM with `pcm()`; `MicEncoder` adds it to the mic through a jitter buffer (starts at 60 ms, trims back to 100 ms if it passes 300 ms, refills after running dry).
 - Timestamps share one clock. The page sets `LIVE.t0` just before calling `start`, and the app takes `System.nanoTime()` in that same call. Each connection is rebased to start at 0 on its first key frame.
 
 **Limits**

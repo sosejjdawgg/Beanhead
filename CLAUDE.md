@@ -23,7 +23,7 @@ Peanut Cam puts the user's real eyes and mouth, tracked live from the front came
 
 ## How index.html is organised
 
-Sections start with `/* ---------- name ---------- */`; grep for that to navigate. In order: settings, three.js scene, peanut, PSX snapping, imported 3D models, face placement on models (`fitFace`), rigging tool, puppet (2D), face features, stage, background, camera, MediaPipe, arm/hand tracking, per-frame face geometry (`track`), picture upload + scan, outlines/cut-out editor, character gallery, about & legal, settings sheet, layout editor, place-face tool, joint editor, menu/modes/HUD, touch gestures, recording, screenshots, live streaming, PSX 3D world, render loop, boot.
+Sections start with `/* ---------- name ---------- */`; grep for that to navigate. In order: settings, three.js scene, peanut, PSX snapping, imported 3D models, face placement on models (`fitFace`), rigging tool, puppet (2D), face features, stage (+ the `VIEW` camera), background, videos (playlists, mini TV, sound mixer), camera, MediaPipe, arm/hand tracking, per-frame face geometry (`track`, `faceLayout`, `placeFace`), picture upload + scan, outlines/cut-out editor, character gallery, about & legal, settings sheet, layout editor, place-face tool, joint editor, studios, menu/modes/HUD, touch gestures, recording, screenshots, live streaming, PSX 3D world, render loop, boot.
 
 Key ideas:
 
@@ -44,7 +44,10 @@ Key ideas:
   - Rigs added by the tool are saved in `cfg.autoRig = {type, joints}` and skinned on load by `skinModel`.
   - `applyModelStyle` must never touch the face overlay meshes when they ride on the head bone.
 - **PSX look.** `psxPatch` adds vertex snapping to materials through `onBeforeCompile`. Never apply it to `ShaderMaterial`s, which declare `uSnap` themselves.
-- **Recording.** MediaRecorder records `canvas.captureStream`, with the background repainted by `paintBg`. Recordings and pictures go to the gallery via the native bridge on Android.
+- **Recording.** MediaRecorder records `canvas.captureStream`, with the background repainted by `paintBg`. Recordings and pictures go to the gallery via the native bridge on Android. When videos play sound, the recording takes the WebAudio mixer (`AUD.rec`: videos + mic) instead of the bare mic.
+- **Camera (`VIEW`).** `resize()` sets a base framing (models: `S.mFrame` full/upper/head); `VIEW.over()` returns an override the camera glides to each frame (`stepView`): Place face (`placeView`) first, then the active studio camera (`studioView`). Don't set `camera.position` directly.
+- **Videos.** Clips live in IndexedDB as `media:<id>`; `Playlist` (`BGP` background, `TVP` mini TV) loops one or plays all in order. Scoped keys `bgList/bgMode/bgVol` and `tv` (an object: always go through `own(k)` / `tvCfg()` so the shared default is never mutated). Video sound goes through `AUD` (one gain per element into `AUD.bus`, `S.hearVideos` mutes the speaker only); while live, an AudioWorklet tap sends 20 ms of 48 kHz PCM to `PeanutLive.pcm`, which `MicEncoder` mixes in through a jitter buffer.
+- **Studios.** Scoped key `studio` = `{cast:[{uid, ref, x,y,z,s,r, motion}], host, shots:[{actor, rel, pos, tgt}], shot, smooth, lock}`. Cast members are built by `buildExtra` (models via `buildModel`, pictures via `buildPuppetInto`, peanut via `cloneNut`); `scopeId` is the studio owner and `leadRef` the character wearing the live face. `swapLead` moves the lead's content out to a cast shell and the chosen member's content into the stage rig (`leadSlot` holds `rig`, `puppet`, `mrig`). `storeScope` writes studio keys to the owner and character keys to `leadRef`. Character-editing tools must use `leadRef`, not `scopeId`. Loops (`loop:<ref>`) hold the face buffers + pose per sample (`LOOP_STRIDE` floats) and a 256² face-crop video (WebCodecs H.264/VP8); `stepLoop` decodes it back onto the member's own feature meshes.
 
 ## Workflow
 
@@ -81,6 +84,9 @@ There is no Android device or emulator here. Test the page in Chromium with Play
 - Auto-rig skin weights are distance-based with limb gates, so long coats can web or stretch when arms are raised high.
 - The face auto-find on models uses the silhouette (neck) for bipeds and the most forward point for pets. The user can always fix it with Place face.
 - Characters saved without their original photo can't use Restore in the cut-out editor.
+- Face auto-find on models sizes the face from the curvature around the nose; low-poly models with a separate nose blob get a tiny face until Place face is used (it now zooms in, so this is quick to fix).
+- Studio loops record the face and head movement, not arm/hand tracking. Shots on a character are stored in that character's frame (`rel`), Wide shots are absolute.
+- Swapping the live face onto a model that isn't loaded as a cast member isn't possible; only cast members can be put on camera.
 
 ## Live streaming (4.5)
 

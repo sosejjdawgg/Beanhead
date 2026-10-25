@@ -219,6 +219,20 @@ body.sheet-open #tvBar,body.placing #tvBar,.clean #tvBar{display:none}
 .vrow .step{width:38px;height:38px;border-radius:12px}
 .vvol{display:flex;align-items:center;gap:12px;font-size:15px;margin:8px 0 2px}
 .vvol input{flex:1;accent-color:var(--nut)}
+/* studio */
+#shotBar{position:fixed;z-index:12;left:calc(14px + env(safe-area-inset-left,0px));top:calc(74px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:6px}
+.shb{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--panel);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px var(--line),0 6px 16px rgba(0,0,0,.3);color:var(--ink);font:600 15px var(--mono)}
+.shb.on{background:var(--nut);color:#1d1109}
+.shb svg{width:20px;height:20px}
+body.sheet-open #shotBar,.clean #shotBar,body.placing #shotBar,body.adjusting #shotBar{display:none}
+#camPad{position:fixed;inset:0;z-index:26;touch-action:none}
+#camBar{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:27;width:min(540px,calc(100% - 24px));display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:22px;background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line),0 14px 40px rgba(0,0,0,.5)}
+#camBar p{margin:0 4px;color:var(--mute);font-size:13px} #camBar .rbtns{display:flex;gap:8px} #camBar .pill{flex:1;height:44px}
+body.adjusting #hud{opacity:0!important;pointer-events:none} body.adjusting #hud *{pointer-events:none!important}
+#loopBar{position:fixed;z-index:40;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border-radius:99px;background:#ff3b30;color:#fff;font:500 13px var(--mono);box-shadow:0 8px 24px rgba(255,59,48,.35);white-space:nowrap}
+#loopBar b{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s steps(2) infinite}
+#loopBar .pill{height:32px;padding:0 12px;font-size:13px;flex:none}
+#loopBar .pill:not(.hot){background:rgba(0,0,0,.25);color:#fff}
 /* live streaming */
 #liveBtn{position:absolute;right:calc(27px + env(safe-area-inset-right,0px));bottom:calc(252px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:16px;
   display:grid;place-items:center;background:var(--panel);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px var(--line),0 8px 20px rgba(0,0,0,.35);color:var(--ink)}
@@ -478,6 +492,7 @@ body.rigging #hud *{pointer-events:none!important}
   <symbol id="down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
   <symbol id="tv" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="12.5" rx="2.5"/><path d="M8.5 3l3.5 4 3.5-4"/></symbol>
   <symbol id="film" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M7.5 4.5v15M16.5 4.5v15M3.5 9h4M3.5 14.5h4M16.5 9h4M16.5 14.5h4"/></symbol>
+  <symbol id="clap" viewBox="0 0 24 24"><path d="M4 10h16v9.5H4z"/><path d="M4 10 5.5 5l14 3.5L20 10"/><path d="M8.5 6.2 9.8 10M13 7.3l1.3 2.7"/></symbol>
   <symbol id="dots" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/></symbol>
   <symbol id="hand" viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10V4.5a1.5 1.5 0 0 1 3 0V11M14 10.5V6a1.5 1.5 0 0 1 3 0v7.5c0 4-2.5 7-6 7s-5-1.8-6.5-4.5L3 12.8a1.5 1.5 0 0 1 2.5-1.6L8 14"/></symbol>
   <symbol id="cube" viewBox="0 0 24 24"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></symbol>
@@ -534,7 +549,7 @@ body.rigging #hud *{pointer-events:none!important}
     <button class="bb press" id="bSettings"><svg class="i"><use href="#sliders"/></svg>Settings</button>
     <button class="bb press puppet-only" id="bLayout"><svg class="i"><use href="#move"/></svg>Layout</button>
     <button class="bb press puppet-only" id="bCut"><svg class="i"><use href="#cutout"/></svg>Edges</button>
-    <button class="bb press puppet-only" id="bImage"><svg class="i"><use href="#plus"/></svg>New</button>
+    <button class="bb press" id="bStudio"><svg class="i"><use href="#clap"/></svg>Studio</button>
     <button class="bb press" id="bFlip"><svg class="i"><use href="#flip"/></svg>Flip</button>
     <button class="bb press" id="bClean"><svg class="i"><use href="#eye"/></svg>Hide</button>
   </nav>
@@ -563,6 +578,10 @@ body.rigging #hud *{pointer-events:none!important}
   <div class="tvrow"><span id="tvInfo"></span><input type="range" id="tvVol" min="0" max="1" step="0.01" aria-label="TV volume"><button class="tvb press" id="tvList" aria-label="TV videos"><svg class="i"><use href="#list"/></svg></button><button class="tvb press" id="tvClose" aria-label="Close TV controls"><svg class="i"><use href="#x"/></svg></button></div>
   <div class="tvrow ctl"><button class="tvb press" id="tvPrev" aria-label="Previous video"><svg class="i"><use href="#prev"/></svg></button><button class="tvb big press" id="tvPlay" aria-label="Play"><svg class="i"><use href="#play"/></svg></button><button class="tvb press" id="tvNext" aria-label="Next video"><svg class="i"><use href="#next"/></svg></button><button class="tvb press" id="tvHear" aria-label="Hear video sound on this phone"><svg class="i"><use href="#speaker"/></svg></button><button class="tvb press" id="tvOff" aria-label="Remove the TV"><svg class="i"><use href="#trash"/></svg></button></div>
 </div>
+<nav id="shotBar" hidden aria-label="Cameras"></nav>
+<div id="camPad" hidden></div>
+<div id="camBar" hidden><p>One finger: orbit around. Two fingers: move and zoom.</p><div class="rbtns"><button class="pill press" id="camCancel">Cancel</button><button class="pill hot press" id="camSave">Save camera</button></div></div>
+<div id="loopBar" hidden><b></b><span>Recording loop</span><span id="loopTime">0.0</span><button class="pill press" id="loopCancel">Cancel</button><button class="pill hot press" id="loopStop">Done</button></div>
 <div id="flash" aria-live="polite"></div>
 <div id="shutter" aria-hidden="true"></div>
 <img id="shotPrev" alt="" hidden>
@@ -646,6 +665,7 @@ const DEFAULTS = {
   coachSeen:false, psx:"modern", body:false,
   faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mEyeZ:0, mMouthZ:0, mEyeRot:0, mMouthRot:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true, mFrame:"full",
   mirror:true, pip_on:true, deviceId:"", facing:"user", hearVideos:true,
+  studio:{cast:[], shots:[], shot:-1, smooth:true, lock:false},
   bgList:[], bgMode:"all", bgVol:0, tv:{on:false, x:1.05, y:1.3, z:0.4, s:0.7, r:-0.35, list:[], mode:"all", vol:0.8, i:0, playing:true}
 };
 const WORLD_OPTS = [["auto","Auto-morph"],["meadow","Meadow"],["canyon","Canyon"],["city","Neon City"],["islands","Islands"],["snow","Snowfield"],["alien","Alien"],
@@ -655,20 +675,33 @@ try{ Object.assign(S, JSON.parse(localStorage.getItem("peanutcam") || "{}")); }c
 // settings that belong to "what's on screen": the peanut has its own copy, every character has its own
 const SCOPED = ["bg","bgColor","world","wBiome","wMorph","wSpeed","wRes","wJitter","wAffine","wDither","wDepth","wFog","wParallax","psx",
   "skinMatch","depth","retouch","blend","eyeMargin","mouthMargin","feather","symFill","light","zoom",
-  "bgList","bgMode","bgVol","tv"];
+  "bgList","bgMode","bgVol","tv","studio"];
 const NUT_KEYS = ["nX","nY","nScale","nRot","nSpin","nTilt"];
 const CHAR_KEYS = ["pX","pY","pScale","pRot","pEyeSize","pMouthSize","pMove","pStick","pShadow"];
 const MODEL_KEYS = ["faceMode","mEyeSpacing","mEyeY","mMouthY","mEyeSize","mMouthSize","mFaceZ","mEyeZ","mMouthZ","mEyeRot","mMouthRot","mCurve","mFaceK","mTurn","mHeadBone","mFrame"];
 const charType = id => CHARS.find(c => c.id === id)?.type || "image";
-let scopeId = "peanut";
+let scopeId = "peanut";   // whose studio is open (background, cast, cameras)
+let leadRef = "peanut";   // who wears the live face; the studio's owner unless a studio camera moved it to a cast member
 const scopeKeys = id => id === "peanut" ? [...SCOPED, ...NUT_KEYS] : id === "x" ? [...SCOPED, ...CHAR_KEYS, ...NUT_KEYS, ...MODEL_KEYS]
   : charType(id) === "model" ? [...SCOPED, ...NUT_KEYS, ...MODEL_KEYS] : [...SCOPED, ...CHAR_KEYS];
 const pick = (keys, src = S) => Object.fromEntries(keys.map(k => [k, src[k]]));
 let charSaveT = null;
+const charKeys = ref => ref === "peanut" ? NUT_KEYS : charType(ref) === "model" ? [...NUT_KEYS, ...MODEL_KEYS] : CHAR_KEYS;
+const saveTimers = new Map();
+// merge settings into a character's record (keeps the cfg object, which a loaded model holds on to)
+function writeCfg(id, part){
+  if (id === "peanut"){ try{ localStorage.setItem("peanutcam.peanut", JSON.stringify({...scopeCfg("peanut"), ...part})); }catch(e){} return; }
+  const c = CHARS.find(c => c.id === id); if (!c) return;
+  c.cfg = Object.assign(c.cfg || {}, part);
+  clearTimeout(saveTimers.get(id)); saveTimers.set(id, setTimeout(() => persistChar(c), 500));
+}
 function storeScope(){
+  if (leadRef !== scopeId){                       // studio settings to the studio's owner, the live character's own to it
+    writeCfg(scopeId, pick(SCOPED)); writeCfg(leadRef, pick(charKeys(leadRef))); return;
+  }
   const cfg = pick(scopeKeys(scopeId));
   if (scopeId === "peanut"){ try{ localStorage.setItem("peanutcam.peanut", JSON.stringify(cfg)); }catch(e){} }
-  else { const c = CHARS.find(c => c.id === scopeId); if (c){ c.cfg = cfg; clearTimeout(charSaveT); charSaveT = setTimeout(() => persistChar(c), 500); } }
+  else { const c = CHARS.find(c => c.id === scopeId); if (c){ c.cfg = Object.assign(c.cfg || {}, cfg); clearTimeout(charSaveT); charSaveT = setTimeout(() => persistChar(c), 500); } }
 }
 const save = () => { try{ localStorage.setItem("peanutcam", JSON.stringify(S)); }catch(e){} storeScope(); };
 function scopeCfg(id){
@@ -677,7 +710,8 @@ function scopeCfg(id){
 }
 async function loadScope(id){
   storeScope();
-  scopeId = id;
+  studioClear();
+  scopeId = id; leadRef = id;
   const cfg = scopeCfg(id);
   for (const k of scopeKeys(id)) S[k] = k in cfg ? cfg[k] : DEFAULTS[k];
   await loadBgPhoto();
@@ -887,7 +921,7 @@ async function loadModelFile(c){
       const g = await loader.loadAsync(url);
       const vrm = g.userData.vrm || null;
       if (vrm && V){ V.VRMUtils.removeUnnecessaryVertices?.(g.scene); V.VRMUtils.rotateVRM0?.(vrm); }
-      out = {root: vrm ? vrm.scene : g.scene, vrm, gltf:true};
+      out = {root: vrm ? vrm.scene : g.scene, vrm, gltf:true, anims:g.animations || []};
     } else if (ext === "obj"){
       const {OBJLoader} = await import("three/addons/loaders/OBJLoader.js");
       const loader = new OBJLoader(manager);
@@ -902,7 +936,7 @@ async function loadModelFile(c){
       const o = loader.parse(objText);
       o.traverse(m => { if (m.isMesh) m.material = [].concat(m.material).map(x => !x || (x.type === "MeshPhongMaterial" && !x.map && !mtl) ? std() : x).reduce((a, x, i, arr) => arr.length > 1 ? arr : x, null); });
       out = {root:o};
-    } else if (ext === "fbx"){ const {FBXLoader} = await import("three/addons/loaders/FBXLoader.js"); out = {root: await new FBXLoader(manager).loadAsync(url)}; }
+    } else if (ext === "fbx"){ const {FBXLoader} = await import("three/addons/loaders/FBXLoader.js"); const r = await new FBXLoader(manager).loadAsync(url); out = {root:r, anims:r.animations || []}; }
     else if (ext === "stl"){ const {STLLoader} = await import("three/addons/loaders/STLLoader.js"); const g = await new STLLoader(manager).loadAsync(url); g.computeVertexNormals(); out = {root:new THREE.Mesh(g, std())}; }
     else if (ext === "ply"){ const {PLYLoader} = await import("three/addons/loaders/PLYLoader.js"); const g = await new PLYLoader(manager).loadAsync(url); g.computeVertexNormals();
       const m = std(); if (g.attributes.color){ m.vertexColors = true; m.color.set(0xffffff); } out = {root:new THREE.Mesh(g, m)}; }
@@ -969,10 +1003,10 @@ function sampleMat(hit){
   }
   return [c.r, c.g, c.b];
 }
-function applyModelStyle(){
-  if (!MDL) return;
-  const ours = new Set(); faceAnchor.traverse(o => ours.add(o));         // our eyes and mouth ride on the head bone; leave them alone
-  MDL.root.traverse(o => {
+function applyModelStyle(M = MDL){
+  if (!M) return;
+  const ours = new Set(); faceAnchor.traverse(o => ours.add(o)); M.anchor?.traverse(o => ours.add(o));   // our eyes and mouth ride on the head bone; leave them alone
+  M.root.traverse(o => {
     if (!o.isMesh || ours.has(o)) return;
     for (const m of [].concat(o.material)){
       if (!m || m.isShaderMaterial) continue;
@@ -985,17 +1019,28 @@ function applyModelStyle(){
   });
 }
 let modelTicket = 0;
+// the model on stage (wearing your face): load it, fit it, put it in the stage rig
 async function setModelFrom(c){
   const ticket = ++modelTicket;
   if (MDL){ mturn.remove(MDL.root); faceAnchor.parent?.remove(faceAnchor); MDL = null; }
-  const {root, vrm, applied} = await loadModelFile(c);
+  const M = await buildModel(c, S.mTurn);
   if (ticket !== modelTicket) throw new Error("superseded");          // another character was opened meanwhile
   for (const ch of [...mturn.children]) mturn.remove(ch);              // never two models on stage
-  if (applied) toast(`Applied ${applied === 1 ? "a texture" : applied + " textures"} from the files you picked.`);
-  root.traverse(o => { if (o.isLight || o.isCamera) o.visible = false; });
+  if (M.applied) toast(`Applied ${M.applied === 1 ? "a texture" : M.applied + " textures"} from the files you picked.`);
   mrig.position.set(0, 0, 0); mrig.rotation.set(0, 0, 0); mrig.scale.set(1, 1, 1); mbody.rotation.set(0, 0, 0); mbody.scale.set(1, 1, 1);
-  const turn = (S.mTurn || 0) * Math.PI/2;
-  mturn.rotation.set(0, turn, 0);
+  mturn.rotation.set(0, M.turn, 0);
+  mturn.add(M.root); mrig.updateWorldMatrix(true, true);
+  MDL = M;
+  fitFace();
+  if (!c.cfg.faceModeSet){ c.cfg.faceModeSet = true; c.cfg.faceMode = (M.vrm?.expressionManager || M.arkit) ? "model" : "overlay"; S.faceMode = c.cfg.faceMode; persistChar(c); }
+  applyModelStyle();
+  return MDL;
+}
+// load and fit a model (3.9 units tall, centred, feet on the floor line) without putting it anywhere
+async function buildModel(c, turnSteps = 0){
+  const {root, vrm, applied, anims} = await loadModelFile(c);
+  root.traverse(o => { if (o.isLight || o.isCamera) o.visible = false; });
+  const turn = (turnSteps || 0) * Math.PI/2;
   // measure what the GPU actually draws (CPU skinning maths disagrees with the GPU for some exports)
   const tmp = new THREE.Scene(), tg = new THREE.Group(); tg.rotation.y = turn; tmp.add(tg); tg.add(root);
   tmp.add(new THREE.AmbientLight(0xffffff, 2.0), new THREE.DirectionalLight(0xffffff, 1.5));
@@ -1050,12 +1095,7 @@ async function setModelFrom(c){
   root.traverse(o => { if (o.morphTargetDictionary && o.morphTargetInfluences){ const map = {}; for (const [k, i] of Object.entries(o.morphTargetDictionary)) map[k.toLowerCase().replace(/^.*[.:]/, "").replace(/[^a-z]/g, "")] = i; morphs.push({o, map}); } });
   const arkit = morphs.some(m => "jawopen" in m.map || "eyeblinkleft" in m.map);
   rt.dispose();
-  mturn.add(root); mrig.updateWorldMatrix(true, true);
-  MDL = {id:c.id, root, vrm, rig, morphs, arkit, head:rig.head, own, autoRig:auto ? c.cfg.autoRig.type : null, tail:auto?.tail || [], turn, bx:bx.clone(), cfg:c.cfg};
-  fitFace();
-  if (!c.cfg.faceModeSet){ c.cfg.faceModeSet = true; c.cfg.faceMode = (vrm?.expressionManager || arkit) ? "model" : "overlay"; S.faceMode = c.cfg.faceMode; persistChar(c); }
-  applyModelStyle();
-  return MDL;
+  return {id:c.id, root, vrm, rig, morphs, arkit, head:rig.head, own, autoRig:auto ? c.cfg.autoRig.type : null, tail:auto?.tail || [], turn, bx:bx.clone(), cfg:c.cfg, applied, anims:anims || []};
 }
 // the model's own face, driven by your expressions (VRM expressions or ARKit-named shape keys)
 const swapLR = n => n.replace(/left/g, "#").replace(/right/g, "left").replace(/#/g, "right");
@@ -1082,10 +1122,11 @@ function driveFace(){
 /* ---------- where the eyes and mouth sit on a model ----------
    Spot = the point you placed (stored relative to the model), else the head joint/bone, else near the top;
    when it was guessed, it's refined to the nose (the face's most forward point) and lifted to eye level. */
-function fitFace(){
-  const M = MDL; if (!M) return;
-  const {root, rig, bx} = M, turn = M.turn = (S.mTurn || 0) * Math.PI/2, cfg = M.cfg || {};
-  faceAnchor.parent?.remove(faceAnchor);                              // never measure our own eyes and mouth
+// M = which model (the one on stage by default); anchor/body = where its face anchor hangs; cs = its settings
+function fitFace(M = MDL, anchor = faceAnchor, body = mbody, cs = S){
+  if (!M) return;
+  const {root, rig, bx} = M, turn = M.turn = (cs.mTurn || 0) * Math.PI/2, cfg = M.cfg || {};
+  anchor.parent?.remove(anchor);                                      // never measure our own eyes and mouth
   const par = root.parent;
   const tmp = new THREE.Scene(), tg = new THREE.Group(); tg.rotation.y = turn; tmp.add(tg); tg.add(root);
   tmp.add(new THREE.AmbientLight(0xffffff, 2.0), new THREE.DirectionalLight(0xffffff, 1.5));
@@ -1169,13 +1210,13 @@ function fitFace(){
   rt.dispose(); depthMat.dispose();
   par.add(root);
   // the tg frame is the body's own frame, so the spot goes straight onto the anchor
-  faceAnchor.position.set(cx, cy, 0); faceAnchor.rotation.set(0, 0, 0); faceAnchor.scale.set(1, 1, 1);
-  mbody.add(faceAnchor); mrig.updateWorldMatrix(true, true);
-  if (rig.head && S.mHeadBone) rig.head.attach(faceAnchor);
+  anchor.position.set(cx, cy, 0); anchor.rotation.set(0, 0, 0); anchor.scale.set(1, 1, 1);
+  body.add(anchor); body.updateWorldMatrix(true, true);
+  if (rig.head && cs.mHeadBone) rig.head.attach(anchor);
   M.face = {z0, R, f:Math.max(0.05, r/0.9)};
   M.faceRest = new THREE.Vector3(cx, cy, z0);                        // in the body's frame (= world with the model at rest)
   M.tint = new THREE.Color().setRGB(...tint);
-  if (stageMode === "model"){ tintU.value.copy(M.tint); resize(); }
+  if (M === MDL && stageMode === "model"){ tintU.value.copy(M.tint); resize(); }
 }
 
 /* ---------- rigging tool: give a boneless model a skeleton (two-legged humanoid or four-legged pet) ----------
@@ -1486,6 +1527,8 @@ function syncArms(){
 /* ---------- puppet (2D picture) ---------- */
 const PUP_H = 3.5;
 const puppet = new THREE.Group(); puppet.visible = false; scene.add(puppet);
+// the character wearing your face (peanut, picture or model) stands in this slot; in a studio it moves to whoever is on camera
+const leadSlot = new THREE.Group(); scene.add(leadSlot); leadSlot.add(rig, puppet, mrig);
 // puppet -> pGrip (the hand holding the stick: position, tilt, size) -> pBody (picture, stick, shadow, features)
 const pGrip = new THREE.Group(); puppet.add(pGrip);
 const pBody = new THREE.Group(); pGrip.add(pBody);
@@ -1517,13 +1560,13 @@ function stickTexture(){
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
   return t;
 }
-function shadowTexture(cv, Wd, Hd = PUP_H){
+function shadowTexture(cv, Wd, Hd = PUP_H, stick = S.pStick){
   const pad = 0.45, x0 = -Wd/2 - pad, x1 = Wd/2 + pad, y1 = Hd/2 + pad, y0 = STICK.top - STICK.len - pad;
   const k = Math.min(160, 700 / (y1 - y0));          // canvas pixels per world unit
   const c = document.createElement("canvas"); c.width = Math.round((x1 - x0)*k); c.height = Math.round((y1 - y0)*k);
   const x = c.getContext("2d");
   x.drawImage(cv, (-Wd/2 - x0)*k, (y1 - Hd/2)*k, Wd*k, Hd*k);
-  x.beginPath(); x.roundRect((-STICK.w/2 - x0)*k, (y1 - STICK.top)*k, STICK.w*k, STICK.len*k, STICK.w*k/2); x.fillStyle = "#000"; if (S.pStick) x.fill();
+  x.beginPath(); x.roundRect((-STICK.w/2 - x0)*k, (y1 - STICK.top)*k, STICK.w*k, STICK.len*k, STICK.w*k/2); x.fillStyle = "#000"; if (stick) x.fill();
   x.globalCompositeOperation = "source-in"; x.fillStyle = "#000"; x.fillRect(0, 0, c.width, c.height);
   const b = document.createElement("canvas"); b.width = c.width; b.height = c.height;
   const bx = b.getContext("2d"); bx.filter = `blur(${Math.round(k*0.09)}px)`; bx.drawImage(c, 0, 0);
@@ -1536,22 +1579,24 @@ function clearPuppet(){
   for (const m of [...pBody.children]){ if (keep.has(m)) continue; pBody.remove(m); m.geometry?.dispose(); m.material?.map?.dispose(); m.material?.dispose(); }
   if (PUP) PUP.meshes = null;
 }
-function buildPuppet(){
-  clearPuppet();
-  const cv = PUP.canvas, w = cv.width, h = cv.height, pad = PUP.pad || 0, s = PUP_H / (h - 2*pad), Wd = w*s, Hd = h*s;   // outlines add a margin; the character keeps its size
-  PUP.s = s;
+function buildPuppet(){ clearPuppet(); buildPuppetInto(PUP, pBody, S); }
+// a picture character's meshes (picture, stick, shadow) for P, added to host; cs = its settings
+function buildPuppetInto(P, host, cs){
+  const cv = P.canvas, w = cv.width, h = cv.height, pad = P.pad || 0, s = PUP_H / (h - 2*pad), Wd = w*s, Hd = h*s;   // outlines add a margin; the character keeps its size
+  P.s = s;
   const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const pic = new THREE.Mesh(new THREE.PlaneGeometry(Wd, Hd), new THREE.MeshBasicMaterial({map:tex, transparent:true, toneMapped:false, alphaTest:0.02}));
   pic.renderOrder = 2;
   const stick = new THREE.Mesh(new THREE.PlaneGeometry(STICK.w, STICK.len), new THREE.MeshBasicMaterial({map:stickTexture(), transparent:true, toneMapped:false, alphaTest:0.02}));
-  stick.position.set(0, STICK.top - STICK.len/2, -0.03); stick.renderOrder = 1; stick.visible = S.pStick;
-  const sh = shadowTexture(cv, Wd, Hd);
+  stick.position.set(0, STICK.top - STICK.len/2, -0.03); stick.renderOrder = 1; stick.visible = cs.pStick;
+  const sh = shadowTexture(cv, Wd, Hd, cs.pStick);
   const shadow = new THREE.Mesh(new THREE.PlaneGeometry(sh.w, sh.h), new THREE.MeshBasicMaterial({map:sh.t, transparent:true, opacity:0.42, depthWrite:false, toneMapped:false}));
-  shadow.position.set(sh.cx + 0.13, sh.cy - 0.16, -0.22); shadow.renderOrder = 0; shadow.visible = S.pShadow;
-  pBody.add(shadow, stick, pic);
-  PUP.meshes = [pic, stick, shadow]; PUP.stick = stick; PUP.shadow = shadow;
+  shadow.position.set(sh.cx + 0.13, sh.cy - 0.16, -0.22); shadow.renderOrder = 0; shadow.visible = cs.pShadow;
+  host.add(shadow, stick, pic);
+  P.meshes = [pic, stick, shadow]; P.stick = stick; P.shadow = shadow;
 }
-const pxToWorld = (p) => PUP ? [(p[0] + (PUP.pad || 0) - PUP.canvas.width/2) * PUP.s, (PUP.canvas.height/2 - p[1] - (PUP.pad || 0)) * PUP.s] : [0, 0];
+const pxToWorldP = (P, p) => P ? [(p[0] + (P.pad || 0) - P.canvas.width/2) * P.s, (P.canvas.height/2 - p[1] - (P.pad || 0)) * P.s] : [0, 0];
+const pxToWorld = p => pxToWorldP(PUP, p);
 
 /* ---------- face features ----------
    Each feature is a ring mesh built from face landmarks: centre -> contour -> skin rings -> feathered edge.
@@ -1577,12 +1622,12 @@ const frameCtx = frameCanvas.getContext("2d", {alpha:false});
 const videoTex = new THREE.CanvasTexture(frameCanvas);
 videoTex.minFilter = THREE.LinearFilter; videoTex.magFilter = THREE.LinearFilter; videoTex.generateMipmaps = false;
 const texelU = { value: new THREE.Vector2(1/1280, 1/720) };
-function featureMaterial(){
+function featureMaterial(map = videoTex, tint = tintU, texel = texelU){
   return new THREE.ShaderMaterial({
     transparent:true, depthWrite:false, side:THREE.DoubleSide,
     polygonOffset:true, polygonOffsetFactor:-4, polygonOffsetUnits:-4,
-    uniforms:{ map:{value:videoTex}, opacity:{value:0}, blend:{value:S.blend}, skinMatch:{value:S.skinMatch},
-      relief:{value:1}, smoothSkin:{value:0.8}, tint:tintU, texel:texelU, light:{value:1}, uSnap:PSXU.uSnap, uPsxJ:PSXU.uPsxJ, uLin:PSXU.uLin },
+    uniforms:{ map:{value:map}, opacity:{value:0}, blend:{value:S.blend}, skinMatch:{value:S.skinMatch},
+      relief:{value:1}, smoothSkin:{value:0.8}, tint, texel, light:{value:1}, uSnap:PSXU.uSnap, uPsxJ:PSXU.uPsxJ, uLin:PSXU.uLin },
     vertexShader:`
       uniform vec2 uSnap; uniform float uPsxJ;
       attribute float alpha; attribute float core; attribute vec3 snormal;
@@ -1631,7 +1676,7 @@ function featureMaterial(){
       }`
   });
 }
-function makeFeatureMesh(N, ringAlphas, ringCores, order, lipStrip){
+function makeFeatureMesh(N, ringAlphas, ringCores, order, lipStrip, mat){
   const nv = 1 + N * ringAlphas.length, g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(nv*3), 3).setUsage(THREE.DynamicDrawUsage));
   g.setAttribute("normal", new THREE.BufferAttribute(new Float32Array(nv*3), 3).setUsage(THREE.DynamicDrawUsage));
@@ -1656,9 +1701,9 @@ function makeFeatureMesh(N, ringAlphas, ringCores, order, lipStrip){
     }
   }
   g.setIndex(idx);
-  const mesh = new THREE.Mesh(g, featureMaterial());
+  const mesh = new THREE.Mesh(g, mat || featureMaterial());
   mesh.frustumCulled = false; mesh.renderOrder = order; mesh.visible = false;
-  nut.add(mesh);
+  if (!mat) nut.add(mesh);
   return mesh;
 }
 const EYE_RINGS = [1, 1, 0], EYE_CORE = [1, 0, 0], MOUTH_RINGS = [1, 1, 1, 0], MOUTH_CORE = [1, 1, 0, 0];
@@ -1738,7 +1783,7 @@ function resize(){
     else { const top = fr.y + Math.max(f*1.8, 0.35), bot = Math.max(MDL.bx.min.y, fr.y - Math.max(f*7, 1.4)); halfH = (top - bot)/2 + 0.1; halfW = halfH*0.75; cy = ly = (top + bot)/2; }
   }
   const dist = fitDist(halfH, halfW) / S.zoom;
-  VIEW.basePos.set(cx, cy, dist); VIEW.baseTgt.set(cx, ly, 0);
+  VIEW.basePos.set(cx, cy, dist).add(leadSlot.position); VIEW.baseTgt.set(cx, ly, 0).add(leadSlot.position);
   if (!VIEW.over){ VIEW.pos.copy(VIEW.basePos); VIEW.tgt.copy(VIEW.baseTgt); }
   applyView();
 }
@@ -1899,12 +1944,14 @@ const TV = {g:new THREE.Group(), screen:null, glass:null, tex:null, idle:null};
 })();
 TVP.onchange = () => {
   const v = TVP.el, a = TVP.ready && v.videoWidth ? v.videoWidth / v.videoHeight : 0;
-  TV.screen.material.map = a ? TV.tex : TV.idle; TV.screen.material.needsUpdate = true;
-  const W = 1.14, Hh = 0.66;                                           // fit the clip inside the screen
-  if (!a) TV.screen.scale.set(W, Hh, 1); else if (a > W/Hh) TV.screen.scale.set(W, W/a, 1); else TV.screen.scale.set(Hh*a, Hh, 1);
+  if (a || !TVP.ids.length){                                           // between clips, keep the last picture rather than flash the card
+    const map = a ? TV.tex : TV.idle; if (TV.screen.material.map !== map){ TV.screen.material.map = map; TV.screen.material.needsUpdate = true; }
+    const W = 1.14, Hh = 0.66;                                         // fit the clip inside the screen
+    if (!a) TV.screen.scale.set(W, Hh, 1); else if (a > W/Hh) TV.screen.scale.set(W, W/a, 1); else TV.screen.scale.set(Hh*a, Hh, 1);
+  }
   syncTvBar();
 };
-$("#tvVid").addEventListener("playing", () => TVP.onchange());
+for (const ev of ["playing", "loadeddata", "canplay"]) $("#tvVid").addEventListener(ev, () => TVP.onchange());
 function tvCfg(){ return own("tv"); }
 function syncTV(){
   const t = tvCfg(), show = t.on && mode !== "menu";
@@ -1946,21 +1993,29 @@ $("#tvOff").onclick = () => { buzz(8); tvCfg().on = false; save(); syncTV(); toa
 TVP.el.addEventListener("play", syncTvBar); TVP.el.addEventListener("pause", syncTvBar);
 TVP.el.addEventListener("ended", () => { tvCfg().i = TVP.i; });
 
-// ---- touching the TV: drag to move it, pinch to resize, twist to turn it, tap for its controls
-const TVG = {pts:new Map(), base:null, moved:false, t0:0, max:0};
+// ---- touching the TV or a studio cast member: drag to move it, pinch to resize, twist to turn it, tap for its controls
+// (the target's cfg holds x, y, z, s, r; obj is the thing on screen)
+const TVG = {pts:new Map(), base:null, moved:false, t0:0, max:0, tgt:null};
 const _tvr = new THREE.Raycaster(), _tvn = new THREE.Vector2();
 function tvHit(x, y){
-  if (!TV.g.visible) return false;
+  if (!TV.g.visible || stuCfg().lock) return false;
   _tvn.set(x/innerWidth*2 - 1, -(y/innerHeight*2 - 1)); _tvr.setFromCamera(_tvn, camera);
   return _tvr.intersectObject(TV.g, true).length > 0;
 }
+function grabTarget(x, y){
+  if (tvHit(x, y)) return {cfg:tvCfg(), obj:TV.g, apply:() => { const t = tvCfg(); TV.g.position.set(t.x, t.y, t.z); TV.g.scale.setScalar(t.s); TV.g.rotation.y = t.r; },
+    tap:() => { $("#tvBar").hidden ? openTvBar() : ($("#tvBar").hidden = true); }};
+  const X = castHit(x, y); if (!X) return null;
+  if (X.uid === "host" && !stuCfg().host) stuCfg().host = {x:0, y:0, z:0, s:1, r:0};
+  return {cfg:slotOf(X.uid), obj:X.slot, apply:() => placeSlot(X), tap:() => castOptions(X.uid)};
+}
 function tvBaseline(){
-  const p = [...TVG.pts.values()], t = tvCfg(), n = p.length;
+  const p = [...TVG.pts.values()], t = TVG.tgt.cfg, n = p.length;
   TVG.base = {n, cx:p.reduce((a, q) => a + q.x, 0)/n, cy:p.reduce((a, q) => a + q.y, 0)/n, d:n > 1 ? Math.max(20, Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y)) : 1,
     a:n > 1 ? Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x) : 0, x:t.x, y:t.y, z:t.z, s:t.s, r:t.r};
 }
 canvas.addEventListener("pointerdown", e => {
-  if (!TVG.pts.size && !tvHit(e.clientX, e.clientY)) return;
+  if (!TVG.pts.size){ if (mode === "menu" || PF.on || RIGE.on || editing) return; TVG.tgt = grabTarget(e.clientX, e.clientY); if (!TVG.tgt) return; }
   e.stopImmediatePropagation();
   if (!TVG.pts.size){ TVG.moved = false; TVG.t0 = performance.now(); TVG.max = 0; }
   TVG.pts.set(e.pointerId, {x:e.clientX, y:e.clientY}); TVG.max = Math.max(TVG.max, TVG.pts.size);
@@ -1971,12 +2026,12 @@ canvas.addEventListener("pointermove", e => {
   if (!TVG.pts.has(e.pointerId)) return;
   e.stopImmediatePropagation();
   TVG.pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
-  const p = [...TVG.pts.values()], b = TVG.base, t = tvCfg(); if (p.length !== b.n) return;
+  const p = [...TVG.pts.values()], b = TVG.base, t = TVG.tgt.cfg; if (p.length !== b.n) return;
   const cx = p.reduce((a, q) => a + q.x, 0)/b.n, cy = p.reduce((a, q) => a + q.y, 0)/b.n, dx = cx - b.cx, dy = cy - b.cy;
   if (!TVG.moved && Math.hypot(dx, dy) < 6 && b.n === 1) return;
   if (!TVG.moved){ TVG.moved = true; buzz(5); }
-  // move in the camera's own plane, at the TV's distance
-  const k = 2 * tanHalfFov() * camera.position.distanceTo(TV.g.position) / innerHeight;
+  // move in the camera's own plane, at the thing's distance
+  const k = 2 * tanHalfFov() * camera.position.distanceTo(TVG.tgt.obj.getWorldPosition(new THREE.Vector3())) / innerHeight;
   const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion), up = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
   t.x = b.x + (right.x*dx - up.x*dy)*k; t.y = b.y + (right.y*dx - up.y*dy)*k; t.z = b.z + (right.z*dx - up.z*dy)*k;
   if (b.n >= 2){
@@ -1984,13 +2039,13 @@ canvas.addEventListener("pointermove", e => {
     if (da > Math.PI) da -= 2*Math.PI; if (da < -Math.PI) da += 2*Math.PI;
     t.s = clamp(b.s * d / b.d, 0.2, 3); t.r = b.r - da;
   }
-  TV.g.position.set(t.x, t.y, t.z); TV.g.scale.setScalar(t.s); TV.g.rotation.y = t.r;
+  TVG.tgt.apply();
 }, true);
 const tvEnd = e => {
   if (!TVG.pts.delete(e.pointerId)) return;
   e.stopImmediatePropagation();
   if (TVG.pts.size){ tvBaseline(); return; }
-  if (!TVG.moved && TVG.max === 1 && performance.now() - TVG.t0 < 400){ buzz(8); $("#tvBar").hidden ? openTvBar() : ($("#tvBar").hidden = true); }
+  if (!TVG.moved && TVG.max === 1 && performance.now() - TVG.t0 < 400){ buzz(8); TVG.tgt.tap(); }
   suppressClick = true; save();
 };
 canvas.addEventListener("pointerup", tvEnd, true); canvas.addEventListener("pointercancel", tvEnd, true);
@@ -2237,14 +2292,14 @@ function fillFeature(buf, innerIds, baseIds, offsets){
     }
   }
 }
-function placeFeature(mesh, buf, ax, ay, ox, oy, k, flipX, cavity, rot = 0){
+function placeFeature(mesh, buf, ax, ay, ox, oy, k, flipX, cavity, rot = 0, surf = SURF){
   const g = mesh.geometry, pos = g.attributes.position.array, sn = g.attributes.snormal.array, uv = g.attributes.uv.array, al = g.attributes.alpha.array;
   const mx = S.mirror ? -1 : 1, N = buf.N;
   let zRef = 0; for (let i = buf.nv - N; i < buf.nv; i++) zRef += buf.F[i].z; zRef /= N;
   const depth = S.depth * k * 0.42, rc = Math.cos(rot), rs = Math.sin(rot);
   for (let v = 0; v < buf.nv; v++){
     const f = buf.F[v], fx = flipX ? -f.x : f.x, o = v*3, dx = (fx - ox)*k*mx, dy = -(f.y - oy)*k;
-    SURF(ax + dx*rc - dy*rs, ay + dx*rs + dy*rc, pos, o, sn, o);
+    surf(ax + dx*rc - dy*rs, ay + dx*rs + dy*rc, pos, o, sn, o);
     let h = -(f.z - zRef) * depth * al[v];
     if (cavity && v >= 1 && v <= N) h -= cavity;
     h = clamp(h, -0.006, 0.11);
@@ -2328,33 +2383,46 @@ function track(now){
   W.eyeR = far < 0 ? wE : 0;  W.eyeL = far > 0 ? wE : 0;
   W.mouth = S.symFill ? smooth01(0.40, 0.70, Math.abs(yawF)) : 0;
 
-  // where the features go: on the peanut, or on the uploaded picture
+  const n2 = Fs.get(2);
+  FACE.far = far; FACE.jaw = jawRaw; FACE.mox = n2.x + mouthRest.x; FACE.moy = n2.y + mouthRest.y; FACE.wR = W.eyeR; FACE.wL = W.eyeL; FACE.wM = W.mouth;
+  placeFace(B, FACE, faceLayout(stageMode, S, PUP, MDL), LIVE_MESHES, SURF);
+}
+// the live face's state each frame (also what a studio loop records)
+const FACE = {far:1, jaw:0, mox:0, moy:0, wR:0, wL:0, wM:0};
+const LIVE_MESHES = {R:F_EYE.R, L:F_EYE.L, M:F_MOUTH};
+// where the eyes and mouth go and how big they are: on the peanut, a picture, or a model (cfg = that character's settings)
+function faceLayout(kind, cfg, P, M){
+  const mx = S.mirror ? -1 : 1;
   let eRx, eRy, eLx, eLy, mX, mY, kE, kM, rR = 0, rL = 0, rM = 0;
-  if (stageMode === "puppet" && PUP){
-    const m = PUP.meta, unit = m.unit * PUP.s, ro = m.rot || {};
+  if (kind === "puppet" && P){
+    const m = P.meta, unit = m.unit * P.s, ro = m.rot || {};
     rR = (S.mirror ? ro.eyeL : ro.eyeR) || 0; rL = (S.mirror ? ro.eyeR : ro.eyeL) || 0; rM = ro.mouth || 0;
-    const scrL = pxToWorld(m.eyeR), scrR = pxToWorld(m.eyeL);   // the picture's right eye sits on the left of the image
+    const scrL = pxToWorldP(P, m.eyeR), scrR = pxToWorldP(P, m.eyeL);   // the picture's right eye sits on the left of the image
     const forR = S.mirror ? scrR : scrL, forL = S.mirror ? scrL : scrR;
-    [eRx, eRy] = forR; [eLx, eLy] = forL; [mX, mY] = pxToWorld(m.mouth);
-    kE = unit * S.pEyeSize; kM = unit * S.pMouthSize;
-  } else if (stageMode === "model" && MDL){
-    const f = MDL.face.f*S.mFaceK, sp = (0.36 + S.mEyeSpacing)*f;
-    eRx = -sp*mx; eLx = sp*mx; eRy = eLy = (0.02 + S.mEyeY)*f; mX = 0; mY = (-0.66 + S.mMouthY)*f;
-    kE = 1.45 * S.mEyeSize * f * 0.8; kM = 1.2 * S.mMouthSize * f * 0.8;
-    rR = S.mEyeRot; rL = -S.mEyeRot; rM = S.mMouthRot;
+    [eRx, eRy] = forR; [eLx, eLy] = forL; [mX, mY] = pxToWorldP(P, m.mouth);
+    kE = unit * cfg.pEyeSize; kM = unit * cfg.pMouthSize;
+  } else if (kind === "model" && M?.face){
+    const f = M.face.f*cfg.mFaceK, sp = (0.36 + cfg.mEyeSpacing)*f;
+    eRx = -sp*mx; eLx = sp*mx; eRy = eLy = (0.02 + cfg.mEyeY)*f; mX = 0; mY = (-0.66 + cfg.mMouthY)*f;
+    kE = 1.45 * cfg.mEyeSize * f * 0.8; kM = 1.2 * cfg.mMouthSize * f * 0.8;
+    rR = cfg.mEyeRot; rL = -cfg.mEyeRot; rM = cfg.mMouthRot;
   } else {
-    eRx = -S.eyeSpacing*mx; eLx = S.eyeSpacing*mx; eRy = eLy = S.eyeHeight; mX = 0; mY = S.mouthHeight;
-    kE = 1.45 * S.eyeSize; kM = 1.2 * S.mouthSize;
+    eRx = -cfg.eyeSpacing*mx; eLx = cfg.eyeSpacing*mx; eRy = eLy = cfg.eyeHeight; mX = 0; mY = cfg.mouthHeight;
+    kE = 1.45 * cfg.eyeSize; kM = 1.2 * cfg.mouthSize;
   }
+  return {eRx, eRy, eLx, eLy, mX, mY, kE, kM, rR, rL, rM};
+}
+// lay the eyes and mouth (buffers B, state st) onto a surface with a layout L
+function placeFace(B, st, L, meshes, surf){
   const eyeCentre = buf => [(buf.F[1].x + buf.F[9].x)/2, (buf.F[1].y + buf.F[9].y)/2];
   const [rcx, rcy] = eyeCentre(B.R), [lcx, lcy] = eyeCentre(B.L);
-  placeFeature(F_EYE.R.real, B.R, eRx, eRy, rcx, rcy, kE, false, 0, rR);
-  placeFeature(F_EYE.L.real, B.L, eLx, eLy, lcx, lcy, kE, false, 0, rL);
-  if (W.eyeR > 0) placeFeature(F_EYE.R.alt, B.L, eRx, eRy, -lcx, lcy, kE, true, 0, rR);
-  if (W.eyeL > 0) placeFeature(F_EYE.L.alt, B.R, eLx, eLy, -rcx, rcy, kE, true, 0, rL);
-  const n2 = Fs.get(2), mox = n2.x + mouthRest.x, moy = n2.y + mouthRest.y, cav = S.depth * 0.025 * jawRaw;
-  placeFeature(F_MOUTH.real, B.M, mX, mY, mox, moy, kM, false, cav, rM);
-  if (W.mouth > 0){ symmetricMouth(B.M, B.alt, far); placeFeature(F_MOUTH.alt, B.alt, mX, mY, 0, moy, kM, false, cav, rM); }
+  placeFeature(meshes.R.real, B.R, L.eRx, L.eRy, rcx, rcy, L.kE, false, 0, L.rR, surf);
+  placeFeature(meshes.L.real, B.L, L.eLx, L.eLy, lcx, lcy, L.kE, false, 0, L.rL, surf);
+  if (st.wR > 0) placeFeature(meshes.R.alt, B.L, L.eRx, L.eRy, -lcx, lcy, L.kE, true, 0, L.rR, surf);
+  if (st.wL > 0) placeFeature(meshes.L.alt, B.R, L.eLx, L.eLy, -rcx, rcy, L.kE, true, 0, L.rL, surf);
+  const cav = S.depth * 0.025 * st.jaw;
+  placeFeature(meshes.M.real, B.M, L.mX, L.mY, st.mox, st.moy, L.kM, false, cav, L.rM, surf);
+  if (st.wM > 0){ symmetricMouth(B.M, B.alt, st.far); placeFeature(meshes.M.alt, B.alt, L.mX, L.mY, 0, st.moy, L.kM, false, cav, L.rM, surf); }
 }
 
 /* ---------- uploaded picture: cut out and find the face ---------- */
@@ -2896,7 +2964,7 @@ $("#modelFile").onchange = e => { const f = [...e.target.files]; e.target.value 
 // extra textures for a model that's already in the gallery
 $("#texFiles").onchange = async e => {
   const picked = [...e.target.files]; e.target.value = ""; if (!picked.length) return;
-  const c = CHARS.find(x => x.id === scopeId); if (!c || c.type !== "model") return;
+  const c = CHARS.find(x => x.id === leadRef); if (!c || c.type !== "model") return;
   const add = await expandFiles(picked);
   c.files = [...filesOf(c), ...add]; if (!c.main) c.main = pickMain(c.files)?.name;
   await persistChar(c);
@@ -2927,7 +2995,7 @@ async function addAndOpen(blob, name){
   else toast("Drag to move it, pinch to resize. Tap Layout to fine-tune.");
 }
 async function reprocess(){
-  const c = CHARS.find(c => c.id === scopeId);
+  const c = CHARS.find(c => c.id === leadRef);
   if (!c?.original){ toast("Upload the picture again to change this."); return; }
   try{
     const {canvas, meta} = await processImage(c.original);
@@ -2986,7 +3054,7 @@ function openModal(title, build){
   $("#modal").hidden = false;
 }
 /* ---------- about & legal ---------- */
-const VERSION = "4.5";
+const VERSION = "4.6";
 function openLegal(){
   openModal("About & legal", b => {
     const d = el("div", "legal");
@@ -3183,7 +3251,7 @@ function afterChange(k){
   if (k === "body"){ syncArms(); ensureBody(); }
   if (k === "faceMode") renderBody();
   if (k === "mTurn" && MDL){ mturn.rotation.y = S.mTurn * Math.PI/2; fitFace(); }
-  if (k === "mHeadBone" && MDL){ const c = CHARS.find(x => x.id === scopeId); if (c) setModelFrom(c).then(() => showStage("model")).catch(() => {}); }
+  if (k === "mHeadBone" && MDL){ const c = CHARS.find(x => x.id === leadRef); if (c) setModelFrom(c).then(() => showStage("model")).catch(() => {}); }
   if (k === "roast"){ applyShell(); updateTint(); }
   if (k === "pBgRemove") reprocess();
   save();
@@ -3275,7 +3343,7 @@ function buildItem(it){
   if (it.t === "faceplace"){
     const w = el("div"); const row = el("div", "btnrow");
     const b1 = el("button", "pill hot press", "Place face on model"); b1.onclick = () => { buzz(8); placeFaceStart(); };
-    const b2 = el("button", "pill press", "Auto-find"); b2.onclick = async () => { buzz(8); const c = CHARS.find(x => x.id === scopeId); if (c){ delete c.cfg.facePt; await persistChar(c); if (MDL) MDL.cfg = c.cfg; } fitFace(); toast("Face re-found"); };
+    const b2 = el("button", "pill press", "Auto-find"); b2.onclick = async () => { buzz(8); const c = CHARS.find(x => x.id === leadRef); if (c){ delete c.cfg.facePt; await persistChar(c); if (MDL) MDL.cfg = c.cfg; } fitFace(); toast("Face re-found"); };
     row.append(b1, b2); w.append(row);
     w.append(el("p", "note", "Zooms in on the face: drag the eyes and the mouth onto the model, or drag anywhere to move the whole face."));
     return w;
@@ -3391,7 +3459,7 @@ const ACTIONS = {
   cutout: () => openCut(),
   reset: (b) => {
     if (b.dataset.armed !== "1"){ b.dataset.armed = "1"; b.textContent = "Tap again to reset everything"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "Reset all settings"; }, 3000); return; }
-    const keep = {deviceId:S.deviceId, facing:S.facing}; S = {...DEFAULTS, ...keep}; save();
+    const keep = {deviceId:S.deviceId, facing:S.facing, studio:S.studio, tv:S.tv, bgList:S.bgList}; S = {...DEFAULTS, ...keep}; save();
     applyShell(); updateTint(); applyBg(); resize(); onChange("light"); syncPip(); renderBody(); toast("Settings reset");
   }
 };
@@ -3521,12 +3589,12 @@ function placeFaceStart(){
   if (S.faceMode === "model"){ S.faceMode = "overlay"; save(); }
   PF.on = true; PF.drag = null; document.body.classList.add("placing"); rigCv.hidden = false; $("#pfBar").hidden = false;
   $("#pfSize").value = S.mFaceK; $("#pfEye").value = S.mEyeSize; $("#pfMouth").value = S.mMouthSize;
-  VIEW.over = placeView; buzz(10);
+  buzz(10);
 }
-function placeFaceEnd(){ PF.on = false; PF.drag = null; VIEW.over = null; document.body.classList.remove("placing"); rigCv.hidden = true; $("#pfBar").hidden = true; save(); }
+function placeFaceEnd(){ PF.on = false; PF.drag = null; document.body.classList.remove("placing"); rigCv.hidden = true; $("#pfBar").hidden = true; save(); }
 $("#pfDone").onclick = () => { buzz(8); placeFaceEnd(); toast("Face placed. Fine-tune it in Settings › Face."); };
 $("#pfAuto").onclick = async () => {
-  buzz(8); const c = CHARS.find(x => x.id === scopeId); if (c){ delete c.cfg.facePt; await persistChar(c); } MDL.cfg = c?.cfg || MDL.cfg;
+  buzz(8); const c = CHARS.find(x => x.id === leadRef); if (c){ delete c.cfg.facePt; await persistChar(c); } MDL.cfg = c?.cfg || MDL.cfg;
   for (const k of ["mEyeSpacing","mEyeY","mMouthY"]) S[k] = DEFAULTS[k];
   fitFace(); save();
 };
@@ -3540,7 +3608,7 @@ function placeAt(x, y, final){
   _pn.set(x/innerWidth*2 - 1, -(y/innerHeight*2 - 1)); _pr.setFromCamera(_pn, camera);
   const hit = _pr.intersectObject(MDL.root, true).find(h => { for (let o = h.object; o; o = o.parent) if (o === faceAnchor) return false; return true; });
   PF.ok = !!hit; if (!hit) return;
-  const c = CHARS.find(q => q.id === scopeId); if (!c) return;
+  const c = CHARS.find(q => q.id === leadRef); if (!c) return;
   c.cfg.facePt = MDL.root.worldToLocal(hit.point.clone()).toArray(); MDL.cfg = c.cfg;
   const now = performance.now();
   if (final || now - PF.t > 140){ PF.t = now; fitFace(); }
@@ -3615,7 +3683,7 @@ const RIGE = {on:false, type:"biped", joints:null, sel:null, mirror:true, side:f
 const rigCv = $("#rigCv"), rctx = rigCv.getContext("2d");
 const MIRROR_OF = n => n.startsWith("Left") ? "Right" + n.slice(4) : n.startsWith("Right") ? "Left" + n.slice(5) : null;
 async function rigStart(type){
-  const c = CHARS.find(x => x.id === scopeId); if (!c || !MDL) return;
+  const c = CHARS.find(x => x.id === leadRef); if (!c || !MDL) return;
   if (MDL.own){ toast("This model already has its own skeleton."); return; }
   closeSheet();
   if (MDL.autoRig){ const prev = c.cfg.autoRig; busy("Preparing…"); delete c.cfg.autoRig; try{ await setModelFrom(c); showStage("model"); } finally { busy(); c.cfg.autoRig = prev; } }
@@ -3648,7 +3716,7 @@ $("#rigDone").onclick = async () => {
   busy(); renderBody?.();
 };
 async function rigRemove(){
-  const c = CHARS.find(x => x.id === scopeId); if (!c) return;
+  const c = CHARS.find(x => x.id === leadRef); if (!c) return;
   delete c.cfg.autoRig; await persistChar(c); busy("Removing bones…");
   try{ await setModelFrom(c); showStage("model"); }catch(e){} busy(); toast("Bones removed"); renderBody();
 }
@@ -3709,6 +3777,616 @@ const rigUp = () => {
   if (RIGE.drag) buzz(4); RIGE.drag = false; };
 rigCv.addEventListener("pointerup", rigUp); rigCv.addEventListener("pointercancel", rigUp);
 
+/* ---------- studios: more characters on stage, recorded loops, and cameras ----------
+   Every scene is a studio: the character you opened (the host) plus a cast of other characters. Cast
+   members can replay a loop you recorded of yourself (face video + eye/mouth shapes + head movement),
+   sway gently, play a model's own animation, or stand still. Saved cameras frame whoever you choose, and
+   your live face moves to the character the active camera is on (the "lead"); the one it leaves goes
+   back to its loop. Loops are kept per character ("loop:<id>") and play in any studio they're cast in. */
+const STU = {extras:new Map(), lead:"host", gen:0, swapping:false, rec:null, adj:null};
+const stuCfg = () => own("studio");
+const charName = ref => ref === "peanut" ? "Peanut" : CHARS.find(c => c.id === ref)?.name || "Character";
+const castEntry = uid => uid === "host" ? null : stuCfg().cast.find(e => e.uid === uid);
+const slotOf = uid => uid === "host" ? (stuCfg().host || {x:0, y:0, z:0, s:1, r:0}) : castEntry(uid);
+const refOf = uid => uid === "host" ? scopeId : castEntry(uid)?.ref;
+const leadKind = () => stageMode;
+// a character's own settings, filled in from the defaults (the peanut's face settings are app-wide)
+function cfgOf(ref){
+  if (ref === "peanut") return {...DEFAULTS, ...S, ...scopeCfg("peanut")};
+  return {...DEFAULTS, ...(CHARS.find(c => c.id === ref)?.cfg || {})};
+}
+function placeLeadSlot(){
+  const sl = slotOf(STU.lead) || {x:0, y:0, z:0, s:1, r:0};
+  leadSlot.position.set(sl.x, sl.y, sl.z); leadSlot.scale.setScalar(sl.s); leadSlot.rotation.set(0, sl.r, 0);
+}
+function placeSlot(X){
+  const sl = slotOf(X.uid); if (!sl) return;
+  X.slot.position.set(sl.x, sl.y, sl.z); X.slot.scale.setScalar(sl.s); X.slot.rotation.set(0, sl.r, 0);
+  // the character's own offset and size, as it would stand if it were wearing your face
+  const c = X.cfg;
+  if (X.kind === "puppet"){ X.off.position.set(c.pX, c.pY, 0); X.off.scale.setScalar(c.pScale); X.off.rotation.set(0, 0, c.pRot); }
+  else { X.off.position.set(c.nX, c.nY, 0); X.off.scale.setScalar(c.nScale); X.off.rotation.set(c.nTilt, c.nSpin, c.nRot); }
+}
+function cloneNut(){ const g = new THREE.Group(); for (const m of [nutHi, nutMid, nutLo]) g.add(new THREE.Mesh(m.geometry, m.material)); return g; }
+async function puppetData(c){
+  const canvas = await canvasFromBlob(c.png), st = outlineCanvas(canvas, c.meta.strokes);
+  return {id:c.id, canvas:st.canvas, pad:st.pad, base:canvas, meta:c.meta, tint:new THREE.Color().setRGB(...c.meta.tint)};
+}
+// a model's face area as a surface for its own eyes and mouth (the lead uses onModel with the live settings)
+function modelSurf(X){
+  return (x, y, out, off, nOut, nOff) => {
+    const F = X.M.face, c = X.cfg; if (!F) return onFlat(x, y, out, off, nOut, nOff);
+    const R = F.R*c.mCurve, fk = F.f*c.mFaceK, ey = (0.02 + c.mEyeY)*fk, my = (-0.66 + c.mMouthY)*fk;
+    const t = clamp((ey - y)/Math.max(1e-4, ey - my), 0, 1), dz = (c.mEyeZ + (c.mMouthZ - c.mEyeZ)*t)*F.f*0.35;
+    const z0 = F.z0 + c.mFaceZ*F.f*0.35 + dz, cz = z0 - R, yy = y*0.6;
+    const zz = cz + Math.sqrt(Math.max(R*R - x*x - yy*yy, R*R*0.05));
+    out[off] = x; out[off+1] = y; out[off+2] = zz + 0.012;
+    _n.set(x, yy, zz - cz).normalize(); nOut[nOff] = _n.x; nOut[nOff+1] = _n.y; nOut[nOff+2] = _n.z;
+  };
+}
+// an empty shell for a cast member: slot (where it stands) -> off (its own offset) -> pose (loop / idle motion) -> body
+function shell(uid, ref){
+  const X = {uid, ref, slot:new THREE.Group(), off:new THREE.Group(), pose:new THREE.Group(), body:new THREE.Group(), phase:Math.random()*20, cfg:cfgOf(ref)};
+  X.slot.add(X.off); X.off.add(X.pose); X.pose.add(X.body);
+  return X;
+}
+async function buildExtra(uid, ref){
+  const X = shell(uid, ref);
+  if (ref === "peanut"){ X.kind = "peanut"; X.nut = cloneNut(); X.body.add(X.nut); X.tint = shellTint.clone(); X.surf = onSurface; X.faceHost = X.nut; }
+  else {
+    const c = CHARS.find(q => q.id === ref); if (!c) return null;
+    X.c = c;
+    if (c.type === "model"){
+      X.kind = "model"; X.M = await buildModel(c, X.cfg.mTurn);
+      X.turn = new THREE.Group(); X.turn.rotation.y = X.M.turn; X.turn.add(X.M.root); X.body.add(X.turn);
+      X.anchor = new THREE.Group(); fitFace(X.M, X.anchor, X.body, X.cfg); X.M.anchor = X.anchor; applyModelStyle(X.M);
+      X.tint = X.M.tint; X.surf = modelSurf(X); X.faceHost = X.anchor;
+      if (X.M.anims.length){ X.mixer = new THREE.AnimationMixer(X.M.root); X.action = X.mixer.clipAction(X.M.anims[0]); }
+    } else {
+      X.kind = "puppet"; X.P = await puppetData(c); buildPuppetInto(X.P, X.body, X.cfg);
+      X.tint = X.P.tint; X.surf = onFlat; X.faceHost = X.body;
+    }
+  }
+  return X;
+}
+function showExtra(X){
+  scene.add(X.slot); placeSlot(X); STU.extras.set(X.uid, X);
+  attachLoop(X); syncMotion(X);
+}
+function disposeTree(o){
+  o.traverse(m => { if (!m.isMesh) return; if ([nutHi, nutMid, nutLo].some(n => n.geometry === m.geometry)) return;
+    m.geometry?.dispose(); for (const mt of [].concat(m.material)){ for (const k of ["map", "normalMap", "emissiveMap"]) mt?.[k]?.dispose?.(); mt?.dispose?.(); } });
+}
+function dropExtra(X, dispose = true){
+  scene.remove(X.slot); X.loop?.dispose(); X.loop = null; X.mixer?.stopAllAction();
+  if (X.faces){ for (const m of facesList(X.faces)){ m.parent?.remove(m); m.geometry.dispose(); m.material.dispose(); } X.faces = null; }
+  if (dispose) disposeTree(X.slot);
+  STU.extras.delete(X.uid);
+}
+function studioClear(){
+  STU.gen++;
+  if (LOOPREC.on) loopRecStop(false);
+  for (const X of [...STU.extras.values()]) dropExtra(X);
+  STU.lead = "host"; leadSlot.position.set(0, 0, 0); leadSlot.scale.setScalar(1); leadSlot.rotation.set(0, 0, 0);
+  syncShotBar();
+}
+// build the cast for the studio that just opened, then put the camera (and your face) back where it was
+async function studioBuild(){
+  const gen = ++STU.gen, st = stuCfg();
+  placeLeadSlot();
+  for (const e of [...st.cast]){
+    if (e.ref === scopeId || !(e.ref === "peanut" || CHARS.some(c => c.id === e.ref))){ st.cast = st.cast.filter(x => x !== e); continue; }
+    try{ const X = await buildExtra(e.uid, e.ref); if (gen !== STU.gen){ if (X) disposeTree(X.slot); return; } if (X) showExtra(X); }
+    catch(err){ console.error(err); toast(`Couldn't load ${charName(e.ref)} into the studio.`); }
+  }
+  if (gen !== STU.gen) return;
+  const sh = st.shots[st.shot];
+  if (sh && sh.actor !== "host" && STU.extras.has(sh.actor)) await swapLead(sh.actor);
+  syncShotBar();
+}
+async function addToCast(ref){
+  const st = stuCfg(), n = st.cast.length, side = n % 2 ? -1 : 1, uid = newId();
+  const e = {uid, ref, x:side*(1.8 + Math.floor(n/2)*1.5), y:0, z:-1, s:0.85, r:-side*0.35, motion:"auto"};
+  st.cast.push(e); save();
+  busy("Adding " + charName(ref) + "…");
+  try{ const X = await buildExtra(uid, ref); if (X) showExtra(X); toast(`${charName(ref)} joined the studio. Drag them to move, pinch to resize.`, 3600); }
+  catch(err){ console.error(err); st.cast = st.cast.filter(x => x !== e); save(); toast("Couldn't add that character: " + (err?.message || err)); }
+  busy();
+}
+function removeFromCast(uid){
+  const st = stuCfg();
+  if (STU.lead === uid) { goShot(-1); }
+  const X = STU.extras.get(uid); if (X) dropExtra(X);
+  st.cast = st.cast.filter(e => e.uid !== uid);
+  st.shots = st.shots.filter(s => s.actor !== uid && s.rel !== uid); if (st.shot >= st.shots.length) st.shot = -1;
+  save(); syncShotBar();
+}
+
+// ---- motion: recorded loop, idle sway, the model's own animation, or still
+const MOTIONS = [["loop", "My recorded loop"], ["idle", "Gentle sway"], ["clip", "Model's animation"], ["still", "Still"]];
+function motionOf(X){
+  const e = castEntry(X.uid) || stuCfg(), m = X.uid === "host" ? (e.hostMotion || "auto") : (e.motion || "auto");
+  if (m !== "auto") return m === "clip" && !X.action ? "idle" : m === "loop" && !X.loopData ? "idle" : m;
+  return X.loopData ? "loop" : X.action ? "clip" : "idle";
+}
+function syncMotion(X){
+  const m = motionOf(X);
+  if (X.action){ if (m === "clip") X.action.play(); else X.action.stop(); }
+  if (m === "loop" && X.loopData){ if (!X.loop) startLoopPlayer(X); } else if (X.loop){ X.loop.dispose(); X.loop = null; setFacesVisible(X, false); }
+  if (m !== "loop") restPose(X);
+}
+function restPose(X){ X.pose.position.set(0, 0, 0); X.pose.rotation.set(0, 0, 0); X.pose.scale.setScalar(1); if (X.nut) X.nut.scale.set(1, 1, 1); }
+async function attachLoop(X){
+  const d = await idb.get("loop:" + X.ref);
+  if (!STU.extras.has(X.uid)) return;
+  X.loopData = d?.frames ? d : null; syncMotion(X);
+}
+
+// ---- eyes and mouth for a cast member's loop: their own six meshes, textured by the loop's face video
+const facesList = F => [F.R.real, F.R.alt, F.L.real, F.L.alt, F.M.real, F.M.alt];
+function makeFaces(X, tex){
+  const texel = {value:new THREE.Vector2(1/LOOP_W, 1/LOOP_W)}, tint = {value:X.tint};
+  const mk = (N, rings, cores, order, lip) => makeFeatureMesh(N, rings, cores, order, lip, featureMaterial(tex, tint, texel));
+  const F = {R:{real:mk(16, EYE_RINGS, EYE_CORE, 3), alt:mk(16, EYE_RINGS, EYE_CORE, 4)}, L:{real:mk(16, EYE_RINGS, EYE_CORE, 3), alt:mk(16, EYE_RINGS, EYE_CORE, 4)},
+             M:{real:mk(20, MOUTH_RINGS, MOUTH_CORE, 3, true), alt:mk(20, MOUTH_RINGS, MOUTH_CORE, 4, true)}};
+  for (const m of facesList(F)) X.faceHost.add(m);
+  return F;
+}
+function setFacesVisible(X, v){ if (X.faces) for (const m of facesList(X.faces)) m.visible = v; }
+
+// ---- loops: recording yourself
+const LOOP_W = 256, LOOP_MAX = 15000, LOOP_HDR = 18, LOOP_STRIDE = LOOP_HDR + (49 + 49 + 81)*5;
+const LOOPREC = {on:false, t0:0, last:0, frames:[], chunks:[], enc:null, desc:null, codec:"", cv:null, cx:null, n:0, ref:null, timer:0};
+async function loopCodec(){
+  for (const [codec, extra] of [["avc1.42E01E", {avc:{format:"avc"}}], ["vp8", {}]]){
+    for (const hw of ["prefer-hardware", "no-preference"]){
+      const cfg = {codec, width:LOOP_W, height:LOOP_W, bitrate:900_000, framerate:30, hardwareAcceleration:hw, latencyMode:"realtime", ...extra};
+      try{ if ((await VideoEncoder.isConfigSupported(cfg)).supported) return cfg; }catch(e){}
+    }
+  }
+  return null;
+}
+async function loopRecStart(){
+  if (LOOPREC.on) return;
+  if (!window.VideoEncoder){ toast("This phone's web engine can't record loops. Update Android System WebView."); return; }
+  if (!trackerOk || performance.now() - lastSeen > 1500){ toast("Show your face to the camera first, then record a loop."); return; }
+  const cfg = await loopCodec(); if (!cfg){ toast("This phone can't encode the loop's video."); return; }
+  closeModal(); closeSheet();
+  for (const n of ["3", "2", "1"]){ flash(n, "Loop starts in"); buzz(10); await new Promise(r => setTimeout(r, 800)); }
+  Object.assign(LOOPREC, {on:true, t0:performance.now(), last:-1e9, frames:[], chunks:[], desc:null, codec:cfg.codec, n:0, ref:leadRef});
+  LOOPREC.cv = document.createElement("canvas"); LOOPREC.cv.width = LOOPREC.cv.height = LOOP_W; LOOPREC.cx = LOOPREC.cv.getContext("2d", {alpha:false});
+  LOOPREC.enc = new VideoEncoder({
+    output: (ch, meta) => {
+      const d = meta?.decoderConfig?.description; if (d && !LOOPREC.desc) LOOPREC.desc = new Uint8Array(d instanceof ArrayBuffer ? d : d.buffer.slice(d.byteOffset, d.byteOffset + d.byteLength));
+      const u = new Uint8Array(ch.byteLength); ch.copyTo(u); LOOPREC.chunks.push({t:ch.timestamp, key:ch.type === "key", data:u});
+    },
+    error: e => { console.error(e); if (LOOPREC.on) loopRecStop(false); toast("The loop's video failed: " + (e?.message || e)); }
+  });
+  LOOPREC.enc.configure(cfg);
+  $("#loopBar").hidden = false; buzz(25);
+}
+// one sample: the live face's shapes (texture coordinates moved into a face-sized crop of the camera frame) + movement
+function loopCapture(now){
+  if (!LOOPREC.on) return;
+  const t = now - LOOPREC.t0;
+  if (t >= LOOP_MAX){ loopRecStop(true); return; }
+  $("#loopTime").textContent = `${(t/1000).toFixed(1)} / ${LOOP_MAX/1000}s`;
+  if (now - LOOPREC.last < 32 || !vw) return;
+  LOOPREC.last = now;
+  // a square crop around the eyes and mouth
+  let u0 = 1, u1 = 0, v0 = 1, v1 = 0;
+  for (const b of [B.R, B.L, B.M]) for (let i = 0; i < b.nv; i++){ const u = b.uv[i*2], v = b.uv[i*2+1]; if (u < u0) u0 = u; if (u > u1) u1 = u; if (v < v0) v0 = v; if (v > v1) v1 = v; }
+  const pxW = (u1 - u0)*vw, pxH = (v1 - v0)*vh, side = Math.max(32, Math.max(pxW, pxH)*1.25);
+  const cx = clamp((u0 + u1)/2*vw - side/2, -side/2, vw - side/2), cy = clamp((1 - (v0 + v1)/2)*vh - side/2, -side/2, vh - side/2);
+  LOOPREC.cx.fillStyle = "#000"; LOOPREC.cx.fillRect(0, 0, LOOP_W, LOOP_W);
+  LOOPREC.cx.drawImage(frameCanvas, cx, cy, side, side, 0, 0, LOOP_W, LOOP_W);
+  const f = new Float32Array(LOOP_STRIDE);
+  f.set([t, FACE.far, FACE.jaw, FACE.mox, FACE.moy, FACE.wR, FACE.wL, FACE.wM, faceVis,
+         spr.pitch.p, spr.yaw.p, spr.roll.p, spr.tx.p, spr.ty.p, spr.lean.p, spr.jaw.p, spr.talk.p, spr.tilt.p]);
+  let o = LOOP_HDR;
+  for (const b of [B.R, B.L, B.M]) for (let i = 0; i < b.nv; i++){
+    const F = b.F[i]; f[o++] = F.x; f[o++] = F.y; f[o++] = F.z;
+    f[o++] = (b.uv[i*2]*vw - cx)/side; f[o++] = 1 - ((1 - b.uv[i*2+1])*vh - cy)/side;
+  }
+  LOOPREC.frames.push(f);
+  const vf = new VideoFrame(LOOPREC.cv, {timestamp:Math.round(t*1000)});
+  try{ LOOPREC.enc.encode(vf, {keyFrame:LOOPREC.n % 15 === 0}); } finally { vf.close(); }
+  LOOPREC.n++;
+}
+async function loopRecStop(keep){
+  if (!LOOPREC.on) return;
+  LOOPREC.on = false; $("#loopBar").hidden = true;
+  try{ await LOOPREC.enc.flush(); }catch(e){}
+  try{ LOOPREC.enc.close(); }catch(e){}
+  const n = LOOPREC.frames.length;
+  if (!keep) { toast("Loop discarded"); return; }
+  if (n < 15 || !LOOPREC.chunks.length){ toast("That loop was too short. Record at least a second."); return; }
+  const frames = new Float32Array(n*LOOP_STRIDE); LOOPREC.frames.forEach((f, i) => frames.set(f, i*LOOP_STRIDE));
+  const d = {v:1, w:LOOP_W, codec:LOOPREC.codec, desc:LOOPREC.desc, dur:frames[(n - 1)*LOOP_STRIDE] + 33, n, frames, chunks:LOOPREC.chunks};
+  await idb.set("loop:" + LOOPREC.ref, d);
+  LOOPREC.frames = []; LOOPREC.chunks = [];
+  buzz([15, 60, 15]);
+  toast(`Loop saved for ${charName(LOOPREC.ref)}. It plays whenever they aren't on camera.`, 4200);
+  for (const X of STU.extras.values()) if (X.ref === LOOPREC.ref){ X.loop?.dispose(); X.loop = null; attachLoop(X); }
+}
+$("#loopStop").onclick = () => { buzz(8); loopRecStop(true); };
+$("#loopCancel").onclick = () => { buzz(8); loopRecStop(false); };
+
+// ---- loops: playing them back on a cast member
+function startLoopPlayer(X){
+  const d = X.loopData, cv = document.createElement("canvas"); cv.width = cv.height = d.w;
+  const cx = cv.getContext("2d", {alpha:false}), tex = new THREE.CanvasTexture(cv);
+  tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; tex.colorSpace = THREE.SRGBColorSpace;
+  if (!X.faces) X.faces = makeFaces(X, tex); else for (const m of facesList(X.faces)) m.material.uniforms.map.value = tex;
+  const L = {d, cv, cx, tex, dec:null, next:0, queue:[], t0:performance.now() - Math.random()*d.dur, last:-1, B:{R:featBuf(16, 3), L:featBuf(16, 3), M:featBuf(20, 4), alt:featBuf(20, 4)},
+    st:{far:1, jaw:0, mox:0, moy:0, wR:0, wL:0, wM:0}, pose:{}, vis:0, dead:false};
+  const make = () => {
+    L.dec = new VideoDecoder({output:f => { if (L.dead) f.close(); else L.queue.push(f); }, error:e => { console.warn("loop video:", e); L.dec = null; }});
+    const c = {codec:d.codec, codedWidth:d.w, codedHeight:d.w}; if (d.desc) c.description = d.desc;
+    L.dec.configure(c); L.next = 0;
+  };
+  L.restart = () => { for (const f of L.queue) f.close(); L.queue = []; try{ L.dec?.close(); }catch(e){} make(); };
+  L.dispose = () => { L.dead = true; for (const f of L.queue) f.close(); L.queue = []; try{ L.dec?.close(); }catch(e){} tex.dispose(); };
+  try{ if (window.VideoDecoder) make(); }catch(e){ console.warn(e); }
+  X.loop = L;
+}
+const _fb = new Float32Array(LOOP_STRIDE);
+function loopFrameAt(d, t){                                           // the last sample at or before t
+  let lo = 0, hi = d.n - 1;
+  while (lo < hi){ const mid = (lo + hi + 1) >> 1; if (d.frames[mid*LOOP_STRIDE] <= t) lo = mid; else hi = mid - 1; }
+  return lo;
+}
+function stepLoop(X, now){
+  const L = X.loop, d = L.d, t = (now - L.t0) % d.dur;
+  if (t < L.last && L.dec) L.restart();                               // wrapped round: start the video again
+  L.last = t;
+  if (L.dec){
+    while (L.next < d.chunks.length && d.chunks[L.next].t/1000 <= t + 350 && L.dec.decodeQueueSize < 6){
+      const c = d.chunks[L.next++];
+      try{ L.dec.decode(new EncodedVideoChunk({type:c.key ? "key" : "delta", timestamp:c.t, data:c.data})); }catch(e){ console.warn(e); L.dec = null; break; }
+    }
+    let show = null;
+    while (L.queue.length && L.queue[0].timestamp/1000 <= t){ show?.close(); show = L.queue.shift(); }
+    if (show){ L.cx.drawImage(show, 0, 0, d.w, d.w); show.close(); L.tex.needsUpdate = true; }
+  }
+  const i = loopFrameAt(d, t), f = d.frames.subarray(i*LOOP_STRIDE, (i + 1)*LOOP_STRIDE);
+  Object.assign(L.st, {far:f[1], jaw:f[2], mox:f[3], moy:f[4], wR:f[5], wL:f[6], wM:f[7]}); L.vis = f[8];
+  const p = L.pose; p.pitch = f[9]; p.yaw = f[10]; p.roll = f[11]; p.tx = f[12]; p.ty = f[13]; p.lean = f[14]; p.jaw = f[15]; p.talk = f[16]; p.tilt = f[17];
+  let o = LOOP_HDR;
+  for (const b of [L.B.R, L.B.L, L.B.M]) for (let k = 0; k < b.nv; k++){ b.F[k].set(f[o], f[o+1], f[o+2]); b.uv[k*2] = f[o+3]; b.uv[k*2+1] = f[o+4]; o += 5; }
+}
+// a cast member's movement from its loop, the way the stage moves that kind of character
+function applyLoopPose(X, p, dt){
+  const c = X.cfg, mk = 1;
+  if (X.kind === "peanut"){
+    X.pose.rotation.set(p.pitch, p.yaw, p.roll); X.pose.position.set(p.tx*mk, p.ty*mk, 0); X.pose.scale.setScalar(p.lean);
+    const sq = p.jaw*0.06; X.nut.scale.set(1 - sq*0.45, 1 + sq, 1 - sq*0.45);
+  } else if (X.kind === "puppet"){
+    const bob = p.talk*0.07*c.pMove; X.pose.position.set(0, bob, 0); X.pose.rotation.set(0, p.yaw*0.18*c.pMove, p.tilt);
+  } else if (X.M){
+    const R = X.M.rig, head = X.M.head && c.mHeadBone, k = Math.min(1, dt*14), bodyK = head ? 0.2 : 1;
+    X.pose.rotation.set(p.pitch*bodyK, p.yaw*bodyK, p.roll*bodyK); X.pose.position.set(p.tx*mk, p.ty*mk, 0); X.pose.scale.setScalar(p.lean);
+    if (head){
+      const pp = p.pitch*0.8, y = p.yaw*0.8, r = p.roll*0.8;
+      if (R.neck) turnWorld(R, R.neck, -pp*0.35, y*0.35, r*0.35, k);
+      turnWorld(R, R.head, -pp*(R.neck ? 0.65 : 1), y*(R.neck ? 0.65 : 1), r*(R.neck ? 0.65 : 1), k);
+    }
+  }
+}
+// every frame, after the stage: cast members move
+function stepStudio(now, dt){
+  for (const X of STU.extras.values()){
+    if (X.nut){ X.nut.children[0].visible = S.psx === "modern"; X.nut.children[1].visible = S.psx === "ps2"; X.nut.children[2].visible = S.psx === "ps1"; }
+    const m = motionOf(X);
+    if (m === "loop" && X.loop){
+      stepLoop(X, now); applyLoopPose(X, X.loop.pose, dt);
+      if (X.faces && !(X.kind === "model" && X.cfg.faceMode === "model")){
+        placeFace(X.loop.B, X.loop.st, faceLayout(X.kind, X.cfg, X.P, X.M), X.faces, X.surf);
+        const L = X.loop, op = (m2, o) => { const u = m2.material.uniforms; u.opacity.value = o; u.blend.value = S.blend; u.skinMatch.value = S.skinMatch; u.relief.value = Math.min(1, S.depth); u.smoothSkin.value = S.retouch; u.light.value = S.light; m2.visible = o > 0.003; };
+        op(X.faces.R.real, L.vis*(1 - L.st.wR)); op(X.faces.R.alt, L.vis*L.st.wR); op(X.faces.L.real, L.vis*(1 - L.st.wL)); op(X.faces.L.alt, L.vis*L.st.wL);
+        op(X.faces.M.real, L.vis*(1 - L.st.wM)); op(X.faces.M.alt, L.vis*L.st.wM);
+      }
+    } else if (m === "idle"){
+      const t = now/1000 + X.phase;
+      X.pose.rotation.set(Math.sin(t*0.7)*0.03, Math.sin(t*0.45)*0.12, Math.sin(t*0.9)*0.04); X.pose.position.y = Math.sin(t*1.6)*0.025;
+    }
+    if (X.mixer && m === "clip") X.mixer.update(dt);
+  }
+}
+
+// ---- the lead: your face moves to whoever the camera is on
+function leadOffset(kind, cs){ return kind === "puppet" ? [cs.pX, cs.pY] : [cs.nX, cs.nY]; }
+async function swapLead(uid){
+  if (uid === STU.lead || STU.swapping) return;
+  const X = STU.extras.get(uid); if (!X) return;
+  STU.swapping = true;
+  try{
+    storeScope();
+    if (LOOPREC.on) await loopRecStop(true);
+    // 1) whoever wears the face now becomes a cast member where they stand
+    const O = shell(STU.lead, leadRef);
+    if (stageMode === "puppet" && PUP){
+      O.kind = "puppet"; O.P = PUP; for (const m of PUP.meshes || []) O.body.add(m); O.tint = PUP.tint; O.surf = onFlat; O.faceHost = O.body; PUP = null;
+    } else if (stageMode === "model" && MDL){
+      O.kind = "model"; O.M = MDL; O.c = CHARS.find(c => c.id === leadRef); faceAnchor.parent?.remove(faceAnchor);
+      O.turn = new THREE.Group(); O.turn.rotation.y = MDL.turn; O.turn.add(MDL.root); O.body.add(O.turn);
+      O.anchor = new THREE.Group(); fitFace(O.M, O.anchor, O.body, O.cfg); O.M.anchor = O.anchor;
+      O.tint = O.M.tint; O.surf = modelSurf(O); O.faceHost = O.anchor;
+      if (O.M.anims.length){ O.mixer = new THREE.AnimationMixer(O.M.root); O.action = O.mixer.clipAction(O.M.anims[0]); }
+      MDL = null;
+    } else { O.kind = "peanut"; O.nut = cloneNut(); O.body.add(O.nut); O.tint = shellTint.clone(); O.surf = onSurface; O.faceHost = O.nut; }
+    // 2) the cast member steps into the stage rig and puts your face on
+    dropExtra(X, false);
+    leadRef = X.ref; STU.lead = uid;
+    X.cfg = cfgOf(X.ref);
+    for (const k of charKeys(X.ref)) S[k] = X.cfg[k] ?? DEFAULTS[k];
+    if (X.kind === "puppet"){ clearPuppet(); PUP = X.P; for (const m of X.P.meshes) pBody.add(m); }
+    else if (X.kind === "model"){
+      faceAnchor.parent?.remove(faceAnchor);
+      for (const ch of [...mturn.children]) mturn.remove(ch);
+      mturn.rotation.set(0, X.M.turn, 0); mturn.add(X.M.root); MDL = X.M; MDL.cfg = X.c.cfg; MDL.anchor = faceAnchor;
+      mrig.position.set(0, 0, 0); mrig.rotation.set(0, 0, 0); mrig.scale.set(1, 1, 1);
+      fitFace(); applyModelStyle();
+    }
+    showExtra(O);
+    placeLeadSlot();
+    mode = X.kind === "peanut" ? "peanut" : X.kind; document.body.dataset.mode = mode;
+    showStage(X.kind); syncArms(); ensureBody();
+    if (sheet.classList.contains("open")){ renderTabs(); renderBody(); }
+  } finally { STU.swapping = false; }
+}
+
+// ---- cameras
+// a camera on a character is kept in that character's own frame, so it follows when you move them; Wide stays put
+const _shotV = {pos:new THREE.Vector3(), tgt:new THREE.Vector3()}, _slotM = new THREE.Matrix4(), _slotQ = new THREE.Quaternion(), _slotE = new THREE.Euler();
+function slotMatrix(uid){
+  const sl = slotOf(uid); if (!sl) return null;
+  return _slotM.compose(new THREE.Vector3(sl.x, sl.y, sl.z), _slotQ.setFromEuler(_slotE.set(0, sl.r, 0)), new THREE.Vector3(sl.s, sl.s, sl.s));
+}
+function shotWorld(sh, out = _shotV){
+  out.pos.fromArray(sh.pos); out.tgt.fromArray(sh.tgt);
+  const m = sh.rel && slotMatrix(sh.rel); if (m){ out.pos.applyMatrix4(m); out.tgt.applyMatrix4(m); }
+  return out;
+}
+function shotStore(sh, pos, tgt){
+  const m = sh.rel && slotMatrix(sh.rel), inv = m ? m.clone().invert() : null;
+  sh.pos = (inv ? pos.clone().applyMatrix4(inv) : pos).toArray(); sh.tgt = (inv ? tgt.clone().applyMatrix4(inv) : tgt).toArray();
+}
+function studioView(){
+  if (mode === "menu") return null;
+  if (STU.adj) return STU.adj.view;
+  const sh = stuCfg().shots[stuCfg().shot]; if (!sh) return null;
+  return shotWorld(sh);
+}
+VIEW.over = () => (PF.on && placeView()) || studioView();
+// the main visible part of an actor, for framing
+function actorBox(uid){
+  const box = new THREE.Box3();
+  const add = o => { if (o) box.expandByObject(o); };
+  if (uid === STU.lead){ leadSlot.updateWorldMatrix(true, true); if (stageMode === "puppet") add(PUP?.meshes?.[0]); else if (stageMode === "model") add(MDL?.root); else add(nutHi); }
+  else { const X = STU.extras.get(uid); if (!X) return null; X.slot.updateWorldMatrix(true, true); add(X.kind === "puppet" ? X.P.meshes[0] : X.kind === "model" ? X.M.root : X.nut.children[0]); }
+  return box.isEmpty() ? null : box;
+}
+function frameShot(uid, size){
+  let box = null, r = 0;
+  if (size === "wide"){
+    box = new THREE.Box3(); for (const u of ["host", ...stuCfg().cast.map(e => e.uid)]){ const b = actorBox(u === STU.lead ? STU.lead : u === "host" && STU.lead !== "host" ? "host" : u); if (b) box.union(b); }
+    if (TV.g.visible) box.expandByObject(TV.g);
+    if (box.isEmpty()) box = null;
+  } else { box = actorBox(uid); r = slotOf(uid)?.r || 0; }
+  if (!box) return null;
+  const c = box.getCenter(new THREE.Vector3()), sz = box.getSize(new THREE.Vector3()), h = sz.y;
+  let tgt, halfH, halfW;
+  if (size === "close"){ tgt = new THREE.Vector3(c.x, box.max.y - h*0.24, c.z); halfH = h*0.22; halfW = halfH*0.8; }
+  else if (size === "medium"){ tgt = new THREE.Vector3(c.x, box.max.y - h*0.36, c.z); halfH = h*0.42; halfW = halfH*0.7; }
+  else { tgt = c.clone(); halfH = h*0.56; halfW = sz.x*0.56; }
+  const d = fitDist(halfH, halfW) + (size === "wide" ? 0 : sz.z*0.5);
+  const pos = tgt.clone().add(new THREE.Vector3(Math.sin(r)*d, 0, Math.cos(r)*d));
+  return {pos:pos.toArray(), tgt:tgt.toArray()};
+}
+function addShot(uid, size){
+  const v = frameShot(uid, size); if (!v){ toast("Couldn't frame that character yet."); return -1; }
+  const st = stuCfg(), name = size === "wide" ? "Wide" : `${size === "close" ? "Close-up" : "Medium"} · ${charName(refOf(uid))}`;
+  const sh = {id:newId(), name, actor:size === "wide" ? STU.lead : uid, rel:size === "wide" ? null : uid};
+  shotStore(sh, new THREE.Vector3().fromArray(v.pos), new THREE.Vector3().fromArray(v.tgt));
+  st.shots.push(sh);
+  save(); syncShotBar(); return st.shots.length - 1;
+}
+function goShot(i){
+  const st = stuCfg(); st.shot = i; save();
+  const sh = st.shots[i], actor = sh ? sh.actor : "host";
+  if (!st.smooth){ const v = studioView(); if (v){ VIEW.pos.copy(v.pos); VIEW.tgt.copy(v.tgt); } else { VIEW.pos.copy(VIEW.basePos); VIEW.tgt.copy(VIEW.baseTgt); } applyView(); }
+  if (actor !== STU.lead && (actor === "host" || STU.extras.has(actor))) swapLead(actor);
+  syncShotBar(); buzz(8);
+  if (sh) flash(charName(refOf(actor)), sh.name.split(" · ")[0]);
+}
+function syncShotBar(){
+  const bar = $("#shotBar"); if (!bar) return;
+  const st = stuCfg(), show = st.shots.length > 0 && mode !== "menu";
+  bar.hidden = !show; if (!show){ bar.innerHTML = ""; return; }
+  bar.innerHTML = "";
+  const home = el("button", "shb press" + (st.shot < 0 ? " on" : ""), ico("recentre")); home.setAttribute("aria-label", "Main view"); home.onclick = () => goShot(-1); bar.append(home);
+  st.shots.forEach((sh, i) => {
+    const b = el("button", "shb press" + (st.shot === i ? " on" : ""), `<b>${i + 1}</b>`); b.setAttribute("aria-label", "Camera " + (i + 1) + ": " + sh.name);
+    b.onclick = () => goShot(i);
+    let t = null; b.addEventListener("pointerdown", () => { t = setTimeout(() => { t = null; b.dataset.long = "1"; shotOptions(i); }, 550); });
+    b.addEventListener("pointerup", () => { if (t) clearTimeout(t); }); b.addEventListener("pointerleave", () => { if (t) clearTimeout(t); });
+    b.addEventListener("click", e => { if (b.dataset.long){ e.stopImmediatePropagation(); b.dataset.long = ""; } }, true);
+    bar.append(b);
+  });
+}
+function shotOptions(i){
+  const st = stuCfg(), sh = st.shots[i]; if (!sh) return;
+  openModal(`Camera ${i + 1}`, b => {
+    b.append(el("p", "note", sh.name + (sh.actor !== "host" || STU.lead !== "host" ? ` · your face goes to ${charName(refOf(sh.actor))}` : "")));
+    const r = el("div", "btnrow");
+    const go = el("button", "pill hot press", "Go"); go.onclick = () => { closeModal(); goShot(i); };
+    const adj = el("button", "pill press", "Adjust view"); adj.onclick = () => { closeModal(); camAdjust(i); };
+    const del = el("button", "pill press danger", "Delete"); del.onclick = () => { st.shots.splice(i, 1); if (st.shot === i) goShot(-1); else if (st.shot > i) st.shot--; save(); syncShotBar(); closeModal(); };
+    r.append(go, adj, del); b.append(r);
+    b.append(el("div", "sec", "Who wears your face on this camera"));
+    const ch = el("div", "chips");
+    for (const u of ["host", ...st.cast.map(e => e.uid)]){
+      const c = el("button", "chip press", charName(refOf(u))); c.setAttribute("aria-pressed", sh.actor === u);
+      c.onclick = () => { sh.actor = u; save(); ch.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === c)); if (st.shot === i) goShot(i); };
+      ch.append(c);
+    }
+    b.append(ch);
+  });
+}
+// adjust a camera by hand: one finger orbits, two fingers move and zoom
+function camAdjust(i){
+  const st = stuCfg(), sh = st.shots[i]; if (!sh) return;
+  if (st.shot !== i) goShot(i);
+  const w = shotWorld(sh, {pos:new THREE.Vector3(), tgt:new THREE.Vector3()}), pos = w.pos, tgt = w.tgt, off = pos.clone().sub(tgt);
+  const sp = new THREE.Spherical().setFromVector3(off);
+  STU.adj = {i, sp, tgt, view:{pos, tgt}, pts:new Map(), base:null};
+  closeSheet(); document.body.classList.add("adjusting"); $("#camBar").hidden = false; $("#camPad").hidden = false;
+}
+function camAdjustEnd(keep){
+  const A = STU.adj; if (!A) return;
+  if (keep){ const sh = stuCfg().shots[A.i]; shotStore(sh, A.view.pos, A.view.tgt); save(); toast("Camera saved"); }
+  STU.adj = null; document.body.classList.remove("adjusting"); $("#camBar").hidden = true; $("#camPad").hidden = true;
+}
+$("#camSave").onclick = () => { buzz(8); camAdjustEnd(true); };
+$("#camCancel").onclick = () => { buzz(8); camAdjustEnd(false); };
+(() => {
+  const pad = $("#camPad");
+  const base = () => { const A = STU.adj, p = [...A.pts.values()], n = p.length;
+    A.base = {n, cx:p.reduce((a, q) => a + q.x, 0)/n, cy:p.reduce((a, q) => a + q.y, 0)/n, d:n > 1 ? Math.max(20, Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y)) : 1,
+      theta:A.sp.theta, phi:A.sp.phi, r:A.sp.radius, tgt:A.tgt.clone()}; };
+  const apply = () => { const A = STU.adj; A.view.pos.setFromSpherical(A.sp).add(A.tgt); A.view.tgt.copy(A.tgt); };
+  pad.addEventListener("pointerdown", e => { const A = STU.adj; if (!A) return; A.pts.set(e.pointerId, {x:e.clientX, y:e.clientY}); pad.setPointerCapture(e.pointerId); base(); });
+  pad.addEventListener("pointermove", e => {
+    const A = STU.adj; if (!A || !A.pts.has(e.pointerId)) return;
+    A.pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    const p = [...A.pts.values()], b = A.base; if (p.length !== b.n) return;
+    const cx = p.reduce((a, q) => a + q.x, 0)/b.n, cy = p.reduce((a, q) => a + q.y, 0)/b.n, dx = cx - b.cx, dy = cy - b.cy;
+    if (b.n === 1){ A.sp.theta = b.theta - dx*0.008; A.sp.phi = clamp(b.phi - dy*0.006, 0.25, Math.PI - 0.25); }
+    else {
+      const d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); A.sp.radius = clamp(b.r * b.d / d, 0.3, 40);
+      const k = 2 * tanHalfFov() * A.sp.radius / innerHeight;
+      const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion), up = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+      A.tgt.copy(b.tgt).addScaledVector(right, -dx*k).addScaledVector(up, dy*k);
+    }
+    apply();
+  });
+  const end = e => { const A = STU.adj; if (!A) return; A.pts.delete(e.pointerId); if (A.pts.size) base(); };
+  pad.addEventListener("pointerup", end); pad.addEventListener("pointercancel", end);
+  pad.addEventListener("wheel", e => { const A = STU.adj; if (!A) return; e.preventDefault(); A.sp.radius = clamp(A.sp.radius*Math.exp(e.deltaY*0.0012), 0.3, 40); apply(); }, {passive:false});
+})();
+
+// ---- touching cast members: drag to move, pinch to resize, twist to turn, tap for their options
+function castHit(x, y){
+  if (stuCfg().lock || !STU.extras.size) return null;
+  _tvn.set(x/innerWidth*2 - 1, -(y/innerHeight*2 - 1)); _tvr.setFromCamera(_tvn, camera);
+  let best = null;
+  for (const X of STU.extras.values()){ const h = _tvr.intersectObject(X.slot, true).find(q => q.object.visible); if (h && (!best || h.distance < best.d)) best = {X, d:h.distance}; }
+  if (!best) return null;
+  // the character wearing your face wins if it's in front
+  const lead = stageMode === "puppet" ? PUP?.meshes?.[0] : stageMode === "model" ? MDL?.root : nut;
+  const lh = lead && _tvr.intersectObject(lead, true)[0];
+  return lh && lh.distance < best.d ? null : best.X;
+}
+
+// ---- recording a loop: the bar while it runs
+// ---- the Studio panel
+function openStudio(){
+  const st = stuCfg();
+  openModal("Studio", b => {
+    b.append(el("p", "note", `Your face is on <b>${charName(leadRef).replace(/</g, "&lt;")}</b>. Add characters, give them a loop of you, and save cameras to cut between them.`));
+    b.append(el("div", "sec", "Cast"));
+    const list = el("div", "vlist");
+    for (const u of ["host", ...st.cast.map(e => e.uid)]){
+      const ref = refOf(u), X = STU.extras.get(u), live = STU.lead === u;
+      const tag = live ? "Live (you)" : X ? MOTIONS.find(m => m[0] === motionOf(X))?.[1] || "" : "Loading…";
+      const r = el("div", "vrow" + (live ? " on" : ""), `<button class="vname press"><b>${u === "host" ? "★" : "•"}</b><span></span><small></small></button>
+        <button class="step press" aria-label="Camera on this character">${ico("t-camera")}</button><button class="step press" aria-label="Options">${ico("dots")}</button>`);
+      r.querySelector("span").textContent = charName(ref); r.querySelector("small").textContent = tag;
+      const [nm, cam, opt] = r.querySelectorAll("button");
+      nm.onclick = opt.onclick = () => { buzz(6); castOptions(u); };
+      cam.onclick = () => { buzz(8); let i = st.shots.findIndex(s => s.actor === u && !s.name.startsWith("Wide")); if (i < 0) i = addShot(u, "medium"); if (i >= 0){ closeModal(); goShot(i); } };
+      list.append(r);
+    }
+    b.append(list);
+    const add = el("button", "pill press", `${ico("plus")}Add a character`); add.style.width = "100%"; add.onclick = () => { buzz(8); castPicker(); }; b.append(add);
+
+    b.append(el("div", "sec", "Cameras"));
+    if (!st.shots.length) b.append(el("p", "note", "No cameras yet. Add one for each character, or a wide shot of everyone. The camera buttons appear on the left of the screen."));
+    const cl = el("div", "vlist");
+    st.shots.forEach((sh, i) => {
+      const r = el("div", "vrow" + (st.shot === i ? " on" : ""), `<button class="vname press"><b>${i + 1}</b><span></span><small></small></button><button class="step press" aria-label="Adjust view">${ico("move")}</button><button class="step press" aria-label="Delete camera">${ico("x")}</button>`);
+      r.querySelector("span").textContent = sh.name; r.querySelector("small").textContent = charName(refOf(sh.actor));
+      const [go, adj, del] = r.querySelectorAll("button");
+      go.onclick = () => { closeModal(); goShot(i); }; adj.onclick = () => { closeModal(); camAdjust(i); };
+      del.onclick = () => { st.shots.splice(i, 1); if (st.shot === i) goShot(-1); else if (st.shot > i) st.shot--; save(); syncShotBar(); openStudio(); };
+      cl.append(r);
+    });
+    b.append(cl);
+    const cr = el("div", "btnrow");
+    for (const [size, label] of [["close", "Close-up"], ["medium", "Medium"], ["wide", "Wide"]]){
+      const c = el("button", "pill press", `${ico("plus")}${label}`);
+      c.onclick = () => { buzz(8); const i = addShot(STU.lead, size); if (i >= 0){ closeModal(); goShot(i); toast(size === "wide" ? "Wide camera added" : `Camera on ${charName(leadRef)} added. Long-press its button to change who it's on.`, 3600); } };
+      cr.append(c);
+    }
+    b.append(cr, el("p", "note", "New cameras frame the character wearing your face (or everyone, for Wide). Long-press a camera button to adjust its view or change who's on it."));
+    const sm = el("div", "srow", `<span class="slabel">Smooth camera moves</span>`), ss = el("button", "switch"); ss.setAttribute("role", "switch"); ss.setAttribute("aria-checked", !!st.smooth);
+    ss.onclick = () => { st.smooth = !st.smooth; ss.setAttribute("aria-checked", st.smooth); save(); buzz(6); }; sm.append(ss); b.append(sm);
+
+    b.append(el("div", "sec", "Loop of you"));
+    const lr = el("div", "btnrow"), rec = el("button", "pill hot press", `Record a loop of ${charName(leadRef).replace(/</g, "&lt;")}`); rec.onclick = () => { buzz(8); loopRecStart(); };
+    lr.append(rec); b.append(lr);
+    idb.get("loop:" + leadRef).then(d => { if (!d?.frames) return; const del = el("button", "pill press", "Delete loop"); del.onclick = async () => { await idb.set("loop:" + leadRef, null); for (const X of STU.extras.values()) if (X.ref === leadRef){ X.loopData = null; syncMotion(X); } toast("Loop deleted"); del.remove(); }; lr.append(del); });
+    b.append(el("p", "note", "Records up to 15 seconds of you: your eyes and mouth, talking and head movement. Whenever this character isn't the one on camera, it replays the loop, so the background keeps moving."));
+    const lk = el("div", "srow", `<span class="slabel">Lock positions</span>`), ls = el("button", "switch"); ls.setAttribute("role", "switch"); ls.setAttribute("aria-checked", !!st.lock);
+    ls.onclick = () => { st.lock = !st.lock; ls.setAttribute("aria-checked", st.lock); save(); buzz(6); }; lk.append(ls); b.append(lk);
+  });
+}
+function castPicker(){
+  const st = stuCfg(), have = new Set([scopeId, ...st.cast.map(e => e.ref)]);
+  const refs = ["peanut", ...CHARS.map(c => c.id)].filter(r => !have.has(r));
+  openModal("Add to the studio", b => {
+    if (!refs.length){ b.append(el("p", "note", "Everyone is already here. Add more characters from the main menu.")); return; }
+    const g = el("div", "chips");
+    for (const r of refs){ const c = el("button", "chip press", (r === "peanut" ? "🥜 " : charType(r) === "model" ? "◆ " : "") + charName(r)); c.onclick = () => { closeModal(); addToCast(r); }; g.append(c); }
+    b.append(g, el("p", "note", "They join the scene beside you. Drag them where you want them, pinch to resize, twist to turn, and tap them for their options."));
+  });
+}
+function castOptions(uid){
+  const X = STU.extras.get(uid), live = STU.lead === uid, e = castEntry(uid), st = stuCfg();
+  openModal(charName(refOf(uid)), b => {
+    if (live){ b.append(el("p", "note", "This character is wearing your face right now. Switch to another camera to give it its loop back.")); }
+    else if (X){
+      b.append(el("div", "sec", "When it's not on camera"));
+      const ch = el("div", "chips"), cur = motionOf(X);
+      for (const [m, label] of MOTIONS){
+        if (m === "loop" && !X.loopData) continue; if (m === "clip" && !X.action) continue;
+        const c = el("button", "chip press", label); c.setAttribute("aria-pressed", cur === m);
+        c.onclick = () => { if (uid === "host") st.hostMotion = m; else e.motion = m; save(); syncMotion(X); buzz(6); ch.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === c)); };
+        ch.append(c);
+      }
+      b.append(ch);
+      if (!X.loopData) b.append(el("p", "note", "No loop yet: put this character on camera, then use Studio › Record a loop."));
+    }
+    const sl = slotOf(uid);
+    if (sl){
+      b.append(el("div", "sec", "Where it stands"));
+      const rng = (label, k, min, max, step, f = v => v) => {
+        const r = el("label", "vvol", `<span style="width:72px">${label}</span><input type="range" min="${min}" max="${max}" step="${step}">`), i = r.querySelector("input");
+        i.value = sl[k]; i.oninput = () => { sl[k] = f(+i.value); if (live) placeLeadSlot(); else if (X) placeSlot(X); }; i.onchange = () => save(); return r;
+      };
+      if (uid === "host" && !st.host) st.host = {x:0, y:0, z:0, s:1, r:0};
+      b.append(rng("Size", "s", 0.3, 2.5, 0.01), rng("Distance", "z", -6, 2, 0.02), rng("Turn", "r", -Math.PI, Math.PI, 0.01));
+    }
+    const r = el("div", "btnrow");
+    const cam = el("button", "pill hot press", "Put on camera"); cam.onclick = () => { closeModal(); let i = st.shots.findIndex(s => s.actor === uid && !s.name.startsWith("Wide")); if (i < 0) i = addShot(uid, "medium"); if (i >= 0) goShot(i); };
+    r.append(cam);
+    if (uid !== "host"){ const rm = el("button", "pill press danger", "Remove"); rm.onclick = () => { closeModal(); removeFromCast(uid); toast(charName(refOf(uid)) + " left the studio"); }; r.append(rm); }
+    b.append(r);
+  });
+}
+$("#bStudio").onclick = () => { buzz(8); closeSheet(); openStudio(); };
+
 /* ---------- menu, modes, HUD ---------- */
 const statusEl = $("#status");
 async function ensureCamera(){
@@ -3736,7 +4414,7 @@ async function ensureCamera(){
 function enterMode(m){
   mode = m; document.body.dataset.mode = m;
   showStage(m === "puppet" ? "puppet" : m === "model" ? "model" : "peanut");
-  closeSheet(); buzz(12); syncArms(); ensureBody(); syncTV();
+  closeSheet(); buzz(12); syncArms(); ensureBody(); syncTV(); studioBuild();
   // first time: show the touch tips, unless a tool (placing the face, editing) has opened in the meantime
   if (!S.coachSeen) setTimeout(() => { if (S.coachSeen || PF.on || RIGE.on || editing || mode === "menu") return; S.coachSeen = true; save(); showGestures(); }, 700);
 }
@@ -3752,7 +4430,6 @@ async function openPeanut(){ if (!(await ensureCamera())) return; await loadScop
 $("#bHome").onclick = goMenu;
 $("#goPeanut").onclick = () => { buzz(10); openPeanut(); };
 $("#goPeanut").onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openPeanut(); } };
-$("#bImage").onclick = () => { buzz(8); chooseAdd(); };
 $("#bLayout").onclick = () => { buzz(8); editing ? closeEditor() : openEditor(); };
 $("#bCut").onclick = () => { buzz(8); openCut(); };
 let replacing = false;
@@ -3760,7 +4437,7 @@ function pickImage(){ replacing = false; $("#pupFile").click(); }
 function replaceImage(){ replacing = true; $("#pupFile").click(); }
 $("#pupFile").onchange = async e => {
   const f = e.target.files[0]; e.target.value = ""; if (!f) return;
-  if (replacing){ replacing = false; const c = CHARS.find(c => c.id === scopeId); if (c){ c.original = f; closeSheet(); await reprocess(); return; } }
+  if (replacing){ replacing = false; const c = CHARS.find(c => c.id === leadRef); if (c){ c.original = f; closeSheet(); await reprocess(); return; } }
   await addAndOpen(f, f.name.replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ").slice(0, 24));
 };
 // flash a big label in the middle of the screen (character / background switches)
@@ -4771,6 +5448,7 @@ function loop(now){
   set(F_MOUTH.real, faceVis * (1 - W.mouth)); set(F_MOUTH.alt, faceVis * W.mouth);
   if (stageMode === "model" && S.faceMode === "model") [...EYE_MESHES, ...MOUTH_MESHES].forEach(m => m.visible = false);
 
+  try{ stepStudio(now, dt); loopCapture(now); }catch(e){ console.error(e); }
   stepView(dt);
   const worldOn = S.world && (mode !== "menu" || scopeId === "peanut");
   PSXU.uPsxJ.value = S.psx === "modern" ? 0 : S.wJitter;
