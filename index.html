@@ -2226,10 +2226,11 @@ function buildTvModel(key){
 // black bars: sample the clip now and then; rows/columns that stay near-black are trimmed off
 const TRIM = {cv:document.createElement("canvas"), x:null, rows:new Float32Array(96), cols:new Float32Array(96), n:0, clip:null, crop:[0, 0, 1, 1], t:0};
 TRIM.cv.width = TRIM.cv.height = 96; TRIM.x = TRIM.cv.getContext("2d", {willReadFrequently:true});
-function trimReset(){ TRIM.rows.fill(0); TRIM.cols.fill(0); TRIM.n = 0; TRIM.crop = [0, 0, 1, 1]; TRIM.clip = TVP.cur; }
+// keyed to the file actually loaded in the player (the next clip is "current" a moment before its file arrives)
+function trimReset(){ TRIM.rows.fill(0); TRIM.cols.fill(0); TRIM.n = 0; TRIM.crop = [0, 0, 1, 1]; TRIM.clip = TVP.url; }
 function trimSample(){
-  const v = TVP.el; if (!TVP.ready || v.paused) return;
-  if (TRIM.clip !== TVP.cur) trimReset();
+  const v = TVP.el; if (!TVP.ready || v.paused || v.currentSrc !== TVP.url) return;
+  if (TRIM.clip !== TVP.url) trimReset();
   try{ TRIM.x.drawImage(v, 0, 0, 96, 96); }catch(e){ return; }
   const d = TRIM.x.getImageData(0, 0, 96, 96).data;
   for (let y = 0; y < 96; y++) for (let x = 0; x < 96; x++){
@@ -2263,7 +2264,7 @@ TVP.onchange = () => {
   const v = TVP.el, a = TVP.ready && v.videoWidth;
   if (a || !TVP.ids.length){                                           // between clips, keep the last picture rather than flash the card
     const map = a ? TV.tex : TV.idle; if (TV.mat.uniforms.map.value !== map) TV.mat.uniforms.map.value = map;
-    if (TRIM.clip !== TVP.cur) trimReset();
+    if (TRIM.clip !== TVP.url) trimReset();
     tvPicture();
   }
   syncTvBar(); syncMediaSession();
@@ -2304,7 +2305,7 @@ function stepTV(now){
     const k = Math.max(w/sw, h/sh);                                    // cover the screen
     AMB.x.drawImage(v, sx, sy, sw, sh, (w - sw*k)/2, (h - sh*k)/2, sw*k, sh*k);
   }
-  if (TV.g.visible && tvCfg().trim && now - TRIM.t > 700){ TRIM.t = now; trimSample(); }
+  if (TV.g.visible && tvCfg().trim && now - TRIM.t > (TRIM.n < 3 ? 300 : 700)){ TRIM.t = now; trimSample(); }   // quicker at the start of a clip
   if (!$("#tvBar").hidden && !SEEK.drag && now - SEEK.t > 250){ SEEK.t = now; syncSeek(); }
 }
 // the blurred copy, painted into recordings and streams the same way it looks on screen
