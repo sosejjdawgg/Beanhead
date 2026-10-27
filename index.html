@@ -236,6 +236,21 @@ body.adjusting #hud{opacity:0!important;pointer-events:none} body.adjusting #hud
 #loopBar b{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s steps(2) infinite}
 #loopBar .pill{height:32px;padding:0 12px;font-size:13px;flex:none}
 #loopBar .pill:not(.hot){background:rgba(0,0,0,.25);color:#fff}
+/* scenes */
+.scgrid{display:grid;grid-template-columns:1fr;gap:10px;margin:8px 0 4px}
+@media (min-width:520px){.scgrid{grid-template-columns:1fr 1fr}}
+.sccard{display:flex;flex-direction:column;gap:4px;text-align:left;padding:8px 8px 12px;border-radius:18px;background:var(--raise);box-shadow:inset 0 0 0 1px var(--line)}
+.sccard.on{box-shadow:inset 0 0 0 2px var(--nut)}
+.sccard .scart{border-radius:12px;overflow:hidden;line-height:0}
+.sccard .scart svg{width:100%;height:auto;display:block}
+.sccard b{font-size:16px;padding:6px 4px 0}
+.sccard span{font-size:13px;line-height:1.4;color:var(--mute);padding:0 4px}
+.sccur{width:100%;display:flex;align-items:center;gap:12px;padding:8px 12px 8px 8px;border-radius:16px;background:var(--raise);box-shadow:inset 0 0 0 1px var(--line);margin:6px 0 2px;text-align:left}
+.sccur .scart{width:84px;border-radius:10px;overflow:hidden;line-height:0;flex:none}
+.sccur .scart svg{width:100%;height:auto}
+.sccur span{flex:1;display:flex;flex-direction:column}
+.sccur small{font:500 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.sccur b{font-size:16px}
 /* live streaming */
 #liveBtn{position:absolute;right:calc(27px + env(safe-area-inset-right,0px));bottom:calc(252px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:16px;
   display:grid;place-items:center;background:var(--panel);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px var(--line),0 8px 20px rgba(0,0,0,.35);color:var(--ink)}
@@ -669,7 +684,7 @@ const DEFAULTS = {
   coachSeen:false, psx:"modern", body:false,
   faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mEyeZ:0, mMouthZ:0, mEyeRot:0, mMouthRot:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true, mFrame:"full",
   mirror:true, pip_on:true, deviceId:"", facing:"user", hearVideos:true,
-  studio:{cast:[], shots:[], shot:-1, smooth:true, lock:false},
+  studio:{cast:[], shots:[], shot:-1, smooth:true, lock:false}, sceneId:"free", sceneBak:null,
   bgList:[], bgMode:"all", bgVol:0, tv:{on:false, x:1.05, y:1.3, z:0.4, s:0.7, r:-0.35, list:[], mode:"all", vol:0.8, i:0, playing:true,
     model:"retro", tilt:0, lean:0, fit:"fit", trim:true, zoom:1, sharp:0.35, bright:0.03, contrast:1.08, sat:1.12, scan:null, amb:false, speed:1, front:true}
 };
@@ -680,7 +695,7 @@ try{ Object.assign(S, JSON.parse(localStorage.getItem("peanutcam") || "{}")); }c
 // settings that belong to "what's on screen": the peanut has its own copy, every character has its own
 const SCOPED = ["bg","bgColor","world","wBiome","wMorph","wSpeed","wRes","wJitter","wAffine","wDither","wDepth","wFog","wParallax","psx",
   "skinMatch","depth","retouch","blend","eyeMargin","mouthMargin","feather","symFill","light","zoom",
-  "bgList","bgMode","bgVol","tv","studio"];
+  "bgList","bgMode","bgVol","tv","studio","sceneId","sceneBak"];
 const NUT_KEYS = ["nX","nY","nScale","nRot","nSpin","nTilt"];
 const CHAR_KEYS = ["pX","pY","pScale","pRot","pEyeSize","pMouthSize","pMove","pStick","pShadow"];
 const MODEL_KEYS = ["faceMode","mEyeSpacing","mEyeY","mMouthY","mEyeSize","mMouthSize","mFaceZ","mEyeZ","mMouthZ","mEyeRot","mMouthRot","mCurve","mFaceK","mTurn","mHeadBone","mFrame"];
@@ -720,7 +735,7 @@ async function loadScope(id){
   const cfg = scopeCfg(id);
   for (const k of scopeKeys(id)) S[k] = k in cfg ? cfg[k] : DEFAULTS[k];
   await loadBgPhoto();
-  applyBg(); onChange("light"); resize(); WORLD.configure(); syncNutStyle(); syncTV();
+  applyBg(); onChange("light"); resize(); WORLD.configure(); syncNutStyle(); syncTV(); buildScene();
 }
 
 /* ---------- small helpers: haptics, toast, busy ---------- */
@@ -899,6 +914,7 @@ function pickMain(files){
   return null;
 }
 async function loadModelFile(c){
+  if (c.builtin) return BUILTIN[c.builtin].make();                     // made in code, no files
   const files = filesOf(c), main = files.find(f => f.name === c.main) || pickMain(files);
   if (!main) throw new Error("no 3D model file in what was picked");
   const ext = extOf(main.name);
@@ -1122,6 +1138,195 @@ function driveFace(){
     set("aa", g("jawOpen")*1.2); set("oh", g("mouthFunnel")); set("ou", g("mouthPucker")); set("ee", (g("mouthStretchLeft") + g("mouthStretchRight"))*0.7);
     set("ih", smile*0.4); set("happy", smile*0.9); set("surprised", g("browInnerUp")*0.8); set("angry", (g("browDownLeft") + g("browDownRight"))*0.4);
   }
+}
+
+/* ---------- built-in characters: a low-poly, PS2-era skater ----------
+   Made here in code (no model file): about 2,500 triangles, small painted textures, a full skeleton with
+   Mixamo-style bone names (so head, arm, hand and finger tracking drive it like any rigged model) and an
+   idle animation for when it's a studio cast member. Proportions are in metres; the model fitter scales it. */
+const BUILTIN = {skater:{name:"Skater", make:makeSkater}};
+function paintTex(w, h, draw){
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d"); draw(x, w, h);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; return t;
+}
+function grain(x, w, h, base, amt, seed = 7){
+  x.fillStyle = base; x.fillRect(0, 0, w, h);
+  let s = seed; const r = () => ((s = (s*16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < w*h/6; i++){ const v = (r() - 0.5)*amt; x.fillStyle = v > 0 ? `rgba(255,255,255,${v})` : `rgba(0,0,0,${-v})`; x.fillRect(r()*w, r()*h, 1 + r()*2, 1 + r()*2); }
+}
+async function makeSkater(){
+  const {mergeGeometries} = await import("three/addons/utils/BufferGeometryUtils.js");
+  const V = (x, y, z = 0) => new THREE.Vector3(x, y, z);
+  // ---- skeleton, posed relaxed (arms down at the sides); faces +z, its left is +x
+  const J = {}, bones = [];
+  const bone = (name, parent, p) => {
+    const b = new THREE.Bone(); b.name = "mixamorig_" + name; J[name] = {b, p:p.clone()}; bones.push(b);
+    if (parent){ J[parent].b.add(b); b.position.copy(p).sub(J[parent].p); } else b.position.copy(p);
+    return b;
+  };
+  bone("Hips", null, V(0, 0.96)); bone("Spine", "Hips", V(0, 1.06)); bone("Spine1", "Spine", V(0, 1.2)); bone("Spine2", "Spine1", V(0, 1.34));
+  bone("Neck", "Spine2", V(0, 1.5)); bone("Head", "Neck", V(0, 1.6, 0.01)); bone("HeadTop_End", "Head", V(0, 1.84, 0.01));
+  const ARM = {};
+  for (const s of [1, -1]){
+    const L = s > 0 ? "Left" : "Right";
+    const sh = V(0.19*s, 1.44), up = V(0.24*s, -0.97, 0.02).normalize(), lo = V(0.1*s, -0.99, 0.09).normalize();
+    const el = sh.clone().addScaledVector(up, 0.28), wr = el.clone().addScaledVector(lo, 0.25);
+    bone(L + "Shoulder", "Spine2", V(0.05*s, 1.46)); bone(L + "Arm", L + "Shoulder", sh); bone(L + "ForeArm", L + "Arm", el); bone(L + "Hand", L + "ForeArm", wr);
+    const kn = wr.clone().addScaledVector(lo, 0.085);
+    for (const [f, dz, lens] of [["Index", 0.027, [0.03, 0.022, 0.018]], ["Middle", 0.009, [0.032, 0.024, 0.019]], ["Ring", -0.009, [0.03, 0.022, 0.018]], ["Pinky", -0.026, [0.024, 0.018, 0.015]]]){
+      let p = kn.clone().add(V(0, 0, dz)), par = L + "Hand";
+      for (let k = 0; k < 3; k++){ const n = `${L}Hand${f}${k + 1}`; bone(n, par, p); par = n; p = p.clone().addScaledVector(lo, lens[k]); }
+      bone(`${L}Hand${f}4`, par, p);
+    }
+    let tp = wr.clone().addScaledVector(lo, 0.02).add(V(-0.012*s, 0, 0.03)), tpar = L + "Hand";
+    const tdir = lo.clone().add(V(-0.25*s, 0, 0.6)).normalize();
+    for (let k = 0; k < 3; k++){ const n = `${L}HandThumb${k + 1}`; bone(n, tpar, tp); tpar = n; tp = tp.clone().addScaledVector(tdir, [0.03, 0.024, 0.02][k]); }
+    bone(`${L}HandThumb4`, tpar, tp);
+    bone(L + "UpLeg", "Hips", V(0.1*s, 0.92)); bone(L + "Leg", L + "UpLeg", V(0.105*s, 0.52, 0.01)); bone(L + "Foot", L + "Leg", V(0.11*s, 0.1));
+    bone(L + "ToeBase", L + "Foot", V(0.11*s, 0.03, 0.12)); bone(L + "Toe_End", L + "ToeBase", V(0.11*s, 0.03, 0.21));
+    ARM[L] = {sh, el, wr, lo, kn, tdir};
+  }
+  const bi = n => bones.indexOf(J[n].b);
+  // ---- pieces: built in place (rest pose), each skinned to its bone, blended into the parent near the joint
+  const parts = {};
+  const skin = (mat, geo, weights) => {
+    const pos = geo.attributes.position, n = pos.count, si = new Uint16Array(n*4), sw = new Float32Array(n*4), p = new THREE.Vector3();
+    for (let i = 0; i < n; i++){
+      p.fromBufferAttribute(pos, i);
+      const w = weights(p);
+      w.slice(0, 4).forEach(([b, v], k) => { si[i*4 + k] = bi(b); sw[i*4 + k] = v; });
+    }
+    geo.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(si, 4)); geo.setAttribute("skinWeight", new THREE.Float32BufferAttribute(sw, 4));
+    (parts[mat] ||= []).push(geo);
+  };
+  const rigid = b => () => [[b, 1]];
+  // blend: near the start of segment a->b, share with the parent bone
+  const jointBlend = (b, parent, a, z, r = 0.22) => p => {
+    const ab = z.clone().sub(a), t = p.clone().sub(a).dot(ab) / ab.lengthSq();
+    if (t >= r) return [[b, 1]];
+    const w = 0.5*(1 - Math.max(0, t)/r); return [[b, 1 - w], [parent, w]];
+  };
+  const Y = V(0, 1, 0);
+  const limb = (a, b, r0, r1, seg = 7, segH = 2) => {
+    const d = b.clone().sub(a), g = new THREE.CylinderGeometry(r1, r0, d.length(), seg, segH);
+    g.rotateY(Math.PI);                                                 // texture seam to the back
+    g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(Y, d.clone().normalize()));
+    g.translate((a.x + b.x)/2, (a.y + b.y)/2, (a.z + b.z)/2); return g;
+  };
+  const boxAt = (w, h, d, at, dir) => {
+    const g = new THREE.BoxGeometry(w, h, d);
+    if (dir) g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(Y, dir.clone().normalize()));
+    g.translate(at.x, at.y, at.z); return g;
+  };
+  // torso (T-shirt), weighted up the spine
+  const torso = new THREE.CylinderGeometry(0.192, 0.168, 0.5, 10, 4); torso.rotateY(Math.PI); torso.scale(1, 1, 0.62); torso.translate(0, 1.22, 0);
+  skin("shirt", torso, p => p.y < 1.1 ? [["Spine", 0.7], ["Hips", 0.3]] : p.y < 1.26 ? [["Spine1", 1]] : p.y < 1.4 ? [["Spine2", 1]] : [["Spine2", 0.8], ["Neck", 0.2]]);
+  const yoke = new THREE.CylinderGeometry(0.072, 0.192, 0.11, 10); yoke.rotateY(Math.PI); yoke.scale(1, 1, 0.62); yoke.translate(0, 1.525, 0); skin("sleeve", yoke, p => p.y > 1.55 ? [["Spine2", 0.7], ["Neck", 0.3]] : [["Spine2", 1]]);   // sloped shoulders
+  skin("collar", new THREE.CylinderGeometry(0.066, 0.078, 0.035, 10).translate(0, 1.565, 0), rigid("Neck"));
+  skin("skin", limb(V(0, 1.5), V(0, 1.64, 0.005), 0.05, 0.047, 8), p => p.y < 1.56 ? [["Neck", 0.7], ["Spine2", 0.3]] : [["Neck", 1]]);
+  // head: painted face, hair cap, ears, a small nose
+  const head = new THREE.SphereGeometry(0.115, 14, 10); head.scale(0.9, 1.1, 0.98); head.translate(0, 1.705, 0.012); skin("face", head, rigid("Head"));
+  const hair = new THREE.SphereGeometry(0.123, 14, 7, 0, Math.PI*2, 0, 1.3); hair.scale(0.92, 1.08, 1.0); hair.rotateX(-0.42); hair.translate(0, 1.712, 0.0); skin("hair", hair, rigid("Head"));
+  for (const s of [1, -1]) skin("skin", boxAt(0.022, 0.05, 0.034, V(0.104*s, 1.695, 0.0)), rigid("Head"));
+  skin("skin", boxAt(0.026, 0.04, 0.028, V(0, 1.69, 0.122)), rigid("Head"));
+  // shorts: waist + baggy legs; then shins, socks, skate shoes
+  const waist = new THREE.CylinderGeometry(0.176, 0.172, 0.16, 10); waist.rotateY(Math.PI); waist.scale(1, 1, 0.66); waist.translate(0, 0.92, 0); skin("shorts", waist, rigid("Hips"));
+  for (const s of [1, -1]){
+    const L = s > 0 ? "Left" : "Right", hip = V(0.1*s, 0.95), knee = V(0.105*s, 0.52, 0.01), ank = V(0.11*s, 0.1);
+    skin("shorts", limb(hip, V(0.105*s, 0.5, 0.012), 0.1, 0.092, 9, 3), jointBlend(L + "UpLeg", "Hips", hip, knee, 0.18));
+    skin("skin", limb(V(0.105*s, 0.54, 0.01), V(0.11*s, 0.19), 0.047, 0.04, 7), jointBlend(L + "Leg", L + "UpLeg", knee, ank, 0.12));
+    skin("sock", limb(V(0.11*s, 0.21), V(0.11*s, 0.085), 0.044, 0.046, 7, 1), rigid(L + "Foot"));
+    skin("shoe", boxAt(0.125, 0.1, 0.28, V(0.11*s, 0.07, 0.045)), p => p.z > 0.11 ? [[L + "ToeBase", 1]] : [[L + "Foot", 1]]);
+    skin("sole", boxAt(0.13, 0.028, 0.29, V(0.11*s, 0.014, 0.045)), p => p.z > 0.11 ? [[L + "ToeBase", 1]] : [[L + "Foot", 1]]);
+    // arms: short sleeve, upper arm, forearm, a wristband on the left, palm, fingers, thumb
+    const A = ARM[L];
+    skin("sleeve", limb(A.sh.clone().add(V(-0.02*s, 0.02)), A.sh.clone().addScaledVector(A.el.clone().sub(A.sh).normalize(), 0.15), 0.072, 0.066, 8), jointBlend(L + "Arm", L + "Shoulder", A.sh, A.el, 0.3));
+    skin("skin", limb(A.sh, A.el, 0.047, 0.041, 7), jointBlend(L + "Arm", L + "Shoulder", A.sh, A.el, 0.15));
+    skin("skin", limb(A.el, A.wr, 0.041, 0.033, 7), jointBlend(L + "ForeArm", L + "Arm", A.el, A.wr, 0.14));
+    if (s > 0) skin("band", limb(A.wr.clone().addScaledVector(A.lo, -0.05), A.wr.clone().addScaledVector(A.lo, -0.01), 0.037, 0.036, 8, 1), rigid(L + "ForeArm"));
+    skin("skin", boxAt(0.03, 0.09, 0.078, A.wr.clone().addScaledVector(A.lo, 0.045), A.lo), rigid(L + "Hand"));
+    for (const f of ["Index", "Middle", "Ring", "Pinky"]) for (let k = 1; k <= 3; k++){
+      const a = J[`${L}Hand${f}${k}`].p, b = J[`${L}Hand${f}${k + 1 > 3 ? 4 : k + 1}`].p;
+      skin("skin", limb(a, b, 0.0095, 0.0085, 5, 1), rigid(`${L}Hand${f}${k}`));
+    }
+    for (let k = 1; k <= 3; k++) skin("skin", limb(J[`${L}HandThumb${k}`].p, J[`${L}HandThumb${k + 1}`].p, 0.011, 0.0095, 5, 1), rigid(`${L}HandThumb${k}`));
+  }
+  // ---- textures (small, like the era)
+  const T = {
+    skin:paintTex(64, 64, (x, w, h) => grain(x, w, h, "#c8946f", 0.06)),
+    face:paintTex(256, 128, (x) => {
+      grain(x, 256, 128, "#c8946f", 0.05);
+      const cx = 64;
+      x.fillStyle = "rgba(120,70,45,.25)"; x.fillRect(cx - 4, 64, 8, 18);                   // nose shade
+      x.fillStyle = "rgba(255,200,170,.18)"; x.beginPath(); x.ellipse(cx - 22, 76, 9, 6, 0, 0, 7); x.ellipse(cx + 22, 76, 9, 6, 0, 0, 7); x.fill();
+      for (const s of [-1, 1]){
+        x.strokeStyle = "#4a3020"; x.lineWidth = 3; x.beginPath(); x.moveTo(cx + s*7, 50); x.quadraticCurveTo(cx + s*15, 46, cx + s*24, 50); x.stroke();
+        x.fillStyle = "#f2ebe4"; x.beginPath(); x.ellipse(cx + s*15, 58, 6, 3.2, 0, 0, 7); x.fill();
+        x.fillStyle = "#5b3a24"; x.beginPath(); x.arc(cx + s*15, 58, 2.6, 0, 7); x.fill();
+        x.fillStyle = "#120a06"; x.beginPath(); x.arc(cx + s*15, 58, 1.2, 0, 7); x.fill();
+      }
+      x.fillStyle = "#9c5a4c"; x.beginPath(); x.ellipse(cx, 87, 9, 2.6, 0, 0, 7); x.fill();
+      x.strokeStyle = "#6e3a30"; x.lineWidth = 1.2; x.beginPath(); x.moveTo(cx - 9, 87); x.lineTo(cx + 9, 87); x.stroke();
+      x.fillStyle = "rgba(60,40,30,.12)"; x.fillRect(cx - 22, 92, 44, 14);                   // stubble
+    }),
+    hair:paintTex(64, 64, (x, w, h) => { grain(x, w, h, "#6a4627", 0.2, 3); x.strokeStyle = "rgba(40,24,12,.5)"; for (let i = 0; i < 40; i++){ x.beginPath(); x.moveTo(i*1.7, 0); x.lineTo(i*1.7 + 6, 64); x.stroke(); } }),
+    shirt:paintTex(256, 256, (x, w, h) => {
+      grain(x, w, h, "#9fb3a7", 0.08, 11);
+      x.strokeStyle = "rgba(60,80,70,.25)"; x.lineWidth = 3; for (const [ax, ay, bx, by] of [[90, 200, 120, 150], [170, 190, 140, 140], [60, 120, 80, 60], [200, 110, 180, 60]]){ x.beginPath(); x.moveTo(ax, ay); x.quadraticCurveTo((ax + bx)/2 + 10, (ay + by)/2, bx, by); x.stroke(); }
+      // front print: a big cartoon mouth (fitting for an app about eyes and mouths)
+      const cx = 128, cy = 92;
+      x.fillStyle = "#c2484f"; x.beginPath(); x.ellipse(cx, cy, 34, 20, 0, 0, 7); x.fill();
+      x.fillStyle = "#3a0d12"; x.beginPath(); x.ellipse(cx, cy + 1, 26, 11, 0, 0, 7); x.fill();
+      x.fillStyle = "#f4efe6"; x.fillRect(cx - 22, cy - 9, 44, 8); x.fillRect(cx - 18, cy + 4, 36, 6);
+      x.strokeStyle = "#3a0d12"; x.lineWidth = 1; for (let i = -18; i <= 18; i += 7.5){ x.beginPath(); x.moveTo(cx + i, cy - 9); x.lineTo(cx + i, cy - 1); x.stroke(); }
+      x.strokeStyle = "rgba(255,255,255,.35)"; x.lineWidth = 2; x.beginPath(); x.ellipse(cx - 6, cy - 12, 14, 4, -0.1, Math.PI*1.1, Math.PI*1.8); x.stroke();
+      x.fillStyle = "rgba(70,70,110,.55)"; x.fillRect(0, 0, w, 6); x.fillRect(0, h - 5, w, 5);   // hems
+    }),
+    sleeve:paintTex(64, 64, (x, w, h) => { grain(x, w, h, "#9fb3a7", 0.08, 13); x.fillStyle = "rgba(70,70,110,.55)"; x.fillRect(0, h - 4, w, 4); }),
+    shorts:paintTex(128, 128, (x, w, h) => {
+      grain(x, w, h, "#3b4c8c", 0.16, 5);
+      x.strokeStyle = "rgba(20,25,60,.55)"; x.lineWidth = 2;
+      for (const px of [26, 90]){ x.strokeRect(px, 50, 22, 26); x.beginPath(); x.moveTo(px, 56); x.lineTo(px + 22, 56); x.stroke(); }  // cargo pockets
+      x.strokeStyle = "rgba(220,200,140,.5)"; x.lineWidth = 1; x.setLineDash([3, 2]); x.beginPath(); x.moveTo(64, 0); x.lineTo(64, 128); x.moveTo(0, 6); x.lineTo(128, 6); x.stroke();
+    }),
+    shoe:paintTex(64, 64, (x, w, h) => { grain(x, w, h, "#1e1e22", 0.12); x.strokeStyle = "#8a8a90"; x.lineWidth = 2; for (let i = 0; i < 4; i++){ x.beginPath(); x.moveTo(22, 14 + i*7); x.lineTo(42, 14 + i*7); x.stroke(); } }),
+    sole:null, sock:null, band:null, collar:null
+  };
+  const M = {
+    skin:new THREE.MeshStandardMaterial({map:T.skin, roughness:0.8}), face:new THREE.MeshStandardMaterial({map:T.face, roughness:0.75}),
+    hair:new THREE.MeshStandardMaterial({map:T.hair, roughness:0.9}), shirt:new THREE.MeshStandardMaterial({map:T.shirt, roughness:0.9}), sleeve:new THREE.MeshStandardMaterial({map:T.sleeve, roughness:0.9}),
+    shorts:new THREE.MeshStandardMaterial({map:T.shorts, roughness:0.85}), shoe:new THREE.MeshStandardMaterial({map:T.shoe, roughness:0.6}),
+    sole:new THREE.MeshStandardMaterial({color:0xdedad2, roughness:0.7}), sock:new THREE.MeshStandardMaterial({color:0xf2f0ea, roughness:0.9}),
+    band:new THREE.MeshStandardMaterial({color:0x8a2b4a, roughness:0.8}), collar:new THREE.MeshStandardMaterial({color:0x5a4f9a, roughness:0.85})
+  };
+  // ---- assemble: one skinned mesh per material, all sharing one skeleton
+  const root = new THREE.Group(); root.name = "Skater"; root.add(J.Hips.b);
+  root.updateMatrixWorld(true);
+  const skel = new THREE.Skeleton(bones);
+  for (const [k, geos] of Object.entries(parts)){
+    const g = mergeGeometries(geos, false); g.computeVertexNormals();
+    const m = new THREE.SkinnedMesh(g, M[k]); m.name = "Skater_" + k; m.frustumCulled = false;
+    root.add(m); m.bind(skel);
+  }
+  // ---- idle: breathing, a little weight shift, looking around, arms swaying (for when it's a cast member)
+  const q = (x, y, z) => new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z)).toArray();
+  const track = (b, times, eulers) => new THREE.QuaternionKeyframeTrack(`mixamorig_${b}.quaternion`, times, eulers.flatMap(e => q(...e)));
+  const tt = [0, 1, 2, 3, 4];
+  const idle = new THREE.AnimationClip("Idle", 4, [
+    track("Spine2", tt, [[0, 0, 0], [0.025, 0.02, 0], [0, 0, 0], [0.025, -0.02, 0], [0, 0, 0]]),
+    track("Hips", tt, [[0, 0, 0.02], [0, 0.03, 0.03], [0, 0, -0.02], [0, -0.03, -0.03], [0, 0, 0.02]]),
+    track("Head", tt, [[0, 0, 0], [0.04, 0.18, 0], [0, 0, 0.03], [0.03, -0.2, 0], [0, 0, 0]]),
+    track("LeftArm", tt, [[0, 0, 0], [0.06, 0, 0.03], [0, 0, 0], [-0.05, 0, 0.02], [0, 0, 0]]),
+    track("RightArm", tt, [[0, 0, 0], [-0.05, 0, -0.02], [0, 0, 0], [0.06, 0, -0.03], [0, 0, 0]])
+  ]);
+  return {root, anims:[idle], applied:0};
+}
+async function addBuiltin(key){
+  const B = BUILTIN[key]; if (!B) return;
+  const c = {id:newId(), type:"model", builtin:key, name:B.name,
+             cfg:{...pick(scopeKeys("x"), DEFAULTS), bg:"studio", mFrame:"upper", faceMode:"overlay", faceModeSet:true, facePt:[0, 1.712, 0.122], mFaceK:0.9}, created:Date.now()};
+  CHARS.unshift(c); await persistChar(c); await persistIndex(); renderChars();
+  await openChar(c.id);
 }
 
 /* ---------- where the eyes and mouth sit on a model ----------
@@ -1927,7 +2132,7 @@ function syncBgVideo(){
 
 // ---- the mini TV: a set in the scene with its own playlist. Four models; the picture goes through a screen
 // shader (black-bar trimming, fit/fill, zoom, sharpness, brightness, contrast, colour, CRT scanlines)
-const TV = {g:new THREE.Group(), frame:new THREE.Group(), screen:null, mat:null, tex:null, idle:null, model:null};
+const TV = {g:new THREE.Group(), frame:new THREE.Group(), screen:null, mat:null, tex:null, idle:null, model:null, extra:[]};
 // "always in front": the TV renders in this scene after everything else, with its own copy of the lights
 const tvScene = new THREE.Scene(), tvHemi = hemi.clone(), tvKey = key.clone(), tvRim = rim.clone();
 tvScene.add(tvHemi, tvKey, tvRim); tvScene.environment = scene.environment;
@@ -1993,7 +2198,10 @@ function buildTvModel(key){
     box(0.12, 0.26, 0.04, black, 0, -H/2 - 0.13, -0.08); box(0.62, 0.025, 0.28, mat(0x1a1a1d, 0.35, 0.5), 0, -H/2 - 0.27, -0.06);
   } else if (key === "crt"){
     const shell = mat(0x9a9384, 0.75), dark = mat(0x2a2826, 0.5);
-    box(W + 0.28, H + 0.34, 0.9, shell, 0, -0.03, -0.47); box(W*0.72, H*0.72, 0.42, shell, 0, -0.03, -1.1);
+    const vents = paintTex(128, 128, (x) => { grain(x, 128, 128, "#8a8476", 0.08); x.fillStyle = "#2a2724"; for (let i = 0; i < 9; i++) x.fillRect(22, 24 + i*9, 84, 4); x.fillStyle = "#d8d2c2"; x.fillRect(46, 110, 36, 10); });
+    box(W + 0.28, H + 0.34, 0.9, shell, 0, -0.03, -0.47); box(W*0.72, H*0.72, 0.42, mat(0x8a8476, 0.8), 0, -0.03, -1.1);
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(W*0.72, H*0.72), new THREE.MeshStandardMaterial({map:vents, roughness:0.85})); back.position.set(0, -0.03, -1.312); back.rotation.y = Math.PI; TV.frame.add(back);
+    cyl(0.025, 0.025, 0.9, dark, 0.2, -0.55, -1.2, 0, 0.2);
     box(W + 0.08, H + 0.08, 0.03, dark, 0, 0, -0.012);
     box(W + 0.24, 0.12, 0.02, dark, 0, -H/2 - 0.12, -0.005);
     for (const kx of [0.32, 0.46]) cyl(0.03, 0.03, 0.04, mat(0x777066, 0.4, 0.3), W/2 + 0.12 - kx, -H/2 - 0.12, 0.02, 0, Math.PI/2);
@@ -2043,7 +2251,9 @@ function tvPicture(){
   const cr = live && t.trim ? TRIM.crop : [0, 0, 1, 1];
   u.crop.value.set(...cr);
   const A = ((cr[2] - cr[0])*vw) / ((cr[3] - cr[1])*vh), Sa = md.W/md.H, fill = live && t.fit === "fill";
-  if (fill) u.scl.value.set(A > Sa ? Sa/A : 1, A > Sa ? 1 : A/Sa); else u.scl.value.set(A > Sa ? 1 : Sa/A, A > Sa ? A/Sa : 1);
+  const fitTo = (out, sa) => fill ? out.set(A > sa ? sa/A : 1, A > sa ? 1 : A/sa) : out.set(A > sa ? 1 : sa/A, A > sa ? A/sa : 1);
+  fitTo(u.scl.value, Sa);
+  for (const e of TV.extra) fitTo(e.mat.uniforms.scl.value, e.W/e.H);   // other screens showing the same video (a scene's wall screen)
   u.zoom.value = live ? t.zoom : 1;
   u.bright.value = t.bright; u.contrast.value = t.contrast; u.sat.value = t.sat; u.sharp.value = t.sharp;
   u.texel.value.set(1/vw, 1/vh);
@@ -2228,12 +2438,12 @@ function syncMediaSession(){
 const TVG = {pts:new Map(), base:null, moved:false, t0:0, max:0, tgt:null};
 const _tvr = new THREE.Raycaster(), _tvn = new THREE.Vector2();
 function tvHit(x, y){
-  if (!TV.g.visible || stuCfg().lock) return false;
+  if (!TV.g.visible || (stuCfg().lock && !sceneOn())) return false;
   _tvn.set(x/innerWidth*2 - 1, -(y/innerHeight*2 - 1)); _tvr.setFromCamera(_tvn, camera);
   return _tvr.intersectObject(TV.g, true).length > 0;
 }
 function grabTarget(x, y){
-  if (tvHit(x, y)) return {cfg:tvCfg(), obj:TV.g, maxS:8, apply:placeTV,
+  if (tvHit(x, y)) return {cfg:tvCfg(), obj:TV.g, maxS:8, apply:placeTV, locked:sceneOn(),
     tap:() => { $("#tvBar").hidden ? openTvBar() : ($("#tvBar").hidden = true); }};
   const X = castHit(x, y); if (!X) return null;
   if (X.uid === "host" && !stuCfg().host) stuCfg().host = {x:0, y:0, z:0, s:1, r:0};
@@ -2258,7 +2468,7 @@ canvas.addEventListener("pointermove", e => {
   TVG.pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
   const p = [...TVG.pts.values()], b = TVG.base, t = TVG.tgt.cfg; if (p.length !== b.n) return;
   const cx = p.reduce((a, q) => a + q.x, 0)/b.n, cy = p.reduce((a, q) => a + q.y, 0)/b.n, dx = cx - b.cx, dy = cy - b.cy;
-  if (!TVG.moved && Math.hypot(dx, dy) < 6 && b.n === 1) return;
+  if (TVG.tgt.locked || (!TVG.moved && Math.hypot(dx, dy) < 6 && b.n === 1)) return;
   if (!TVG.moved){ TVG.moved = true; buzz(5); }
   // move in the camera's own plane, at the thing's distance
   const k = 2 * tanHalfFov() * camera.position.distanceTo(TVG.tgt.obj.getWorldPosition(new THREE.Vector3())) / innerHeight;
@@ -3114,7 +3324,7 @@ $("#cuSize").oninput = () => { CUT.cur = {x:innerWidth/2, y:innerHeight*0.42}; C
 /* ---------- character gallery: every uploaded picture keeps its own cut-out, layout and settings ---------- */
 let CHARS = [];
 const newId = () => Math.random().toString(36).slice(2, 10);
-async function persistChar(c){ await idb.set("char:" + c.id, {id:c.id, type:c.type || "image", file:c.file, files:c.files, main:c.main, ext:c.ext, name:c.name, png:c.png, original:c.original, meta:c.meta, cfg:c.cfg, thumb:c.thumb, shot:c.shot, created:c.created}); }
+async function persistChar(c){ await idb.set("char:" + c.id, {id:c.id, type:c.type || "image", builtin:c.builtin, file:c.file, files:c.files, main:c.main, ext:c.ext, name:c.name, png:c.png, original:c.original, meta:c.meta, cfg:c.cfg, thumb:c.thumb, shot:c.shot, created:c.created}); }
 async function persistIndex(){ await idb.set("chars", CHARS.map(c => c.id)); }
 function makeThumb(canvas){
   const k = Math.min(1, 240 / Math.max(canvas.width, canvas.height));
@@ -3134,7 +3344,7 @@ async function loadChars(){
     await idb.set("chars", ids);
   }
   CHARS = [];
-  for (const id of ids){ const c = await idb.get("char:" + id); if (c?.png || c?.file || c?.files?.length) CHARS.push(c); }
+  for (const id of ids){ const c = await idb.get("char:" + id); if (c?.png || c?.file || c?.files?.length || c?.builtin) CHARS.push(c); }
   renderChars();
 }
 async function canvasFromBlob(b){ const bmp = await createImageBitmap(b); const [c, x] = mkCanvas(bmp.width, bmp.height); x.drawImage(bmp, 0, 0); return c; }
@@ -3187,6 +3397,8 @@ function chooseAdd(){
     const pic = el("button", "pill hot press", `${ico("image")}Picture`); pic.onclick = () => { closeModal(); pickImage(); };
     const mdl = el("button", "pill press", `${ico("cube")}3D model`); mdl.onclick = () => { closeModal(); $("#modelFile").click(); };
     row.append(pic, mdl); b.append(row);
+    const r2 = el("div", "btnrow"), sk = el("button", "pill press", `${ico("cube")}Skater (built in)`); sk.onclick = () => { closeModal(); addBuiltin("skater"); };
+    r2.append(sk); b.append(r2);
     b.append(el("p", "note", "Pictures: any head-and-shoulders photo or drawing. 3D models: .glb, .gltf, .vrm, .obj, .fbx, .stl, .ply or .dae. For a model with separate textures, select all of its files at once (model, .mtl/.bin and images) or pick a .zip of the folder. Models without bones can be rigged afterwards in Settings › Model."));
   });
 }
@@ -3284,7 +3496,7 @@ function openModal(title, build){
   $("#modal").hidden = false;
 }
 /* ---------- about & legal ---------- */
-const VERSION = "4.7";
+const VERSION = "4.8";
 function openLegal(){
   openModal("About & legal", b => {
     const d = el("div", "legal");
@@ -4017,7 +4229,7 @@ const STU = {extras:new Map(), lead:"host", gen:0, swapping:false, rec:null, adj
 const stuCfg = () => own("studio");
 const charName = ref => ref === "peanut" ? "Peanut" : CHARS.find(c => c.id === ref)?.name || "Character";
 const castEntry = uid => uid === "host" ? null : stuCfg().cast.find(e => e.uid === uid);
-const slotOf = uid => uid === "tv" ? tvCfg() : uid === "host" ? (stuCfg().host || {x:0, y:0, z:0, s:1, r:0}) : castEntry(uid);
+const slotOf = uid => uid === "tv" ? tvCfg() : uid === "host" ? (sceneOn() ? {...ORIGIN_SLOT, y:SIT.dy} : stuCfg().host || {x:0, y:0, z:0, s:1, r:0}) : castEntry(uid);
 const refOf = uid => uid === "host" ? scopeId : castEntry(uid)?.ref;
 const leadKind = () => stageMode;
 // a character's own settings, filled in from the defaults (the peanut's face settings are app-wide)
@@ -4312,7 +4524,7 @@ function stepStudio(now, dt){
       stepLoop(X, now); applyLoopPose(X, X.loop.pose, dt);
       if (X.faces && !(X.kind === "model" && X.cfg.faceMode === "model")){
         placeFace(X.loop.B, X.loop.st, faceLayout(X.kind, X.cfg, X.P, X.M), X.faces, X.surf);
-        const L = X.loop, op = (m2, o) => { const u = m2.material.uniforms; u.opacity.value = o; u.blend.value = S.blend; u.skinMatch.value = S.skinMatch; u.relief.value = Math.min(1, S.depth); u.smoothSkin.value = S.retouch; u.light.value = S.light; m2.visible = o > 0.003; };
+        const L = X.loop, op = (m2, o) => { const u = m2.material.uniforms; u.opacity.value = o; u.blend.value = S.blend; u.skinMatch.value = S.skinMatch; u.relief.value = Math.min(1, S.depth); u.smoothSkin.value = S.retouch; u.light.value = S.light*FACE_LIGHT.k; m2.visible = o > 0.003; };
         op(X.faces.R.real, L.vis*(1 - L.st.wR)); op(X.faces.R.alt, L.vis*L.st.wR); op(X.faces.L.real, L.vis*(1 - L.st.wL)); op(X.faces.L.alt, L.vis*L.st.wL);
         op(X.faces.M.real, L.vis*(1 - L.st.wM)); op(X.faces.M.alt, L.vis*L.st.wM);
       }
@@ -4389,7 +4601,7 @@ function studioView(){
   const sh = stuCfg().shots[stuCfg().shot]; if (!sh) return null;
   return shotWorld(sh);
 }
-VIEW.over = () => (PF.on && placeView()) || studioView();
+VIEW.over = () => (PF.on && placeView()) || studioView() || (typeof sceneView === "function" ? sceneView() : null);
 // the main visible part of an actor, for framing
 function actorBox(uid){
   const box = new THREE.Box3();
@@ -4526,6 +4738,9 @@ function openStudio(){
   const st = stuCfg();
   openModal("Studio", b => {
     b.append(el("p", "note", `Your face is on <b>${charName(leadRef).replace(/</g, "&lt;")}</b>. Add characters, give them a loop of you, and save cameras to cut between them.`));
+    const cur = SCENES.find(x => x.id === (S.sceneId || "free"));
+    const scr = el("button", "sccur press", `<div class="scart">${SCENE_ART[cur.id]}</div><span><small>Scene</small><b>${cur.label}</b></span>${ico("arrow")}`);
+    scr.onclick = () => { buzz(8); openScenes(); }; b.append(scr);
     b.append(el("div", "sec", "Cast"));
     const list = el("div", "vlist");
     for (const u of ["host", ...st.cast.map(e => e.uid)]){
@@ -4617,6 +4832,207 @@ function castOptions(uid){
   });
 }
 $("#bStudio").onclick = () => { buzz(8); closeSheet(); openStudio(); };
+
+/* ---------- scenes: ready-made sets with props, light and a locked camera ----------
+   A scene is applied to the studio that's open (whoever hosts it: the Peanut, a picture, a model). It takes
+   over the background, the TV and the camera while it's on, and gives them back when you pick another one.
+   Positions are locked so the shot stays as designed. */
+const SCENES = [
+  {id:"free", label:"Free studio", desc:"Your own setup: move things around, add a TV, cast and cameras."},
+  {id:"tvroom", label:"TV night", desc:"Sitting on the couch, watching the TV. The TV's back faces the viewers and its flicker lights your face, while your video plays big on the wall behind you."},
+  {id:"car", label:"Road trip", desc:"Behind the wheel, filmed from the bonnet, cruising down a sunset road."}
+];
+const SCN = {g:new THREE.Group(), id:"free", glow:null, sweep:null, wall:null, view:{pos:new THREE.Vector3(), tgt:new THREE.Vector3()}, col:new THREE.Color(0.6, 0.7, 1), lum:0.4, flick:1, t:0, cv:null, cx:null};
+SCN.cv = document.createElement("canvas"); SCN.cv.width = SCN.cv.height = 6; SCN.cx = SCN.cv.getContext("2d", {willReadFrequently:true});
+scene.add(SCN.g);
+const sceneOn = () => SCN.id !== "free" && mode !== "menu";
+const ORIGIN_SLOT = {x:0, y:0, z:0, s:1, r:0};
+function sceneView(){ return sceneOn() ? SCN.view : null; }
+// what a scene borrows, put back when you leave it
+const SCN_TV_KEYS = ["on", "model", "front", "x", "y", "z", "s", "r", "tilt", "lean", "placed"];
+function setScene(id){
+  const cur = S.sceneId || "free";
+  if (cur !== id){
+    if (cur !== "free" && S.sceneBak){
+      const b = S.sceneBak; Object.assign(S, {world:b.world, wBiome:b.wBiome, bg:b.bg, bgColor:b.bgColor}); Object.assign(tvCfg(), b.tv); S.sceneBak = null;
+    }
+    if (id !== "free"){
+      const t = tvCfg();
+      S.sceneBak = {world:S.world, wBiome:S.wBiome, bg:S.bg, bgColor:S.bgColor, tv:Object.fromEntries(SCN_TV_KEYS.map(k => [k, t[k]]))};
+      // the character stands where the scene expects it
+      if (stageMode === "puppet"){ S.pX = DEFAULTS.pX; S.pY = DEFAULTS.pY; S.pScale = DEFAULTS.pScale; S.pRot = 0; }
+      else for (const k of NUT_KEYS) S[k] = DEFAULTS[k];
+      if (id === "tvroom"){ Object.assign(t, {on:true, model:"crt", front:false, x:0, y:-1.32, z:2.35, s:1.12, r:Math.PI, tilt:0.06, lean:0, placed:true}); S.world = false; S.bg = "custom"; S.bgColor = "#0b0705"; }
+      if (id === "car"){ t.on = false; S.world = true; S.wBiome = "drive"; }
+    }
+    S.sceneId = id;
+    if (stuCfg().shot >= 0) stuCfg().shot = -1;
+    save(); applyBg(); WORLD.configure(); syncTV(); syncShotBar();
+  }
+  buildScene(); placeLeadSlot();
+  if (id === "tvroom" && !tvCfg().list.length) setTimeout(() => mediaSheet("tv"), 400);
+}
+function clearSceneProps(){
+  for (const o of [...SCN.g.children]){ SCN.g.remove(o); o.traverse(m => { if (m.isMesh){ m.geometry.dispose(); if (m.material !== TV.mat && !m.material.userData?.shared) m.material.dispose?.(); } }); }
+  TV.extra = TV.extra.filter(e => e.keep); SCN.glow = SCN.sweep = SCN.wall = null;
+}
+function buildScene(){
+  clearSceneProps();
+  SCN.id = S.sceneId || "free";
+  if (SCN.id === "tvroom") buildTvRoom(); else if (SCN.id === "car") buildCar();
+  tvPicture();
+}
+const sm = (color, rough = 0.7, metal = 0, extra = {}) => { const m = new THREE.MeshStandardMaterial({color, roughness:rough, metalness:metal, flatShading:true, ...extra}); psxPatch(m); return m; };
+function sBox(w, h, d, m, x, y, z, rx = 0, ry = 0, rz = 0){ const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.rotation.set(rx, ry, rz); SCN.g.add(o); return o; }
+// ---- TV night: a dark living room, a couch, a big screen on the back wall, the TV in front lighting your face
+function buildTvRoom(){
+  const floor = sm(0x3a2617, 0.85), wall = sm(0x1c130d, 0.95), fabric = sm(0x5a2f2a, 0.95), dark = sm(0x0c0c0e, 0.4, 0.3);
+  sBox(16, 0.1, 12, floor, 0, -2.0, -1);
+  sBox(16, 9, 0.2, wall, 0, 2.4, -4.2);
+  const rug = sBox(5.2, 0.02, 3.6, sm(0x6b4a2a, 0.95), 0, -1.94, 1.0);
+  // couch behind you
+  sBox(4.6, 0.7, 1.5, fabric, 0, -1.6, -1.15); sBox(4.6, 1.9, 0.5, fabric, 0, -0.75, -1.85); sBox(0.5, 1.2, 1.7, fabric, -2.45, -1.25, -1.1); sBox(0.5, 1.2, 1.7, fabric, 2.45, -1.25, -1.1);
+  // the big screen on the wall: the same video as the TV, so viewers can watch along
+  const W = 7.6, H = W*9/16;
+  sBox(W + 0.25, H + 0.25, 0.12, dark, 0, 1.55, -4.05);
+  const mat = new THREE.ShaderMaterial({toneMapped:false, uniforms:{...TV.mat.uniforms, scl:{value:new THREE.Vector2(1, 1)}, scan:{value:0}, curve:{value:0}}, vertexShader:TV.mat.vertexShader, fragmentShader:TV.mat.fragmentShader});
+  const wallScreen = new THREE.Mesh(new THREE.PlaneGeometry(W, H), mat); wallScreen.position.set(0, 1.55, -3.98); SCN.g.add(wallScreen);
+  TV.extra.push({mat, W, H}); SCN.wall = wallScreen;
+  // a soft glow from the wall screen, and the TV's light on your face
+  SCN.glow = new THREE.SpotLight(0x9ab8ff, 0, 14, 0.75, 0.7, 1.2); SCN.glow.position.set(0, -0.6, 2.2); SCN.glow.target.position.set(0, 0.9, 0);
+  SCN.g.add(SCN.glow, SCN.glow.target);
+  const lamp = new THREE.PointLight(0xffa860, 1.2, 9, 1.5); lamp.position.set(-3.2, 1.2, 0.5); SCN.g.add(lamp);
+  const back = new THREE.PointLight(0x9ab8ff, 0.8, 8, 1.5); back.position.set(0, 1.5, -3.5); SCN.g.add(back); SCN.back = back;
+}
+// ---- Road trip: a low-poly car around the driver's seat, camera out on the bonnet
+function buildCar(){
+  const cx = -1.15;                                                     // the car's middle; you sit on its left
+  const paint = sm(0xb3261e, 0.35, 0.35), black = sm(0x141416, 0.5, 0.2), dash = sm(0x2a2a2e, 0.8), seat = sm(0x3a3330, 0.95), chrome = sm(0xc8c8cc, 0.25, 0.8);
+  const lite = sm(0xfff2c0, 0.3, 0, {emissive:0xffe9a0, emissiveIntensity:0.9});
+  sBox(4.7, 0.36, 2.7, paint, cx, -0.78, 2.95, -0.07); sBox(4.8, 0.55, 0.32, black, cx, -1.1, 4.3);
+  for (const s of [-1, 1]){ sBox(0.75, 0.22, 0.08, lite, cx + s*1.75, -0.82, 4.47); sBox(0.24, 1.35, 4.2, paint, cx + s*2.38, -0.95, 0.3); sBox(0.5, 0.28, 0.12, black, cx + s*2.68, 0.05, 1.35); sBox(0.32, 0.06, 0.06, chrome, cx + s*2.5, 0.05, 1.4); }
+  sBox(4.5, 0.55, 1.0, dash, cx, -0.45, 1.35); sBox(4.5, 0.08, 1.15, black, cx, -0.16, 1.3);
+  // windscreen frame and a faint glass with a glare stripe
+  for (const s of [-1, 1]) sBox(0.15, 2.75, 0.15, black, cx + s*2.22, 1.0, 0.98, -0.42);
+  sBox(4.6, 0.16, 0.22, black, cx, 2.22, 0.45); sBox(4.6, 0.12, 2.8, paint, cx, 2.32, -0.85);
+  for (const s of [-1, 1]) sBox(0.14, 2.3, 0.14, black, cx + s*2.25, 1.1, -2.1);
+  const gc = document.createElement("canvas"); gc.width = 128; gc.height = 64; const gx = gc.getContext("2d");
+  const gg = gx.createLinearGradient(0, 0, 128, 64); gg.addColorStop(0.35, "rgba(255,255,255,0)"); gg.addColorStop(0.45, "rgba(255,255,255,.35)"); gg.addColorStop(0.52, "rgba(255,255,255,0)"); gx.fillStyle = gg; gx.fillRect(0, 0, 128, 64);
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(4.3, 2.55), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(gc), color:0xbfd8ff, transparent:true, opacity:0.22, depthWrite:false}));
+  glass.position.set(cx, 1.0, 1.03); glass.rotation.x = -0.42; glass.renderOrder = 6; SCN.g.add(glass);
+  // steering wheel in front of you
+  const wheel = new THREE.Group(); wheel.position.set(0, -0.08, 0.95); wheel.rotation.x = -0.38; SCN.g.add(wheel);
+  wheel.add(new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.06, 6, 16), black));
+  for (const a of [0, 2.2, -2.2]){ const sp = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.04), dash); sp.position.set(Math.cos(a + Math.PI/2)*0.25, Math.sin(a + Math.PI/2)*0.25, 0); sp.rotation.z = a + Math.PI/2; wheel.add(sp); }
+  wheel.add(new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.08, 10).rotateX(Math.PI/2), dash));
+  sBox(0.12, 0.12, 0.55, black, 0, -0.22, 1.2, -0.38);
+  SCN.wheel = wheel;
+  // seats: yours behind you, the passenger's beside it
+  for (const x of [0, cx*2]){ sBox(1.9, 2.1, 0.35, seat, x, -0.55, -1.25, 0.08); sBox(1.0, 0.5, 0.3, seat, x, 0.85, -1.4, 0.08); sBox(1.9, 0.35, 1.6, seat, x, -1.65, -0.45); }
+  // streetlights sweeping past, and a warm dash light
+  SCN.sweep = new THREE.PointLight(0xffc27a, 0, 9, 1.6); SCN.g.add(SCN.sweep);
+  const dl = new THREE.PointLight(0x7aa8ff, 0.5, 4, 2); dl.position.set(0, -0.1, 1.0); SCN.g.add(dl);
+}
+// the locked camera for the scene, fitted to the screen's shape
+function sceneCamera(){
+  const v = SCN.view;
+  if (SCN.id === "tvroom"){ v.tgt.set(0, 0.45, 0); const d = Math.min(14, fitDist(2.55, 2.1)); v.pos.set(0, 1.05, d); }
+  else if (SCN.id === "car"){ v.tgt.set(-0.15, 0.55, 0); const d = Math.min(9, Math.max(4.4, fitDist(1.55, 1.25))); v.pos.set(0.55, 0.62, d); }
+}
+// every frame: the TV's flicker on your face, the wall glow, the car's shake and the passing lights
+function stepScene(now, dt){
+  const on = sceneOn();
+  SCN.g.visible = on;
+  let lk = 1;                                                            // how the room's lights compare to the normal stage
+  syncSeat();
+  if (on){
+    sceneCamera();
+    if (SCN.id === "tvroom"){
+      lk = 0.22;
+      if (now - SCN.t > 110 && TVP.ready && !TVP.el.paused){
+        SCN.t = now;
+        try{ SCN.cx.drawImage(TVP.el, 0, 0, 6, 6); const d = SCN.cx.getImageData(0, 0, 6, 6).data; let r = 0, g = 0, b = 0;
+          for (let i = 0; i < d.length; i += 4){ r += d[i]; g += d[i+1]; b += d[i+2]; }
+          const n = d.length/4; SCN.col.setRGB(r/n/255, g/n/255, b/n/255); SCN.lum = 0.3*SCN.col.r + 0.59*SCN.col.g + 0.11*SCN.col.b; }catch(e){}
+      } else if (!TVP.ready || TVP.el.paused){ SCN.col.lerp(new THREE.Color(0.55, 0.65, 1), 0.05); SCN.lum += (0.25 - SCN.lum)*0.05; }
+      SCN.flick += (0.86 + Math.random()*0.28 - SCN.flick)*0.5;          // the restless shimmer of an old set
+      if (Math.random() < 0.01) SCN.flick *= 0.6;
+      const c = SCN.col.clone(); const mx = Math.max(c.r, c.g, c.b, 0.05); c.multiplyScalar(1/mx);   // keep the hue, set the brightness separately
+      if (SCN.glow){ SCN.glow.color.copy(c); SCN.glow.intensity = (8 + 34*SCN.lum)*SCN.flick*S.light; }
+      if (SCN.back){ SCN.back.color.copy(c); SCN.back.intensity = (0.6 + 2*SCN.lum)*S.light; }
+    } else if (SCN.id === "car"){
+      lk = 0.8;
+      const t = now/1000, shake = Math.sin(t*37)*0.004 + Math.sin(t*7.3)*0.007 + Math.sin(t*1.7)*0.01;
+      SCN.g.position.y = shake; leadSlot.position.y = SIT.dy + shake*1.2;
+      if (SCN.wheel) SCN.wheel.rotation.z = Math.sin(t*0.6)*0.12 + Math.sin(t*1.9)*0.03;
+      if (SCN.sweep){ const p = (t % 1.6)/1.6; SCN.sweep.position.set(2.8, 2.6, 6 - p*14); SCN.sweep.intensity = Math.sin(p*Math.PI)*6*S.light; }
+    }
+  } else if (SCN.g.position.y !== 0){ SCN.g.position.y = 0; placeLeadSlot(); }
+  hemi.intensity = 0.6*S.light*lk; key.intensity = 2.2*S.light*lk; rim.intensity = 1.4*S.light*(on && SCN.id === "tvroom" ? 0.5 : 1)*lk;
+  // your real eyes and mouth follow the room's light too
+  FACE_LIGHT.k = on && SCN.id === "tvroom" ? clamp(0.45 + SCN.lum*0.9*SCN.flick, 0.35, 1.2) : 1;
+}
+const FACE_LIGHT = {k:1};
+// sitting: bend a rigged character's thighs forward and knees down (in world space, so any bone axes work), then
+// move them so their head is where the scene wants it. Undone when the scene ends or someone else takes the seat.
+const SIT = {M:null, saved:[], dy:0, scene:null};
+const SEAT_HEAD = {tvroom:1.15, car:1.0};
+function legBones(root){
+  const out = {};
+  root.traverse(o => {
+    if (!o.isBone) return;
+    const n = o.name.toLowerCase().replace(/mixamorig\d*[:_]?/, "");
+    const side = /left|(^|[_.\s])l($|[_.\s])/.test(n) ? "L" : /right|(^|[_.\s])r($|[_.\s])/.test(n) ? "R" : null; if (!side) return;
+    const core = n.replace(/left|right/g, "").replace(/(^|[_.\s])[lr]($|[_.\s])/g, "").replace(/[^a-z]/g, "");
+    const r = out[side] ||= {};
+    if (!r.up && /^(upleg|thigh|upperleg|legupper)$/.test(core)) r.up = o;
+    else if (!r.lo && /^(leg|calf|shin|lowerleg|leglower|knee)$/.test(core)) r.lo = o;
+  });
+  return out;
+}
+function turnBoneWorld(b, axis, ang){
+  const pq = b.parent.getWorldQuaternion(new THREE.Quaternion()), wq = new THREE.Quaternion().setFromAxisAngle(axis, ang);
+  b.quaternion.premultiply(pq.clone().invert().multiply(wq).multiply(pq)); b.updateWorldMatrix(false, true);
+}
+function sitDown(M){
+  standUp();
+  const legs = legBones(M.root); if (!legs.L?.up || !legs.R?.up) return;
+  M.root.updateWorldMatrix(true, true);
+  const axis = new THREE.Vector3(1, 0, 0).applyQuaternion(M.root.getWorldQuaternion(new THREE.Quaternion()));
+  for (const sd of ["L", "R"]){ const g = legs[sd]; for (const b of [g.up, g.lo]) if (b) SIT.saved.push([b, b.quaternion.clone()]); }
+  for (const sd of ["L", "R"]){ const g = legs[sd]; turnBoneWorld(g.up, axis, -Math.PI/2); if (g.lo) turnBoneWorld(g.lo, axis, Math.PI/2); }
+  SIT.M = M;
+}
+function standUp(){ for (const [b, q] of SIT.saved) b.quaternion.copy(q); SIT.saved = []; SIT.M = null; SIT.dy = 0; }
+function syncSeat(){
+  const want = sceneOn() && SEAT_HEAD[SCN.id] !== undefined && stageMode === "model" && MDL ? MDL : null;
+  if (want === SIT.M && (!want || SIT.scene === SCN.id)) return;
+  if (!want){ standUp(); placeLeadSlot(); return; }
+  sitDown(want); SIT.scene = SCN.id;
+  // head to seat height
+  const head = MDL.rig.head || faceAnchor; leadSlot.position.y = 0; leadSlot.updateWorldMatrix(true, true);
+  const hy = head.getWorldPosition(new THREE.Vector3()).y;
+  SIT.dy = SEAT_HEAD[SCN.id] - hy; placeLeadSlot();
+}
+// ---- the Scenes page
+const SCENE_ART = {
+  free:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#2b1c12"/><ellipse cx="60" cy="70" rx="34" ry="5" fill="#000" opacity=".35"/><path d="M60 14c9 0 15 6 15 14 0 5-2 8-4 10-1 2-1 3 0 5 2 2 5 6 5 11 0 9-7 14-16 14s-16-5-16-14c0-5 3-9 5-11 1-2 1-3 0-5-2-2-4-5-4-10 0-8 6-14 15-14z" fill="#c8945a"/></svg>`,
+  tvroom:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#0b0705"/><rect x="18" y="6" width="84" height="40" rx="2" fill="#2b5aa8"/><rect x="18" y="6" width="84" height="40" rx="2" fill="url(#g)" opacity=".5"/><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#ff3cac"/><stop offset="1" stop-color="#2bd2ff"/></linearGradient></defs><rect x="20" y="40" width="80" height="18" rx="4" fill="#5a2f2a"/><path d="M60 22c6 0 10 4 10 9 0 3-1 5-3 7-1 1-1 2 0 3 1 1 3 4 3 7 0 6-5 9-10 9s-10-3-10-9c0-3 2-6 3-7 1-1 1-2 0-3-2-2-3-4-3-7 0-5 4-9 10-9z" fill="#c8945a"/><rect x="38" y="58" width="44" height="22" rx="3" fill="#9a9384"/><rect x="42" y="61" width="36" height="16" fill="#77705f"/><ellipse cx="60" cy="40" rx="18" ry="12" fill="#9ab8ff" opacity=".18"/></svg>`,
+  car:`<svg viewBox="0 0 120 80"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b0b3a"/><stop offset="1" stop-color="#ff6a8a"/></linearGradient></defs><rect width="120" height="80" fill="url(#s)"/><path d="M4 62 L28 18 L92 18 L116 62Z" fill="#141416"/><path d="M14 58 L32 22 L88 22 L106 58Z" fill="#7aa8ff" opacity=".18"/><path d="M68 30c5 0 8 3 8 7 0 3-1 4-2 5v2c1 1 2 3 2 6 0 4-4 7-8 7s-8-3-8-7c0-3 1-5 2-6v-2c-1-1-2-2-2-5 0-4 3-7 8-7z" fill="#c8945a"/><circle cx="68" cy="58" r="9" fill="none" stroke="#141416" stroke-width="3"/><rect x="0" y="62" width="120" height="18" fill="#b3261e"/></svg>`
+};
+function openScenes(){
+  openModal("Scenes", b => {
+    b.append(el("p", "note", `Pick a set for ${charName(leadRef).replace(/</g, "&lt;")}. The camera and props lock into place; your video, cast and cameras carry on.`));
+    const grid = el("div", "scgrid");
+    for (const sc of SCENES){
+      const on = (S.sceneId || "free") === sc.id;
+      const c = el("button", "sccard press" + (on ? " on" : ""), `<div class="scart">${SCENE_ART[sc.id]}</div><b>${sc.label}</b><span>${sc.desc}</span>`);
+      c.onclick = () => { buzz(10); closeModal(); setScene(sc.id); flash(sc.label, "Scene"); };
+      grid.append(c);
+    }
+    b.append(grid);
+  });
+}
 
 /* ---------- menu, modes, HUD ---------- */
 const statusEl = $("#status");
@@ -4727,7 +5143,7 @@ $("#bClean").onclick = () => { buzz(8); closeSheet(); document.body.classList.ad
 /* ---------- touch controls (both the peanut and characters) ---------- */
 let suppressClick = false, holding = false;
 const perPx = () => 2 * tanHalfFov() * camera.position.distanceTo(VIEW.tgt) / innerHeight;
-const canGesture = () => (mode === "puppet" && PUP || mode === "peanut" || mode === "model" && MDL) && !editing && !RIGE.on && !PF.on;
+const canGesture = () => (mode === "puppet" && PUP || mode === "peanut" || mode === "model" && MDL) && !editing && !RIGE.on && !PF.on && !sceneOn();
 const G = {pts:new Map(), n:0, max:0, t0:0, moved:false, base:null, swipe:{x:0, y:0}, lastTap2:0};
 const isPup = () => mode === "puppet";
 function gBaseline(){
@@ -5673,7 +6089,7 @@ function loop(now){
   }
   const set = (m, o) => {
     const u = m.material.uniforms;
-    u.opacity.value = o; u.blend.value = S.blend; u.skinMatch.value = S.skinMatch; u.relief.value = Math.min(1, S.depth); u.smoothSkin.value = S.retouch; u.light.value = S.light;
+    u.opacity.value = o; u.blend.value = S.blend; u.skinMatch.value = S.skinMatch; u.relief.value = Math.min(1, S.depth); u.smoothSkin.value = S.retouch; u.light.value = S.light*FACE_LIGHT.k;
     m.visible = o > 0.003;
   };
   set(F_EYE.R.real, faceVis * (1 - W.eyeR)); set(F_EYE.R.alt, faceVis * W.eyeR);
@@ -5681,7 +6097,7 @@ function loop(now){
   set(F_MOUTH.real, faceVis * (1 - W.mouth)); set(F_MOUTH.alt, faceVis * W.mouth);
   if (stageMode === "model" && S.faceMode === "model") [...EYE_MESHES, ...MOUTH_MESHES].forEach(m => m.visible = false);
 
-  try{ stepStudio(now, dt); loopCapture(now); stepTV(now); }catch(e){ console.error(e); }
+  try{ stepStudio(now, dt); loopCapture(now); stepTV(now); stepScene(now, dt); }catch(e){ console.error(e); }
   stepView(dt);
   const worldOn = S.world && (mode !== "menu" || scopeId === "peanut");
   PSXU.uPsxJ.value = S.psx === "modern" ? 0 : S.wJitter;

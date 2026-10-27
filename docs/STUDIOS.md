@@ -4,6 +4,20 @@
 
 Every scene in Peanut Cam is a studio: the character you opened plus any others you add. Open it with the **Studio** button in the bottom bar.
 
+## Scenes
+
+**Studio › Scene** opens the scene page. A scene is a ready-made set: props, light and a locked camera. It works for whoever hosts the studio (the Peanut, a picture character, a 3D model), and rigged models sit down in it.
+
+- **TV night:** you sit on a couch facing an old CRT. Its back faces the viewers and its flicker, tinted by the video, lights your face. The video also plays big on the wall behind you, so viewers can watch along with your reactions. Pick the video with the TV's playlist (it opens the first time).
+- **Road trip:** you sit at the wheel of a low-poly car, filmed from the bonnet, with the Sunset Drive world rolling past, streetlights sweeping by and a little engine shake.
+- **Free studio** gives back everything a scene borrowed (background, 3D world, TV placement).
+
+In a scene the character, TV and camera stay where the scene puts them. You can still tap the TV for its controls, add cast and use cameras.
+
+## Built-in characters
+
+**Add › Skater (built in)** adds a low-poly, PS2-era skater made in the app itself: about 2,600 triangles with painted textures and a full skeleton (head, arms, hands and fingers). Head, arm and hand tracking drive it like any rigged model, and it has an idle animation for when it's a cast member. It can host any studio or scene in place of the Peanut.
+
 ## Cast
 
 - **Add a character** puts the Peanut, a picture character or a 3D model into the scene beside you.
