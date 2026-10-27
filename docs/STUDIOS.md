@@ -6,13 +6,13 @@ Every scene in Peanut Cam is a studio: the character you opened plus any others 
 
 ## Scenes
 
-**Studio › Scene** opens the scene page. A scene is a ready-made set: props, light and a locked camera. It works for whoever hosts the studio (the Peanut, a picture character, a 3D model), and rigged models sit down in it.
+**Studio › Scene** opens the scene page. A scene is a ready-made set: props, light, a camera and a starting layout for the character and TV. It works for whoever hosts the studio (the Peanut, a picture character, a 3D model), and rigged models sit down in it.
 
 - **TV night:** you sit on a couch facing an old CRT. Its back faces the viewers and its flicker, tinted by the video, lights your face. The video also plays big on the wall behind you, so viewers can watch along with your reactions. Pick the video with the TV's playlist (it opens the first time).
 - **Road trip:** you sit at the wheel of a low-poly car, filmed from the bonnet, with the Sunset Drive world rolling past, streetlights sweeping by and a little engine shake.
 - **Free studio** gives back everything a scene borrowed (background, 3D world, TV placement).
 
-In a scene the character, TV and camera stay where the scene puts them. You can still tap the TV for its controls, add cast and use cameras.
+In a scene you can still move, turn and resize the character and the TV, zoom the camera, tap the TV for its controls, add cast and use cameras. The **Reset** button puts the scene back to its starting layout, and so does picking the scene again or reopening the character or the app.
 
 ## Built-in characters
 

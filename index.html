@@ -685,7 +685,7 @@ const DEFAULTS = {
   faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mEyeZ:0, mMouthZ:0, mEyeRot:0, mMouthRot:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true, mFrame:"full",
   mirror:true, pip_on:true, deviceId:"", facing:"user", hearVideos:true,
   studio:{cast:[], shots:[], shot:-1, smooth:true, lock:false}, sceneId:"free", sceneBak:null,
-  bgList:[], bgMode:"all", bgVol:0, tv:{on:false, x:1.05, y:1.3, z:0.4, s:0.7, r:-0.35, list:[], mode:"all", vol:0.8, i:0, playing:true,
+  bgList:[], bgMode:"all", bgVol:0, tv:{on:false, x:1.05, y:1.3, z:0.4, s:1.0, r:-0.35, list:[], mode:"all", vol:0.8, i:0, playing:true,
     model:"retro", tilt:0, lean:0, fit:"fit", trim:true, zoom:1, sharp:0.35, bright:0.03, contrast:1.08, sat:1.12, scan:null, amb:false, speed:1, front:true}
 };
 const WORLD_OPTS = [["auto","Auto-morph"],["meadow","Meadow"],["canyon","Canyon"],["city","Neon City"],["islands","Islands"],["snow","Snowfield"],["alien","Alien"],
@@ -736,6 +736,7 @@ async function loadScope(id){
   for (const k of scopeKeys(id)) S[k] = k in cfg ? cfg[k] : DEFAULTS[k];
   await loadBgPhoto();
   applyBg(); onChange("light"); resize(); WORLD.configure(); syncNutStyle(); syncTV(); buildScene();
+  if ((S.sceneId || "free") !== "free") setTimeout(sceneLayout, 0);   // after the character's own settings are in
 }
 
 /* ---------- small helpers: haptics, toast, busy ---------- */
@@ -2286,7 +2287,7 @@ function addTV(){
   const t = tvCfg();
   if (!t.placed){
     const z = -0.5, d = camera.position.distanceTo(VIEW.tgt) - z, hh = tanHalfFov()*d, hw = hh*camera.aspect;
-    t.s = clamp(hw*0.8/1.34, 0.3, 1.6); t.x = VIEW.tgt.x + hw - t.s*0.75; t.y = VIEW.tgt.y + hh*0.36; t.z = z; t.r = -0.3; t.placed = true;
+    t.s = clamp(hw*1.15/1.34, 0.45, 2.4); t.x = VIEW.tgt.x + hw - t.s*0.6; t.y = VIEW.tgt.y + hh*0.36; t.z = z; t.r = -0.3; t.placed = true;
   }
   t.on = true; save(); syncTV(); openTvBar(); if (!t.list.length) mediaSheet("tv");
 }
@@ -2439,12 +2440,12 @@ function syncMediaSession(){
 const TVG = {pts:new Map(), base:null, moved:false, t0:0, max:0, tgt:null};
 const _tvr = new THREE.Raycaster(), _tvn = new THREE.Vector2();
 function tvHit(x, y){
-  if (!TV.g.visible || (stuCfg().lock && !sceneOn())) return false;
+  if (!TV.g.visible || stuCfg().lock) return false;
   _tvn.set(x/innerWidth*2 - 1, -(y/innerHeight*2 - 1)); _tvr.setFromCamera(_tvn, camera);
   return _tvr.intersectObject(TV.g, true).length > 0;
 }
 function grabTarget(x, y){
-  if (tvHit(x, y)) return {cfg:tvCfg(), obj:TV.g, maxS:8, apply:placeTV, locked:sceneOn(),
+  if (tvHit(x, y)) return {cfg:tvCfg(), obj:TV.g, maxS:8, apply:placeTV,
     tap:() => { $("#tvBar").hidden ? openTvBar() : ($("#tvBar").hidden = true); }};
   const X = castHit(x, y); if (!X) return null;
   if (X.uid === "host" && !stuCfg().host) stuCfg().host = {x:0, y:0, z:0, s:1, r:0};
@@ -2469,7 +2470,7 @@ canvas.addEventListener("pointermove", e => {
   TVG.pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
   const p = [...TVG.pts.values()], b = TVG.base, t = TVG.tgt.cfg; if (p.length !== b.n) return;
   const cx = p.reduce((a, q) => a + q.x, 0)/b.n, cy = p.reduce((a, q) => a + q.y, 0)/b.n, dx = cx - b.cx, dy = cy - b.cy;
-  if (TVG.tgt.locked || (!TVG.moved && Math.hypot(dx, dy) < 6 && b.n === 1)) return;
+  if (!TVG.moved && Math.hypot(dx, dy) < 6 && b.n === 1) return;
   if (!TVG.moved){ TVG.moved = true; buzz(5); }
   // move in the camera's own plane, at the thing's distance
   const k = 2 * tanHalfFov() * camera.position.distanceTo(TVG.tgt.obj.getWorldPosition(new THREE.Vector3())) / innerHeight;
@@ -3497,7 +3498,7 @@ function openModal(title, build){
   $("#modal").hidden = false;
 }
 /* ---------- about & legal ---------- */
-const VERSION = "4.8";
+const VERSION = "4.9";
 function openLegal(){
   openModal("About & legal", b => {
     const d = el("div", "legal");
@@ -4860,18 +4861,25 @@ function setScene(id){
     if (id !== "free"){
       const t = tvCfg();
       S.sceneBak = {world:S.world, wBiome:S.wBiome, bg:S.bg, bgColor:S.bgColor, tv:Object.fromEntries(SCN_TV_KEYS.map(k => [k, t[k]]))};
-      // the character stands where the scene expects it
-      if (stageMode === "puppet"){ S.pX = DEFAULTS.pX; S.pY = DEFAULTS.pY; S.pScale = DEFAULTS.pScale; S.pRot = 0; }
-      else for (const k of NUT_KEYS) S[k] = DEFAULTS[k];
-      if (id === "tvroom"){ Object.assign(t, {on:true, model:"crt", front:false, x:0, y:-1.32, z:2.35, s:1.12, r:Math.PI, tilt:0.06, lean:0, placed:true}); S.world = false; S.bg = "custom"; S.bgColor = "#0b0705"; }
-      if (id === "car"){ t.on = false; S.world = true; S.wBiome = "drive"; }
+      if (id === "tvroom"){ S.world = false; S.bg = "custom"; S.bgColor = "#0b0705"; }
+      if (id === "car"){ S.world = true; S.wBiome = "drive"; }
     }
     S.sceneId = id;
     if (stuCfg().shot >= 0) stuCfg().shot = -1;
     save(); applyBg(); WORLD.configure(); syncTV(); syncShotBar();
   }
-  buildScene(); placeLeadSlot();
+  sceneLayout(); buildScene(); placeLeadSlot();
   if (id === "tvroom" && !tvCfg().list.length) setTimeout(() => mediaSheet("tv"), 400);
+}
+// the scene's starting layout: where the character and the TV go. You can move and resize them freely; this puts
+// them back (picking the scene again, reopening it, restarting the app, or the Reset button)
+const SCENE_TV = {tvroom:{on:true, model:"crt", front:false, x:0, y:-1.12, z:2.6, s:1.6, r:Math.PI, tilt:0.06, lean:0, placed:true}, car:{on:false}};
+function sceneLayout(){
+  const id = S.sceneId || "free"; if (id === "free") return;
+  if (stageMode === "puppet"){ S.pX = DEFAULTS.pX; S.pY = DEFAULTS.pY; S.pScale = DEFAULTS.pScale; S.pRot = 0; }
+  else for (const k of NUT_KEYS) S[k] = DEFAULTS[k];
+  if (SCENE_TV[id]){ Object.assign(tvCfg(), SCENE_TV[id]); syncTV(); }
+  save();
 }
 function clearSceneProps(){
   for (const o of [...SCN.g.children]){ SCN.g.remove(o); o.traverse(m => { if (m.isMesh){ m.geometry.dispose(); if (m.material !== TV.mat && !m.material.userData?.shared) m.material.dispose?.(); } }); }
@@ -4937,8 +4945,8 @@ function buildCar(){
 // the locked camera for the scene, fitted to the screen's shape
 function sceneCamera(){
   const v = SCN.view;
-  if (SCN.id === "tvroom"){ v.tgt.set(0, 0.45, 0); const d = Math.min(14, fitDist(2.55, 2.1)); v.pos.set(0, 1.05, d); }
-  else if (SCN.id === "car"){ v.tgt.set(-0.15, 0.55, 0); const d = Math.min(9, Math.max(4.4, fitDist(1.55, 1.25))); v.pos.set(0.55, 0.62, d); }
+  if (SCN.id === "tvroom"){ v.tgt.set(0, 0.45, 0); const d = Math.min(14, fitDist(2.55, 2.1)) / S.zoom; v.pos.set(0, 1.05, d); }
+  else if (SCN.id === "car"){ v.tgt.set(-0.15, 0.55, 0); const d = Math.min(9, Math.max(4.4, fitDist(1.55, 1.25))) / S.zoom; v.pos.set(0.55, 0.62, d); }
 }
 // every frame: the TV's flicker on your face, the wall glow, the car's shake and the passing lights
 function stepScene(now, dt){
@@ -5111,6 +5119,7 @@ async function cycleChar(dir){
 }
 $("#resetBtn").onclick = () => { const b = $("#resetBtn"); b.classList.remove("spin"); void b.offsetWidth; b.classList.add("spin"); resetPose(); };
 function resetPose(){
+  if (sceneOn()){ sceneLayout(); placeLeadSlot(); buzz([10, 40, 10]); flash("Reset", "Scene"); return; }
   if (mode === "puppet"){ S.pX = DEFAULTS.pX; S.pY = DEFAULTS.pY; S.pScale = DEFAULTS.pScale; S.pRot = 0; }
   else { for (const k of NUT_KEYS) S[k] = DEFAULTS[k]; }
   save(); buzz([10, 40, 10]); flash("Reset", "Position");
@@ -5144,7 +5153,7 @@ $("#bClean").onclick = () => { buzz(8); closeSheet(); document.body.classList.ad
 /* ---------- touch controls (both the peanut and characters) ---------- */
 let suppressClick = false, holding = false;
 const perPx = () => 2 * tanHalfFov() * camera.position.distanceTo(VIEW.tgt) / innerHeight;
-const canGesture = () => (mode === "puppet" && PUP || mode === "peanut" || mode === "model" && MDL) && !editing && !RIGE.on && !PF.on && !sceneOn();
+const canGesture = () => (mode === "puppet" && PUP || mode === "peanut" || mode === "model" && MDL) && !editing && !RIGE.on && !PF.on;
 const G = {pts:new Map(), n:0, max:0, t0:0, moved:false, base:null, swipe:{x:0, y:0}, lastTap2:0};
 const isPup = () => mode === "puppet";
 function gBaseline(){
