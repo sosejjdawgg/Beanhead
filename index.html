@@ -309,7 +309,7 @@ details.lvhelp code{font:12px var(--mono);color:var(--nut2);-webkit-user-select:
 .sh-grab::before{content:"";width:44px;height:5px;border-radius:5px;background:var(--line)}
 .sh-head{display:flex;gap:8px;align-items:center;padding:0 max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px));flex:none}
 .seg{flex:1;display:flex;gap:2px;padding:4px;border-radius:16px;background:rgba(0,0,0,.28);overflow-x:auto;scrollbar-width:none}
-.seg button{flex:1;min-width:58px;height:44px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10.5px;font-weight:600;color:var(--mute);transition:background .25s,color .25s}
+.seg button{flex:1;min-width:50px;height:44px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10.5px;font-weight:600;color:var(--mute);transition:background .25s,color .25s}
 .seg button svg{width:18px;height:18px}
 .seg button[aria-selected=true]{background:var(--raise);color:var(--nut2);box-shadow:inset 0 0 0 1px var(--line)}
 .sh-x{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:rgba(0,0,0,.28);color:var(--mute);flex:none}
@@ -347,6 +347,27 @@ details.lvhelp code{font:12px var(--mono);color:var(--nut2);-webkit-user-select:
 .sw[aria-pressed=true]{color:var(--nut2)}
 .sw[aria-pressed=true] i{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--nut);transform:scale(.94)}
 .sw input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+#shBody .scgrid{grid-template-columns:repeat(3,1fr);gap:8px}
+#shBody .sccard{padding:6px 6px 8px;border-radius:14px}
+#shBody .sccard b{font-size:13px;padding:4px 2px 0}
+#shBody .sccard span{display:none}
+/* filter swatches: a hint of each look */
+.fx-none{background:radial-gradient(circle at 50% 40%,#c8945a 0 30%,#3b2314 31%)}
+.fx-crt{background:repeating-linear-gradient(#0000 0 2px,#0007 2px 4px),radial-gradient(circle at 50% 45%,#ffb070,#7a3b16 60%,#1a0a04)}
+.fx-pvm{background:repeating-linear-gradient(#0000 0 1px,#000a 1px 3px),linear-gradient(135deg,#4bc0ff,#ff5fa2)}
+.fx-arcade{background:repeating-linear-gradient(#0000 0 2px,#0009 2px 4px),radial-gradient(circle at 50% 50%,#ffe14d,#ff2fa0 45%,#20063a 80%)}
+.fx-vhs{background:linear-gradient(90deg,#0000 30%,#ff3c6e55 30% 36%,#0000 36%),linear-gradient(#2a3d6e,#7c6aa8 60%,#c9b8a0);box-shadow:inset 0 -8px 0 #ffffff22}
+.fx-film{background:radial-gradient(circle at 30% 30%,#0000 0 40%,#0006),linear-gradient(#d9b98a,#8a6238)}
+.fx-gameboy{background:linear-gradient(#9bbc0f 0 25%,#8bac0f 25% 50%,#306230 50% 75%,#0f380f 75%)}
+.fx-pixel{background:conic-gradient(#ff004d 0 25%,#29adff 0 50%,#ffec27 0 75%,#00e436 0) 0 0/20px 20px}
+.fx-glitch{background:linear-gradient(90deg,#f0f 0 20%,#0ff 20% 45%,#222 45% 55%,#ff0 55% 80%,#00f 80%)}
+.fx-dream{background:radial-gradient(circle at 40% 40%,#fff6fb,#ffb3d9 45%,#b9a3ff)}
+.fx-comic{background:radial-gradient(#000c 30%,#0000 32%) 0 0/8px 8px,linear-gradient(#ffd23f,#ff6b35)}
+.fx-noir{background:radial-gradient(circle at 50% 40%,#eee,#555 55%,#111)}
+.fx-night{background:radial-gradient(circle,#7dff8a,#0d4a14 55%,#000 72%)}
+.fx-thermal{background:linear-gradient(#ffffd9,#ffa500 30%,#f01e40 55%,#5a00a6 80%,#000026)}
+.fx-cctv{background:repeating-linear-gradient(#0000 0 3px,#0004 3px 5px),radial-gradient(circle,#cfd8cf,#4a524a)}
+
 .btnrow{display:flex;gap:8px;padding:12px 0 6px}
 .btnrow .pill{height:48px}
 select.sel{width:100%;height:48px;margin:12px 0 4px;border-radius:14px;border:0;padding:0 14px;background:var(--raise);color:var(--ink);font:500 14px var(--display)}
@@ -564,10 +585,9 @@ body.rigging #hud *{pointer-events:none!important}
   <button class="press" id="resetBtn" aria-label="Reset position"><svg class="i"><use href="#recentre"/></svg></button>
   <button class="press" id="liveBtn" aria-label="Go live" hidden><svg class="i"><use href="#live"/></svg></button>
   <nav id="bar" aria-label="Controls">
-    <button class="bb press" id="bSettings"><svg class="i"><use href="#sliders"/></svg>Settings</button>
-    <button class="bb press puppet-only" id="bLayout"><svg class="i"><use href="#move"/></svg>Layout</button>
-    <button class="bb press puppet-only" id="bCut"><svg class="i"><use href="#cutout"/></svg>Edges</button>
     <button class="bb press" id="bStudio"><svg class="i"><use href="#clap"/></svg>Studio</button>
+    <button class="bb press" id="bLook"><svg class="i"><use href="#t-look"/></svg>Look</button>
+    <button class="bb press" id="bSettings"><svg class="i"><use href="#sliders"/></svg>Settings</button>
     <button class="bb press" id="bFlip"><svg class="i"><use href="#flip"/></svg>Flip</button>
     <button class="bb press" id="bClean"><svg class="i"><use href="#eye"/></svg>Hide</button>
   </nav>
@@ -681,7 +701,8 @@ const DEFAULTS = {
   pX:0, pY:0.55, pScale:1, pRot:0, pMove:0.4, pStick:true, pShadow:true, recMic:true,
   nX:0, nY:0, nScale:1, nRot:0, nSpin:0, nTilt:0,
   world:false, wBiome:"auto", wMorph:20, wSpeed:0.35, wRes:240, wJitter:0.5, wAffine:true, wDither:0.7, wDepth:15, wFog:0.5, wParallax:0.6,
-  coachSeen:false, psx:"modern", body:false,
+  coachSeen:false, psx:"modern", fx:"none", fxAmt:0.7, body:false,
+  recRes:"screen", recFps:30, recQ:"high", shotFmt:"jpg", perf:"auto", fpsCap:60,
   faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mEyeZ:0, mMouthZ:0, mEyeRot:0, mMouthRot:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true, mFrame:"full",
   mirror:true, pip_on:true, deviceId:"", facing:"user", hearVideos:true,
   studio:{cast:[], shots:[], shot:-1, smooth:true, lock:false}, sceneId:"free", sceneBak:null,
@@ -693,7 +714,7 @@ const WORLD_OPTS = [["auto","Auto-morph"],["meadow","Meadow"],["canyon","Canyon"
 let S = {...DEFAULTS};
 try{ Object.assign(S, JSON.parse(localStorage.getItem("peanutcam") || "{}")); }catch(e){}
 // settings that belong to "what's on screen": the peanut has its own copy, every character has its own
-const SCOPED = ["bg","bgColor","world","wBiome","wMorph","wSpeed","wRes","wJitter","wAffine","wDither","wDepth","wFog","wParallax","psx",
+const SCOPED = ["bg","bgColor","world","wBiome","wMorph","wSpeed","wRes","wJitter","wAffine","wDither","wDepth","wFog","wParallax","psx","fx","fxAmt",
   "skinMatch","depth","retouch","blend","eyeMargin","mouthMargin","feather","symFill","light","zoom",
   "bgList","bgMode","bgVol","tv","studio","sceneId","sceneBak"];
 const NUT_KEYS = ["nX","nY","nScale","nRot","nSpin","nTilt"];
@@ -836,7 +857,7 @@ function makeShell(roast){
   return {map, bump};
 }
 const nutMat = new THREE.MeshStandardMaterial({roughness:0.82, metalness:0, envMapIntensity:0.6});
-// PS1 peanut: a handful of flat-shaded facets and a 64px shell sampled without filtering. PS2: mid-poly, 256px.
+// PS1 peanut: a few hundred flat-shaded facets and a 128px shell sampled without filtering. PS2: mid-poly, 256px.
 const nutMatLo = new THREE.MeshStandardMaterial({roughness:0.9, metalness:0, flatShading:true, envMapIntensity:0.3});
 const nutMatMid = new THREE.MeshStandardMaterial({roughness:0.85, metalness:0, envMapIntensity:0.45});
 function shrinkTex(src, size, nearest){
@@ -850,14 +871,14 @@ function applyShell(){
   const {map, bump} = makeShell(S.roast);
   nutMat.map?.dispose(); nutMat.bumpMap?.dispose(); nutMatLo.map?.dispose(); nutMatMid.map?.dispose();
   nutMat.map = map; nutMat.bumpMap = bump; nutMat.bumpScale = S.bump; nutMat.needsUpdate = true;
-  nutMatLo.map = shrinkTex(map, 64, true); nutMatLo.needsUpdate = true;
+  nutMatLo.map = shrinkTex(map, 128, true); nutMatLo.needsUpdate = true;
   nutMatMid.map = shrinkTex(map, 256, false); nutMatMid.needsUpdate = true;
 }
 const rig = new THREE.Group(), nut = new THREE.Group();
 rig.add(nut); scene.add(rig);
 const nutHi = new THREE.Mesh(makePeanutGeometry(), nutMat);
-const nutMid = new THREE.Mesh(makePeanutGeometry(30, 22), nutMatMid);
-const nutLo = new THREE.Mesh(makePeanutGeometry(12, 9), nutMatLo);
+const nutMid = new THREE.Mesh(makePeanutGeometry(36, 28), nutMatMid);
+const nutLo = new THREE.Mesh(makePeanutGeometry(22, 14), nutMatLo);
 nut.add(nutHi, nutMid, nutLo);
 function syncNutStyle(){ nutHi.visible = S.psx === "modern"; nutMid.visible = S.psx === "ps2"; nutLo.visible = S.psx === "ps1"; }
 const shadowTex = (() => { const c = document.createElement("canvas"); c.width = c.height = 256; const x = c.getContext("2d");
@@ -866,19 +887,29 @@ const shadowTex = (() => { const c = document.createElement("canvas"); c.width =
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2), new THREE.MeshBasicMaterial({map:shadowTex, transparent:true, depthWrite:false}));
 floor.rotation.x = -Math.PI/2; floor.position.y = -H - 0.12; rig.add(floor);
 
-/* ---------- PSX snapping shared by the character, features and imported models ---------- */
-const PSXU = { uSnap:{value:new THREE.Vector2(160, 120)}, uPsxJ:{value:0}, uLin:{value:0} };
-const SNAP_GLSL = `
-  if (uPsxJ > 0.001){ vec2 psxg = uSnap/(1.0 + uPsxJ*3.0); vec3 psxn = gl_Position.xyz/gl_Position.w; psxn.xy = floor(psxn.xy*psxg + 0.5)/psxg; gl_Position = vec4(psxn*gl_Position.w, gl_Position.w); }`;
+/* ---------- PSX snapping shared by the character, features and imported models ----------
+   The PlayStation drew vertices at whole screen pixels and mapped textures without perspective correction.
+   So: snap each vertex to the low-res target's pixel grid (wobble 0..1 = 1..3 px cells, so it shimmers as
+   things move without crumpling the shape) and, with "Texture warp", interpolate the colour map affinely. */
+const PSXU = { uSnap:{value:new THREE.Vector2(160, 120)}, uPsxJ:{value:0}, uLin:{value:0}, uAff:{value:0} };
+const snapGlsl = (k = "1.0") => `
+  if (uPsxJ > 0.001){ vec2 psxg = uSnap/(1.0 + uPsxJ*2.0*${k}); vec3 psxn = gl_Position.xyz/gl_Position.w; psxn.xy = floor(psxn.xy*psxg + 0.5)/psxg; gl_Position = vec4(psxn*gl_Position.w, gl_Position.w); }`;
+const SNAP_GLSL = snapGlsl();
 function psxPatch(mat){
   if (!mat || mat.userData.psx) return;
   mat.userData.psx = true;
   const prev = mat.onBeforeCompile;
   mat.onBeforeCompile = (sh, r) => {
     prev?.(sh, r);
-    sh.uniforms.uSnap = PSXU.uSnap; sh.uniforms.uPsxJ = PSXU.uPsxJ;
-    sh.vertexShader = "uniform vec2 uSnap; uniform float uPsxJ;\n" + sh.vertexShader.replace("#include <project_vertex>", "#include <project_vertex>" + SNAP_GLSL);
+    sh.uniforms.uSnap = PSXU.uSnap; sh.uniforms.uPsxJ = PSXU.uPsxJ; sh.uniforms.uAff = PSXU.uAff;
+    sh.vertexShader = "uniform vec2 uSnap; uniform float uPsxJ;\n#ifdef USE_MAP\nvarying vec3 vPsxUv;\n#endif\n" + sh.vertexShader.replace("#include <project_vertex>", "#include <project_vertex>" + SNAP_GLSL +
+      "\n#ifdef USE_MAP\nvPsxUv = vec3(vMapUv*gl_Position.w, gl_Position.w);\n#endif\n");
+    // affine texturing: the uv times w, interpolated with perspective, then divided by the interpolated w
+    sh.fragmentShader = "uniform float uAff;\n#ifdef USE_MAP\nvarying vec3 vPsxUv;\n#endif\n" + sh.fragmentShader.replace("#include <map_fragment>",
+      "#ifdef USE_MAP\n diffuseColor *= texture2D(map, uAff > 0.5 ? vPsxUv.xy/vPsxUv.z : vMapUv);\n#endif\n");
   };
+  const pk = mat.customProgramCacheKey.bind(mat);
+  mat.customProgramCacheKey = () => "psx|" + (prev ? prev.toString() : pk());
   mat.needsUpdate = true;
 }
 [nutMat, nutMatLo, nutMatMid].forEach(psxPatch);
@@ -1848,7 +1879,7 @@ function featureMaterial(map = videoTex, tint = tintU, texel = texelU){
         vN = normalMatrix * normal; vS = normalMatrix * snormal;
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
         vV = -mv.xyz;
-        gl_Position = projectionMatrix * mv;`+SNAP_GLSL+`
+        gl_Position = projectionMatrix * mv;`+snapGlsl("0.5")+`
       }`,
     fragmentShader:`
       uniform sampler2D map; uniform float opacity, blend, skinMatch, relief, smoothSkin, light, uLin;
@@ -2373,9 +2404,10 @@ function tvCamera(){
 }
 
 // ---- the TV panel: model, size and angle, picture, playback
-function tvSettings(){
+const tvSettings = () => openModal("TV", tvSettingsBody);
+function tvSettingsBody(b){
   const t = tvCfg();
-  openModal("TV", b => {
+  {
     const chipRow = (opts, get, set) => {
       const c = el("div", "chips");
       for (const [v, label] of opts){ const k = el("button", "chip press", label); k.setAttribute("aria-pressed", get() === v);
@@ -2415,11 +2447,11 @@ function tvSettings(){
     b.append(el("div", "sec", "Playback speed"), chipRow([[0.5, "0.5×"], [0.75, "0.75×"], [1, "1×"], [1.25, "1.25×"], [1.5, "1.5×"], [2, "2×"]], () => t.speed, v => { t.speed = v; TVP.el.defaultPlaybackRate = TVP.el.playbackRate = v; }));
     const r = el("div", "btnrow");
     const vids = el("button", "pill press", `${ico("list")}Videos`); vids.onclick = () => mediaSheet("tv");
-    const cam = el("button", "pill hot press", `${ico("t-camera")}Camera on TV`); cam.onclick = () => { closeModal(); tvCamera(); };
+    const cam = el("button", "pill hot press", `${ico("t-camera")}Camera on TV`); cam.onclick = () => { closePanels(); tvCamera(); };
     r.append(vids, cam); b.append(r);
-    const off = el("button", "pill press danger", "Remove the TV"); off.style.width = "100%"; off.onclick = () => { closeModal(); t.on = false; save(); syncTV(); toast("TV removed. Add it again in Settings › Look."); };
+    const off = el("button", "pill press danger", "Remove the TV"); off.style.width = "100%"; off.onclick = () => { closePanels(); t.on = false; save(); syncTV(); toast("TV removed. Add it again in Studio › TV."); };
     b.append(off);
-  });
+  }
 }
 
 // ---- headset buttons, lock screen and notification controls, where the browser offers them (Media Session API)
@@ -3498,7 +3530,7 @@ function openModal(title, build){
   $("#modal").hidden = false;
 }
 /* ---------- about & legal ---------- */
-const VERSION = "4.9";
+const VERSION = "5.0";
 function openLegal(){
   openModal("About & legal", b => {
     const d = el("div", "legal");
@@ -3547,6 +3579,7 @@ function openLegal(){
 }
 $("#bLegal").onclick = () => { buzz(6); openLegal(); };
 function closeModal(){ $("#modal").hidden = true; renderChars(); }
+const closePanels = () => { closeModal(); closeSheet(); };
 $("#mClose").onclick = closeModal; $("#modal .mback").onclick = closeModal;
 // background picker that edits any scope's settings (live if it's the one on screen)
 function bgPicker(id, host){
@@ -3577,7 +3610,7 @@ function bgPicker(id, host){
       const chips = el("div", "chips");
       for (const [v, label] of WORLD_OPTS){ const c = el("button", "chip press", label); c.setAttribute("aria-pressed", cfg.wBiome === v); c.onclick = () => { buzz(6); cfg.wBiome = v; commit(); }; chips.append(c); }
       host.append(chips);
-      host.append(el("p", "note", "More 3D world options (resolution, wobble, dithering, fog, parallax) are in Settings › Look."));
+      host.append(el("p", "note", "More 3D world options are in Studio › Scene (fog, parallax) and Look (resolution, wobble, dithering)."));
     }
   };
   draw();
@@ -3624,23 +3657,26 @@ const motionTab = ["motion","Motion",[SEC("Body"), TG("body","Arm & hand trackin
   {t:"note", text:"Uses the camera to follow your shoulders, arms, hands and fingers. Prop the phone further away so your arms are in view. The peanut grows cartoon arms; rigged 3D models move their own."},
   {t:"gestures"}, SEC("Head"), RG("motion","Head motion",0,1.6,0.02,fmtX), RG("wobble","Wobble",0,1,0.01), RG("steady","Steadiness",0,1,0.01), TG("bounce","Bounce when talking"), TG("invYaw","Invert left/right turning"), TG("invPitch","Invert nodding")]];
 const cameraTab = ["camera","Camera",[{t:"camsel"}, TG("mirror","Mirror view (selfie)"), TG("pip_on","Show camera preview"),
-  {t:"note", text:"On Windows, connect your phone as a webcam (Phone Link, DroidCam or Iriun), then pick it above."}, {t:"btns", items:[["Reset all settings","reset"]]}]];
-const MODEL_LOOK = ["look","Look",[CH("psx","Style",[["modern","Modern"],["ps2","PS2"],["ps1","PS1"]]), {t:"bg"},
-  {t:"if", when:() => S.world, items:[SEC("3D world"), CH("wBiome","World",WORLD_OPTS), RG("wMorph","Morph every",5,60,1,v => Math.round(v) + "s"), RG("wSpeed","Fly speed",0,1,0.01),
-    RG("wFog","Fog",0,1,0.01), RG("wParallax","Head parallax",0,1,0.01), TG("wAffine","Texture warp")]},
+  {t:"note", text:"On Windows, connect your phone as a webcam (Phone Link, DroidCam or Iriun), then pick it above."},
+  SEC("App"), {t:"btns", items:[["About & legal","legal"],["Reset all settings","reset"]]}]];
+// Look: what the picture looks like (filters, retro rendering). The set itself (scene, background, TV, light) is in Studio.
+const lookTab = ["look","Look",[{t:"fx"}, CH("psx","3D style",[["modern","Modern"],["ps2","PS2"],["ps1","PS1"]]),
   {t:"if", when:() => S.world || S.psx !== "modern", items:[SEC("Retro rendering"), CH("wRes","Resolution",[[200,"200p"],[240,"240p"],[360,"360p"],[480,"480p"]]), RG("wJitter","Vertex wobble",0,1,0.01),
-    RG("wDither","Dithering",0,1,0.01), CH("wDepth","Colour depth",[[15,"15-bit"],[12,"12-bit"],[9,"9-bit"]])]},
-  RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX), {t:"tv"}]];
+    RG("wDither","Dithering",0,1,0.01), CH("wDepth","Colour depth",[[15,"15-bit"],[12,"12-bit"],[9,"9-bit"]]), TG("wAffine","Texture warp")]}]];
+// Capture: recordings, pictures, the live stream and how hard the phone works
+const captureTab = ["capture","Capture",[CH("recRes","Video size",[["screen","Full screen"],[1080,"1080p"],[720,"720p"],[540,"540p"]]),
+  CH("recFps","Video frame rate",[[30,"30 fps"],[60,"60 fps"]]), CH("recQ","Video quality",[["std","Standard"],["high","High"],["max","Best"]]), TG("recMic","Record sound"),
+  {t:"note", text:"Full screen records the picture exactly as drawn, which is the lightest on the phone. Smaller sizes make smaller files. 60 fps needs a phone that keeps up: watch the speed below."},
+  CH("shotFmt","Picture format",[["jpg","JPEG"],["png","PNG (lossless)"]]),
+  SEC("Live"), {t:"btns", items:[["Live stream settings","live"]]},
+  CH("perf","Drawing quality",[["auto","Auto"],["quality","Sharpest"],["smooth","Smooth"],["saver","Battery saver"]]), CH("fpsCap","Frame rate limit",[[30,"30"],[60,"60"]]), {t:"perfinfo"}]];
 const TABS = {
   peanut: [
-    ["look","Look",[CH("psx","Style",[["modern","Modern"],["ps2","PS2"],["ps1","PS1"]]), {t:"bg"}, {t:"if", when:() => S.world, items:[SEC("3D world"), CH("wBiome","World",WORLD_OPTS), RG("wMorph","Morph every",5,60,1,v => Math.round(v) + "s"), RG("wSpeed","Fly speed",0,1,0.01),
-      RG("wFog","Fog",0,1,0.01), RG("wParallax","Head parallax",0,1,0.01), TG("wAffine","Texture warp")]},
-    {t:"if", when:() => S.world || S.psx !== "modern", items:[SEC("Retro rendering"), CH("wRes","Resolution",[[200,"200p"],[240,"240p"],[360,"360p"],[480,"480p"]]), RG("wJitter","Vertex wobble",0,1,0.01),
-      RG("wDither","Dithering",0,1,0.01), CH("wDepth","Colour depth",[[15,"15-bit"],[12,"12-bit"],[9,"9-bit"]])]}, CH("roast","Roast",[[0.08,"Raw","#e6c08f"],[0.35,"Golden","#c8945a"],[0.6,"Roasted","#9a6337"],[0.92,"Burnt","#4b2c17"]]),
-      RG("bump","Shell texture",0,3,0.05,fmtX), RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX), TG("floor","Floor shadow"), {t:"tv"}]],
+    ["char","Peanut",[CH("roast","Roast",[[0.08,"Raw","#e6c08f"],[0.35,"Golden","#c8945a"],[0.6,"Roasted","#9a6337"],[0.92,"Burnt","#4b2c17"]]),
+      RG("bump","Shell texture",0,3,0.05,fmtX), TG("floor","Floor shadow")]],
     ["face","Face",[SEC("Placement"), RG("eyeSize","Eye size",0.5,1.8,0.02,fmtX), RG("eyeSpacing","Eye spacing",0.2,0.6,0.01,fmtN), RG("eyeHeight","Eye height",0.6,1.6,0.02,fmtN),
       RG("mouthSize","Mouth size",0.5,1.8,0.02,fmtX), RG("mouthHeight","Mouth height",0,1.2,0.02,fmtN), ...faceShared("Blend skin into shell")]],
-    motionTab, cameraTab
+    lookTab, motionTab, captureTab, cameraTab
   ],
   puppet: [
     ["puppet","Puppet",[{t:"btns", items:[["Change picture","newImage"],["Edit layout","layout"]]},
@@ -3648,29 +3684,37 @@ const TABS = {
       SEC("Lollipop"), RG("pScale","Size",0.4,2.2,0.02,fmtX), RG("pMove","Movement",0,1,0.01), TG("pStick","Show stick"), TG("pShadow","Shadow"),
       {t:"btns", items:[["Put it back in the middle","centre"]]},
       SEC("Picture"), {t:"btns", items:[["Edit cut-out & outline","cutout"]]}, TG("pBgRemove","Remove photo background")]],
-    ["look","Look",[CH("psx","Style",[["modern","Modern"],["ps2","PS2"],["ps1","PS1"]]), {t:"bg"}, {t:"if", when:() => S.world, items:[SEC("3D world"), CH("wBiome","World",WORLD_OPTS), RG("wMorph","Morph every",5,60,1,v => Math.round(v) + "s"), RG("wSpeed","Fly speed",0,1,0.01),
-      RG("wFog","Fog",0,1,0.01), RG("wParallax","Head parallax",0,1,0.01), TG("wAffine","Texture warp")]},
-    {t:"if", when:() => S.world || S.psx !== "modern", items:[SEC("Retro rendering"), CH("wRes","Resolution",[[200,"200p"],[240,"240p"],[360,"360p"],[480,"480p"]]), RG("wJitter","Vertex wobble",0,1,0.01),
-      RG("wDither","Dithering",0,1,0.01), CH("wDepth","Colour depth",[[15,"15-bit"],[12,"12-bit"],[9,"9-bit"]])]}, RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX), {t:"tv"}]],
     ["face","Face",[SEC("Placement"), RG("pEyeSize","Eye size",0.5,2,0.02,fmtX), RG("pMouthSize","Mouth size",0.5,2,0.02,fmtX), {t:"btns", items:[["Move eyes and mouth","layout"]]},
       ...faceShared("Blend skin into picture")]],
-    motionTab, cameraTab
+    lookTab, motionTab, captureTab, cameraTab
   ],
   model: [
-    MODEL_LOOK,
+    ["model","Model",[CH("mFrame","Framing",[["full","Full body"],["upper","Upper body"],["head","Head"]]), CH("mTurn","Facing",[[0,"Front"],[1,"Left"],[2,"Back"],[3,"Right"]]), TG("mHeadBone","Turn only the head (if it has one)"), {t:"rigtools"}, {t:"modelinfo"}]],
     ["face","Face",[CH("faceMode","Face",[["overlay","Your eyes & mouth"],["model","Model's own face"],["both","Both"]]),
       {t:"if", when:() => S.faceMode !== "model", items:[SEC("Placement"), {t:"faceplace"}, RG("mFaceK","Face size",0.3,3,0.02,fmtX), RG("mEyeSpacing","Eye spacing",-0.3,0.5,0.005,fmtN), RG("mEyeY","Eye height",-0.6,0.6,0.005,fmtN), RG("mMouthY","Mouth height",-0.6,0.6,0.005,fmtN),
         RG("mEyeSize","Eye size",0.3,2,0.02,fmtX), RG("mMouthSize","Mouth size",0.3,2,0.02,fmtX), RG("mFaceZ","Face depth (both)",-1,1,0.01,fmtN), RG("mEyeZ","Eye depth",-1,1,0.01,fmtN), RG("mMouthZ","Mouth depth",-1,1,0.01,fmtN), RG("mEyeRot","Eye tilt",-0.6,0.6,0.0087,fmtDeg), RG("mMouthRot","Mouth tilt",-0.6,0.6,0.0087,fmtDeg), RG("mCurve","Face roundness",0.3,3,0.02,fmtX),
         {t:"resetface"},
         ...faceShared("Blend skin into model")]}]],
-    ["model","Model",[CH("mFrame","Framing",[["full","Full body"],["upper","Upper body"],["head","Head"]]), CH("mTurn","Facing",[[0,"Front"],[1,"Left"],[2,"Back"],[3,"Right"]]), TG("mHeadBone","Turn only the head (if it has one)"), {t:"rigtools"}, {t:"modelinfo"}]],
-    motionTab, cameraTab
+    lookTab, motionTab, captureTab, cameraTab
   ]
 };
-const TAB_ICON = {look:"t-look", face:"t-face", motion:"t-motion", camera:"t-camera", puppet:"t-puppet", model:"cube"};
-const curTab = {peanut:"look", puppet:"puppet", model:"look"};
+// The Studio sheet: everything about the set, the same for every character
+const STUDIO_TABS = [
+  ["scene","Scene",[{t:"scenes"}, {t:"bg"},
+    {t:"if", when:() => S.world, items:[SEC("3D world"), CH("wBiome","World",WORLD_OPTS), RG("wMorph","Morph every",5,60,1,v => Math.round(v) + "s"), RG("wSpeed","Fly speed",0,1,0.01),
+      RG("wFog","Fog",0,1,0.01), RG("wParallax","Head parallax",0,1,0.01)]},
+    SEC("Light and framing"), RG("light","Light",0.3,2,0.02,fmtX), RG("zoom","Zoom",0.6,1.8,0.02,fmtX)]],
+  ["tv","TV",[{t:"tv"}]],
+  ["cast","Cast",[{t:"fn", fn:b => studioCastBody(b)}]],
+  ["cams","Cameras",[{t:"fn", fn:b => studioCamsBody(b)}]]
+];
+const TAB_ICON = {look:"t-look", face:"t-face", motion:"t-motion", camera:"flip", puppet:"t-puppet", model:"cube", char:"nut", capture:"film",
+  scene:"image", tv:"tv", cast:"clap", cams:"t-camera"};
+const SHEET = {kind:"settings"};
+const curTab = {peanut:"char", puppet:"puppet", model:"model", studio:"scene"};
 const tabKey = () => stageMode === "puppet" ? "puppet" : stageMode === "model" ? "model" : "peanut";
-const tabSet = () => TABS[tabKey()];
+const tabId = () => SHEET.kind === "studio" ? "studio" : tabKey();
+const tabSet = () => SHEET.kind === "studio" ? STUDIO_TABS : TABS[tabKey()];
 function el(tag, cls, html){ const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
 const ico = id => `<svg class="i"><use href="#${id}"/></svg>`;
 
@@ -3678,18 +3722,19 @@ function renderTabs(){
   const seg = $("#seg"); seg.innerHTML = "";
   for (const [id, label] of tabSet()){
     const b = el("button", "press", `${ico(TAB_ICON[id])}<span>${label}</span>`);
-    b.setAttribute("role", "tab"); b.setAttribute("aria-selected", id === curTab[tabKey()]);
-    b.onclick = () => { if (curTab[tabKey()] === id) return; buzz(6); curTab[tabKey()] = id; renderTabs(); renderBody(); };
+    b.setAttribute("role", "tab"); b.setAttribute("aria-selected", id === curTab[tabId()]);
+    b.onclick = () => { if (curTab[tabId()] === id) return; buzz(6); curTab[tabId()] = id; if (SHEET.kind === "settings" && id !== "look") (SHEET.last ||= {})[tabKey()] = id; renderTabs(); renderBody(); syncBarOn(); };
     seg.append(b);
   }
+  seg.querySelector("[aria-selected=true]")?.scrollIntoView({block:"nearest", inline:"center"});
 }
 function renderBody(){
-  const body = $("#shBody"), tab = tabSet().find(t => t[0] === curTab[tabKey()]) || tabSet()[0];
+  const body = $("#shBody"), tab = tabSet().find(t => t[0] === curTab[tabId()]) || tabSet()[0];
   body.innerHTML = "";
   for (const it of tab[2]) body.append(buildItem(it));
   body.classList.remove("swap"); void body.offsetWidth; body.classList.add("swap");
 }
-const PSX_PRESETS = {ps1:{wRes:240, wJitter:0.55, wDither:0.8, wDepth:15, wAffine:true}, ps2:{wRes:480, wJitter:0.06, wDither:0.3, wDepth:15, wAffine:false}};
+const PSX_PRESETS = {ps1:{wRes:240, wJitter:0.5, wDither:0.6, wDepth:15, wAffine:true}, ps2:{wRes:480, wJitter:0.1, wDither:0.3, wDepth:15, wAffine:false}};
 function afterChange(k){
   if (k === "psx"){ if (PSX_PRESETS[S.psx]) Object.assign(S, PSX_PRESETS[S.psx]); syncNutStyle(); applyModelStyle(); WORLD.configure(); renderBody(); }
   if (k === "body"){ syncArms(); ensureBody(); }
@@ -3765,13 +3810,49 @@ function buildItem(it){
   }
   if (it.t === "note") return el("p", "note", it.text);
   if (it.t === "tv"){
-    const w = el("div"); w.append(el("div", "sec", "Mini TV"));
-    const t = tvCfg(), row = el("div", "btnrow");
-    const a = el("button", "pill press" + (t.on ? "" : " hot"), `${ico("tv")}${t.on ? "TV videos" : "Add a TV"}`); a.onclick = () => { buzz(8); if (t.on) mediaSheet("tv"); else { closeSheet(); addTV(); } };
-    row.append(a);
-    if (t.on){ const se = el("button", "pill press", "TV settings"); se.onclick = () => { buzz(8); tvSettings(); }; row.append(se); }
-    w.append(row, el("p", "note", "A little TV in the scene that plays your videos, so your character can watch and react. Drag it to move it, pinch to resize, twist to turn it, tap it for play, volume and the playlist."));
+    const w = el("div"), t = tvCfg();
+    if (!t.on){
+      const a = el("button", "pill hot press", `${ico("tv")}Add a TV`); a.style.width = "100%"; a.onclick = () => { buzz(8); closeSheet(); addTV(); };
+      w.append(a, el("p", "note", "A little TV in the scene that plays your videos, so your character can watch and react. Drag it to move it, pinch to resize, twist to turn it, tap it for play, volume and the playlist."));
+      return w;
+    }
+    tvSettingsBody(w); return w;
+  }
+  if (it.t === "fn"){ const w = el("div"); it.fn(w); return w; }
+  if (it.t === "scenes"){
+    const w = el("div"); w.append(el("div", "sec", "Scene"));
+    const grid = el("div", "scgrid");
+    for (const sc of SCENES){
+      const on = (S.sceneId || "free") === sc.id;
+      const c = el("button", "sccard press" + (on ? " on" : ""), `<div class="scart">${SCENE_ART[sc.id]}</div><b>${sc.label}</b><span>${sc.desc}</span>`);
+      c.onclick = () => { buzz(10); setScene(sc.id); flash(sc.label, "Scene"); renderBody(); };
+      grid.append(c);
+    }
+    w.append(grid, el("p", "note", "A scene sets up props, light, the camera and where things start. Move and resize anything as usual; Reset puts the scene back."));
     return w;
+  }
+  if (it.t === "fx"){
+    const w = el("div"); w.append(el("div", "sec", "Filter"));
+    const g = el("div", "swatches");
+    for (const [id, label] of FX_LIST){
+      const c = el("button", "sw press", `<i class="fx-${id}"></i>${label}`); c.setAttribute("aria-pressed", S.fx === id);
+      c.onclick = () => { S.fx = id; buzz(8); save(); g.querySelectorAll(".sw").forEach((x, i) => x.setAttribute("aria-pressed", FX_LIST[i][0] === id)); amt.hidden = id === "none"; };
+      g.append(c);
+    }
+    const amt = rangeRow(RG("fxAmt","Strength",0,1,0.01)); amt.hidden = S.fx === "none";
+    w.append(g, amt);
+    setTimeout(() => { const on = g.querySelector("[aria-pressed=true]"); if (on) g.scrollLeft = on.offsetLeft - g.clientWidth/2 + on.clientWidth/2; }, 0);
+    w.append(el("p", "note", "Filters cover the whole picture, background included, and show up in recordings, pictures and live streams."));
+    return w;
+  }
+  if (it.t === "perfinfo"){
+    const p = el("p", "note"), show = () => {
+      if (!p.isConnected) return;
+      const fps = PERF.avg ? Math.round(1000/PERF.avg) : 0;
+      p.textContent = `Now: ${fps} fps, drawing at ${renderer.getPixelRatio().toFixed(2)}× (${canvas.width}×${canvas.height}). Auto lowers the sharpness when the phone can't keep up and raises it again when it can. Battery saver draws at 1× and pairs well with the 30 fps limit.`;
+      setTimeout(show, 1000);
+    };
+    setTimeout(show, 0); return p;
   }
   if (it.t === "gestures"){
     const w = el("div"); w.append(el("div", "sec", "Touch controls"), gestureList());
@@ -3885,9 +3966,28 @@ function rangeRow(it){
   return row;
 }
 const sheet = $("#sheet");
-function openSheet(){ renderTabs(); renderBody(); sheet.classList.add("open"); document.body.classList.add("sheet-open"); $("#bSettings").classList.add("on"); }
-function closeSheet(){ sheet.classList.remove("open"); document.body.classList.remove("sheet-open"); $("#bSettings").classList.remove("on"); openScrub = null; }
-$("#bSettings").onclick = () => { buzz(8); sheet.classList.contains("open") ? closeSheet() : openSheet(); };
+// One sheet, two sets of tabs: Settings (the character, the look, capture) and Studio (the set). Look opens Settings › Look.
+function openSheet(kind = "settings", tab){
+  SHEET.kind = kind; if (tab) curTab[tabId()] = tab;
+  sheet.setAttribute("aria-label", kind === "studio" ? "Studio" : "Settings");
+  renderTabs(); renderBody(); sheet.classList.add("open"); document.body.classList.add("sheet-open"); syncBarOn();
+}
+function closeSheet(){ sheet.classList.remove("open"); document.body.classList.remove("sheet-open"); syncBarOn(); openScrub = null; }
+function syncBarOn(){
+  const open = sheet.classList.contains("open"), look = open && SHEET.kind === "settings" && curTab[tabKey()] === "look";
+  $("#bSettings").classList.toggle("on", open && SHEET.kind === "settings" && !look);
+  $("#bLook").classList.toggle("on", look);
+  $("#bStudio").classList.toggle("on", open && SHEET.kind === "studio");
+}
+const sheetBtn = (kind, tab) => () => {
+  buzz(8);
+  const open = sheet.classList.contains("open"), onLook = SHEET.kind === "settings" && curTab[tabKey()] === "look";
+  if (open && SHEET.kind === kind && (kind !== "settings" || (tab === "look") === onLook)){ closeSheet(); return; }
+  openSheet(kind, tab || (kind === "settings" && onLook ? (SHEET.last?.[tabKey()] || TABS[tabKey()][0][0]) : undefined));
+};
+$("#bSettings").onclick = sheetBtn("settings");
+$("#bLook").onclick = sheetBtn("settings", "look");
+$("#bStudio").onclick = sheetBtn("studio");
 $("#shClose").onclick = () => { buzz(6); closeSheet(); };
 (() => { // drag the handle down to close
   const g = $("#shGrab"); let y0 = null;
@@ -3901,6 +4001,8 @@ const ACTIONS = {
   centre: () => { S.pX = DEFAULTS.pX; S.pY = DEFAULTS.pY; S.pScale = DEFAULTS.pScale; S.pRot = 0; save(); renderBody(); },
   layout: () => { closeSheet(); openEditor(); },
   cutout: () => openCut(),
+  legal: () => openLegal(),
+  live: () => { closeSheet(); openLive(); },
   reset: (b) => {
     if (b.dataset.armed !== "1"){ b.dataset.armed = "1"; b.textContent = "Tap again to reset everything"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "Reset all settings"; }, 3000); return; }
     const keep = {deviceId:S.deviceId, facing:S.facing, studio:S.studio, tv:S.tv, bgList:S.bgList}; S = {...DEFAULTS, ...keep}; save();
@@ -4736,13 +4838,10 @@ function castHit(x, y){
 
 // ---- recording a loop: the bar while it runs
 // ---- the Studio panel
-function openStudio(){
+// Studio › Cast and Studio › Cameras (the Studio sheet; see STUDIO_TABS)
+function studioCastBody(b){
   const st = stuCfg();
-  openModal("Studio", b => {
-    b.append(el("p", "note", `Your face is on <b>${charName(leadRef).replace(/</g, "&lt;")}</b>. Add characters, give them a loop of you, and save cameras to cut between them.`));
-    const cur = SCENES.find(x => x.id === (S.sceneId || "free"));
-    const scr = el("button", "sccur press", `<div class="scart">${SCENE_ART[cur.id]}</div><span><small>Scene</small><b>${cur.label}</b></span>${ico("arrow")}`);
-    scr.onclick = () => { buzz(8); openScenes(); }; b.append(scr);
+    b.append(el("p", "note", `Your face is on <b>${charName(leadRef).replace(/</g, "&lt;")}</b>. Add characters and give them a loop of you; set up shots in the Cameras tab.`));
     b.append(el("div", "sec", "Cast"));
     const list = el("div", "vlist");
     for (const u of ["host", ...st.cast.map(e => e.uid)]){
@@ -4753,33 +4852,11 @@ function openStudio(){
       r.querySelector("span").textContent = charName(ref); r.querySelector("small").textContent = tag;
       const [nm, cam, opt] = r.querySelectorAll("button");
       nm.onclick = opt.onclick = () => { buzz(6); castOptions(u); };
-      cam.onclick = () => { buzz(8); let i = st.shots.findIndex(s => s.actor === u && !s.name.startsWith("Wide")); if (i < 0) i = addShot(u, "medium"); if (i >= 0){ closeModal(); goShot(i); } };
+      cam.onclick = () => { buzz(8); let i = st.shots.findIndex(s => s.actor === u && !s.name.startsWith("Wide")); if (i < 0) i = addShot(u, "medium"); if (i >= 0){ closePanels(); goShot(i); } };
       list.append(r);
     }
     b.append(list);
     const add = el("button", "pill press", `${ico("plus")}Add a character`); add.style.width = "100%"; add.onclick = () => { buzz(8); castPicker(); }; b.append(add);
-
-    b.append(el("div", "sec", "Cameras"));
-    if (!st.shots.length) b.append(el("p", "note", "No cameras yet. Add one for each character, or a wide shot of everyone. The camera buttons appear on the left of the screen."));
-    const cl = el("div", "vlist");
-    st.shots.forEach((sh, i) => {
-      const r = el("div", "vrow" + (st.shot === i ? " on" : ""), `<button class="vname press"><b>${i + 1}</b><span></span><small></small></button><button class="step press" aria-label="Adjust view">${ico("move")}</button><button class="step press" aria-label="Delete camera">${ico("x")}</button>`);
-      r.querySelector("span").textContent = sh.name; r.querySelector("small").textContent = sh.actor ? charName(refOf(sh.actor)) : "";
-      const [go, adj, del] = r.querySelectorAll("button");
-      go.onclick = () => { closeModal(); goShot(i); }; adj.onclick = () => { closeModal(); camAdjust(i); };
-      del.onclick = () => { st.shots.splice(i, 1); if (st.shot === i) goShot(-1); else if (st.shot > i) st.shot--; save(); syncShotBar(); openStudio(); };
-      cl.append(r);
-    });
-    b.append(cl);
-    const cr = el("div", "btnrow");
-    for (const [size, label] of [["close", "Close-up"], ["medium", "Medium"], ["wide", "Wide"]]){
-      const c = el("button", "pill press", `${ico("plus")}${label}`);
-      c.onclick = () => { buzz(8); const i = addShot(STU.lead, size); if (i >= 0){ closeModal(); goShot(i); toast(size === "wide" ? "Wide camera added" : `Camera on ${charName(leadRef)} added. Long-press its button to change who it's on.`, 3600); } };
-      cr.append(c);
-    }
-    b.append(cr, el("p", "note", "New cameras frame the character wearing your face (or everyone, for Wide). Long-press a camera button to adjust its view or change who's on it."));
-    const sm = el("div", "srow", `<span class="slabel">Smooth camera moves</span>`), ss = el("button", "switch"); ss.setAttribute("role", "switch"); ss.setAttribute("aria-checked", !!st.smooth);
-    ss.onclick = () => { st.smooth = !st.smooth; ss.setAttribute("aria-checked", st.smooth); save(); buzz(6); }; sm.append(ss); b.append(sm);
 
     b.append(el("div", "sec", "Loop of you"));
     const lr = el("div", "btnrow"), rec = el("button", "pill hot press", `Record a loop of ${charName(leadRef).replace(/</g, "&lt;")}`); rec.onclick = () => { buzz(8); loopRecStart(); };
@@ -4788,8 +4865,34 @@ function openStudio(){
     b.append(el("p", "note", "Records up to 15 seconds of you: your eyes and mouth, talking and head movement. Whenever this character isn't the one on camera, it replays the loop, so the background keeps moving."));
     const lk = el("div", "srow", `<span class="slabel">Lock positions</span>`), ls = el("button", "switch"); ls.setAttribute("role", "switch"); ls.setAttribute("aria-checked", !!st.lock);
     ls.onclick = () => { st.lock = !st.lock; ls.setAttribute("aria-checked", st.lock); save(); buzz(6); }; lk.append(ls); b.append(lk);
-  });
 }
+function studioCamsBody(b){
+  const st = stuCfg();
+    b.append(el("div", "sec", "Cameras"));
+    if (!st.shots.length) b.append(el("p", "note", "No cameras yet. Add one for each character, or a wide shot of everyone. The camera buttons appear on the left of the screen."));
+    const cl = el("div", "vlist");
+    st.shots.forEach((sh, i) => {
+      const r = el("div", "vrow" + (st.shot === i ? " on" : ""), `<button class="vname press"><b>${i + 1}</b><span></span><small></small></button><button class="step press" aria-label="Adjust view">${ico("move")}</button><button class="step press" aria-label="Delete camera">${ico("x")}</button>`);
+      r.querySelector("span").textContent = sh.name; r.querySelector("small").textContent = sh.actor ? charName(refOf(sh.actor)) : "";
+      const [go, adj, del] = r.querySelectorAll("button");
+      go.onclick = () => { closePanels(); goShot(i); }; adj.onclick = () => { closePanels(); camAdjust(i); };
+      del.onclick = () => { st.shots.splice(i, 1); if (st.shot === i) goShot(-1); else if (st.shot > i) st.shot--; save(); syncShotBar(); refreshStudio(); };
+      cl.append(r);
+    });
+    b.append(cl);
+    const cr = el("div", "btnrow");
+    for (const [size, label] of [["close", "Close-up"], ["medium", "Medium"], ["wide", "Wide"]]){
+      const c = el("button", "pill press", `${ico("plus")}${label}`);
+      c.onclick = () => { buzz(8); const i = addShot(STU.lead, size); if (i >= 0){ closePanels(); goShot(i); toast(size === "wide" ? "Wide camera added" : `Camera on ${charName(leadRef)} added. Long-press its button to change who it's on.`, 3600); } };
+      cr.append(c);
+    }
+    b.append(cr, el("p", "note", "New cameras frame the character wearing your face (or everyone, for Wide). Long-press a camera button to adjust its view or change who's on it."));
+    const sm = el("div", "srow", `<span class="slabel">Smooth camera moves</span>`), ss = el("button", "switch"); ss.setAttribute("role", "switch"); ss.setAttribute("aria-checked", !!st.smooth);
+    ss.onclick = () => { st.smooth = !st.smooth; ss.setAttribute("aria-checked", st.smooth); save(); buzz(6); }; sm.append(ss); b.append(sm);
+
+}
+const refreshStudio = () => { if (SHEET.kind === "studio" && sheet.classList.contains("open")) renderBody(); };
+function openStudio(tab){ openSheet("studio", tab); }
 function castPicker(){
   const st = stuCfg(), have = new Set([scopeId, ...st.cast.map(e => e.ref)]);
   const refs = ["peanut", ...CHARS.map(c => c.id)].filter(r => !have.has(r));
@@ -4814,7 +4917,7 @@ function castOptions(uid){
         ch.append(c);
       }
       b.append(ch);
-      if (!X.loopData) b.append(el("p", "note", "No loop yet: put this character on camera, then use Studio › Record a loop."));
+      if (!X.loopData) b.append(el("p", "note", "No loop yet: put this character on camera, then use Studio › Cast › Record a loop."));
     }
     const sl = slotOf(uid);
     if (sl){
@@ -4833,7 +4936,7 @@ function castOptions(uid){
     b.append(r);
   });
 }
-$("#bStudio").onclick = () => { buzz(8); closeSheet(); openStudio(); };
+
 
 /* ---------- scenes: ready-made sets with props, light and a locked camera ----------
    A scene is applied to the studio that's open (whoever hosts it: the Peanut, a picture, a model). It takes
@@ -5029,19 +5132,7 @@ const SCENE_ART = {
   tvroom:`<svg viewBox="0 0 120 80"><rect width="120" height="80" fill="#0b0705"/><rect x="18" y="6" width="84" height="40" rx="2" fill="#2b5aa8"/><rect x="18" y="6" width="84" height="40" rx="2" fill="url(#g)" opacity=".5"/><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#ff3cac"/><stop offset="1" stop-color="#2bd2ff"/></linearGradient></defs><rect x="20" y="40" width="80" height="18" rx="4" fill="#5a2f2a"/><path d="M60 22c6 0 10 4 10 9 0 3-1 5-3 7-1 1-1 2 0 3 1 1 3 4 3 7 0 6-5 9-10 9s-10-3-10-9c0-3 2-6 3-7 1-1 1-2 0-3-2-2-3-4-3-7 0-5 4-9 10-9z" fill="#c8945a"/><rect x="38" y="58" width="44" height="22" rx="3" fill="#9a9384"/><rect x="42" y="61" width="36" height="16" fill="#77705f"/><ellipse cx="60" cy="40" rx="18" ry="12" fill="#9ab8ff" opacity=".18"/></svg>`,
   car:`<svg viewBox="0 0 120 80"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b0b3a"/><stop offset="1" stop-color="#ff6a8a"/></linearGradient></defs><rect width="120" height="80" fill="url(#s)"/><path d="M4 62 L28 18 L92 18 L116 62Z" fill="#141416"/><path d="M14 58 L32 22 L88 22 L106 58Z" fill="#7aa8ff" opacity=".18"/><path d="M68 30c5 0 8 3 8 7 0 3-1 4-2 5v2c1 1 2 3 2 6 0 4-4 7-8 7s-8-3-8-7c0-3 1-5 2-6v-2c-1-1-2-2-2-5 0-4 3-7 8-7z" fill="#c8945a"/><circle cx="68" cy="58" r="9" fill="none" stroke="#141416" stroke-width="3"/><rect x="0" y="62" width="120" height="18" fill="#b3261e"/></svg>`
 };
-function openScenes(){
-  openModal("Scenes", b => {
-    b.append(el("p", "note", `Pick a set for ${charName(leadRef).replace(/</g, "&lt;")}. The camera and props lock into place; your video, cast and cameras carry on.`));
-    const grid = el("div", "scgrid");
-    for (const sc of SCENES){
-      const on = (S.sceneId || "free") === sc.id;
-      const c = el("button", "sccard press" + (on ? " on" : ""), `<div class="scart">${SCENE_ART[sc.id]}</div><b>${sc.label}</b><span>${sc.desc}</span>`);
-      c.onclick = () => { buzz(10); closeModal(); setScene(sc.id); flash(sc.label, "Scene"); };
-      grid.append(c);
-    }
-    b.append(grid);
-  });
-}
+const openScenes = () => openStudio("scene");
 
 /* ---------- menu, modes, HUD ---------- */
 const statusEl = $("#status");
@@ -5086,8 +5177,6 @@ async function openPeanut(){ if (!(await ensureCamera())) return; await loadScop
 $("#bHome").onclick = goMenu;
 $("#goPeanut").onclick = () => { buzz(10); openPeanut(); };
 $("#goPeanut").onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openPeanut(); } };
-$("#bLayout").onclick = () => { buzz(8); editing ? closeEditor() : openEditor(); };
-$("#bCut").onclick = () => { buzz(8); openCut(); };
 let replacing = false;
 function pickImage(){ replacing = false; $("#pupFile").click(); }
 function replaceImage(){ replacing = true; $("#pupFile").click(); }
@@ -5276,25 +5365,47 @@ function paintBg(x, w, h){
     default: fill(S.bgColor);
   }
 }
+// What a recording is made of. At full screen size the WebGL canvas is recorded directly (the background is
+// drawn into it by the filter pass), so nothing is copied on the CPU. Smaller sizes are scaled through a 2D canvas
+// whose frames are handed over one by one, at the chosen rate.
+const REC_BPP = {std:0.08, high:0.13, max:0.2};      // bits per pixel per frame
+function recPlan(){
+  const cw = canvas.width, ch = canvas.height, short = Math.min(cw, ch);
+  const want = S.recRes === "screen" ? short : Math.min(short, +S.recRes || short), k = want/short;
+  const w = Math.round(cw*k/2)*2, h = Math.round(ch*k/2)*2;
+  return {w, h, direct: w === cw && h === ch && !!canvas.captureStream};
+}
 function recFrame(){
   if (!REC.on) return;
-  const w = REC.c.width, h = REC.c.height, k = `${S.bg}|${S.bgColor}|${bgImg?.src || ""}|${w}x${h}`;
-  if (k !== REC.bgKey || bgDynamic()){ paintBg(REC.bg.getContext("2d"), w, h); REC.bgKey = k; }   // a video background changes every frame
-  if (S.world){ REC.x.drawImage(canvas, 0, 0, w, h); return; }
-  REC.x.drawImage(REC.bg, 0, 0);
-  REC.x.drawImage(canvas, 0, 0, w, h);
-  const t = Math.floor((performance.now() - REC.t0) / 1000);
-  $("#recTime").textContent = `${Math.floor(t/60)}:${String(t % 60).padStart(2, "0")}`;
+  const now = performance.now(), t = Math.floor((now - REC.t0) / 1000);
+  if (t !== REC.shownT){ REC.shownT = t; $("#recTime").textContent = `${Math.floor(t/60)}:${String(t % 60).padStart(2, "0")}`; }
+  if (REC.direct) return;
+  if (now - REC.last < 1000/REC.fps - 4) return;     // pace to the recording's frame rate
+  REC.last = now;
+  const w = REC.c.width, h = REC.c.height;
+  if (glOpaque()) REC.x.drawImage(canvas, 0, 0, w, h);
+  else {
+    const k = `${S.bg}|${S.bgColor}|${bgImg?.src || ""}|${w}x${h}`;
+    if (k !== REC.bgKey || bgDynamic()){ paintBg(REC.bg.getContext("2d"), w, h); REC.bgKey = k; }   // a video background changes every frame
+    REC.x.drawImage(REC.bg, 0, 0);
+    REC.x.drawImage(canvas, 0, 0, w, h);
+  }
+  REC.track.requestFrame?.();
 }
 async function startRec(){
   const mm = pickMime();
   if (!mm || !HTMLCanvasElement.prototype.captureStream){ toast("This device can't record video here."); return; }
   [REC.mime, REC.ext] = mm;
-  const sc = Math.min(1, 1280 / Math.max(canvas.width, canvas.height));
-  const w = Math.round(canvas.width*sc/2)*2, h = Math.round(canvas.height*sc/2)*2;
-  REC.c = document.createElement("canvas"); REC.c.width = w; REC.c.height = h; REC.x = REC.c.getContext("2d");
-  REC.bg = document.createElement("canvas"); REC.bg.width = w; REC.bg.height = h; REC.bgKey = "";
-  const tracks = [...REC.c.captureStream(30).getVideoTracks()];
+  const P = recPlan(), fps = +S.recFps || 30;
+  REC.direct = P.direct; REC.fps = fps; REC.last = 0; REC.shownT = -1;
+  if (P.direct){ REC.c = null; REC.track = canvas.captureStream(fps).getVideoTracks()[0]; }
+  else {
+    REC.c = document.createElement("canvas"); REC.c.width = P.w; REC.c.height = P.h; REC.x = REC.c.getContext("2d", {alpha:false});
+    REC.bg = document.createElement("canvas"); REC.bg.width = P.w; REC.bg.height = P.h; REC.bgKey = "";
+    REC.track = REC.c.captureStream(0).getVideoTracks()[0];
+    if (!REC.track.requestFrame){ REC.track.stop(); REC.track = REC.c.captureStream(fps).getVideoTracks()[0]; }
+  }
+  const tracks = [REC.track];
   if (S.recMic){
     try{ REC.mic = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}}); }
     catch(e){ REC.mic = null; toast("Microphone is blocked, so this recording has no sound."); }
@@ -5306,11 +5417,13 @@ async function startRec(){
     tracks.push(...AUD.rec.stream.getAudioTracks());
   } else if (REC.mic) tracks.push(...REC.mic.getAudioTracks());
   try{ window.PeanutNative?.prepare?.(); }catch(e){}
-  try{ REC.mr = new MediaRecorder(new MediaStream(tracks), {mimeType:REC.mime, videoBitsPerSecond:6_000_000}); }
-  catch(e){ REC.mic?.getTracks().forEach(t => t.stop()); toast("Couldn't start recording."); return; }
+  const bps = Math.round(clamp(P.w*P.h*fps*(REC_BPP[S.recQ] || REC_BPP.high), 2e6, 24e6));
+  try{ REC.mr = new MediaRecorder(new MediaStream(tracks), {mimeType:REC.mime, videoBitsPerSecond:bps, audioBitsPerSecond:128000}); }
+  catch(e){ REC.mic?.getTracks().forEach(t => t.stop()); REC.track?.stop(); toast("Couldn't start recording."); return; }
   REC.chunks = [];
   REC.mr.ondataavailable = e => { if (e.data?.size) REC.chunks.push(e.data); };
   REC.mr.onstop = finishRec;
+  REC.mr.onerror = e => { console.error(e); toast("Recording stopped: " + (e?.error?.message || "the encoder failed")); stopRec(); };
   REC.on = true; REC.t0 = performance.now(); recFrame();
   REC.mr.start(1000);
   $("#rec").classList.add("on"); $("#rec").setAttribute("aria-label", "Stop recording"); $("#recChip").hidden = false; $("#recTime").textContent = "0:00";
@@ -5318,7 +5431,7 @@ async function startRec(){
 }
 function stopRec(){
   if (!REC.on) return;
-  REC.on = false; REC.mr.stop(); REC.mic?.getTracks().forEach(t => t.stop()); REC.mic = null;
+  REC.on = false; try{ REC.mr.stop(); }catch(e){} REC.mic?.getTracks().forEach(t => t.stop()); REC.mic = null; REC.track?.stop(); REC.track = null;
   try{ REC.micNode?.disconnect(); }catch(e){} REC.micNode = null;
   $("#rec").classList.remove("on"); $("#rec").setAttribute("aria-label", "Start recording"); $("#recChip").hidden = true;
   buzz([15, 60, 15]);
@@ -5356,7 +5469,7 @@ function takeThumb(){
   const id = THUMB.pending; if (++THUMB.wait < 20) return; THUMB.pending = null; THUMB.wait = 0;
   const c = CHARS.find(k => k.id === id); if (!c || stageMode !== "model") return;
   const w = canvas.width, h = canvas.height, [cv, x] = mkCanvas(w, h);
-  if (!S.world) paintBg(x, w, h); x.drawImage(canvas, 0, 0, w, h);
+  if (!glOpaque()) paintBg(x, w, h); x.drawImage(canvas, 0, 0, w, h);
   mrig.getWorldPosition(_sc); _sc.project(camera);
   const cx = (_sc.x + 1)/2*w, cy = (1 - _sc.y)/2*h, A = 104/124; let tw = w, th = w/A; if (th > h){ th = h; tw = h*A; }
   const [tc, tx] = mkCanvas(252, 300); tx.drawImage(cv, clamp(cx - tw/2, 0, w - tw), clamp(cy - th*0.5, 0, h - th), tw, th, 0, 0, 252, 300);
@@ -5367,7 +5480,7 @@ const _sc = new THREE.Vector3();
 function takeShot(){                                   // runs right after a frame is drawn
   SHOT.pending = false;
   const w = canvas.width, h = canvas.height, [c, x] = mkCanvas(w, h);
-  if (!S.world) paintBg(x, w, h);
+  if (!glOpaque()) paintBg(x, w, h);
   x.drawImage(canvas, 0, 0, w, h);
   const sh = $("#shutter"); sh.classList.remove("go"); void sh.offsetWidth; sh.classList.add("go");
   // thumbnail: a portrait crop around the character
@@ -5383,15 +5496,15 @@ function takeShot(){                                   // runs right after a fra
   else { try{ localStorage.setItem("peanutcam.peanutShot", thumb); }catch(e){} }
   c.toBlob(async blob => {
     try{ toast(await saveImage(blob)); }catch(e){ toast("Couldn't save the picture: " + (e?.message || e)); }
-  }, "image/jpeg", 0.93);
+  }, S.shotFmt === "png" ? "image/png" : "image/jpeg", 0.95);
 }
 async function saveImage(blob){
-  const d = new Date(), z = n => String(n).padStart(2, "0");
-  const name = `PeanutCam_${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.jpg`;
+  const d = new Date(), z = n => String(n).padStart(2, "0"), png = blob.type === "image/png";
+  const name = `PeanutCam_${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.${png ? "png" : "jpg"}`;
   const N = window.PeanutNative;
   if (N?.begin){
     try{ N.prepare?.(); }catch(e){}
-    if (!N.begin(name, "image/jpeg")) throw new Error("the gallery refused the file");
+    if (!N.begin(name, png ? "image/png" : "image/jpeg")) throw new Error("the gallery refused the file");
     const CH = 3 * 262144;
     for (let o = 0; o < blob.size; o += CH){ if (!N.append(await toB64(blob.slice(o, o + CH)))) throw new Error("writing failed"); }
     if (!N.finish()) throw new Error("finishing failed");
@@ -5470,7 +5583,7 @@ function liveMakeEncoder(){
 // the frame viewers get: background, then the scene fitted inside it (3D worlds fill the frame instead)
 function liveCompose(){
   const {x, w, h} = LIVE, cw = canvas.width, ch = canvas.height;
-  if (S.world){ const k = Math.max(w/cw, h/ch); x.drawImage(canvas, (w - cw*k)/2, (h - ch*k)/2, cw*k, ch*k); return; }
+  if (glOpaque()){ const k = Math.max(w/cw, h/ch); x.drawImage(canvas, (w - cw*k)/2, (h - ch*k)/2, cw*k, ch*k); return; }
   const key = `${S.bg}|${S.bgColor}|${bgImg?.src || ""}`;
   if (key !== LIVE.bgKey || bgDynamic()){ paintBg(LIVE.bg.getContext("2d"), w, h); LIVE.bgKey = key; }
   x.drawImage(LIVE.bg, 0, 0);
@@ -5710,7 +5823,7 @@ const WORLD = (() => {
     }
     vec4 psxSnap(vec4 cp){
       if (uJitter <= 0.001) return cp;
-      vec2 g = uSnap / (1.0 + uJitter*3.0);
+      vec2 g = uSnap / (1.0 + uJitter*2.0);
       vec3 n = cp.xyz / cp.w; n.xy = floor(n.xy*g + 0.5) / g; return vec4(n*cp.w, cp.w);
     }`;
   const U = {
@@ -5923,7 +6036,7 @@ const WORLD = (() => {
         vec3 cc = a > 0.001 ? toSRGB(ch.rgb / a) : vec3(0.0);
         float b = texture2D(tBayer, floor(vUv*uRes)/4.0 + 0.125).r - 0.5;
         cc = clamp(floor((cc + b*uDither/uLevels)*uLevels + 0.5)/uLevels, 0.0, 1.0);
-        a = clamp(floor((a + b*0.5)*4.0 + 0.5)/4.0, 0.0, 1.0);             // PS1 had no smooth transparency
+        a = a < 0.02 ? 0.0 : floor(a*8.0 + 0.5)/8.0;                        // stepped edges, no dither speckle (and nothing on empty pixels)
         if (uWorld > 0.5){
           vec3 w = texture2D(tA, vUv).rgb;
           w = clamp(floor((w + b*uDither/uLevels)*uLevels + 0.5)/uLevels, 0.0, 1.0);
@@ -6025,12 +6138,310 @@ const WORLD = (() => {
   return {configure, render, renderPSX, U};
 })();
 
+/* ---------- filters: one last pass over the whole picture ----------
+   The finished frame (background, scene, TV) is copied into a texture and drawn back through a filter shader,
+   so recordings, pictures and the live stream get exactly what's on screen. Each filter compiles on first use.
+   The CSS background is painted into a texture here (a video background plays straight from its element). */
+const FX_LIST = [["none","None"],["crt","CRT TV"],["pvm","Pro monitor"],["arcade","Arcade"],["vhs","VHS"],["film","Film"],["gameboy","Game Boy"],["pixel","8-bit"],
+  ["glitch","Glitch"],["dream","Dreamy"],["comic","Comic"],["noir","Noir"],["night","Night vision"],["thermal","Thermal"],["cctv","CCTV"]];
+const fxOn = () => S.fx && S.fx !== "none" && mode !== "menu";
+const fxActive = () => fxOn() || (REC.on && REC.direct && !S.world);   // a recording taken straight from the canvas needs the background in it
+const glOpaque = () => S.world || fxActive();      // the canvas already holds the background: captures skip paintBg
+const FX = (() => {
+  const HEAD = `
+    uniform sampler2D tScene, tBg, tOsd; uniform vec2 uRes; uniform float uAmt, uTime, uBg, uOsd; uniform vec4 uBgFit;
+    varying vec2 vUv;
+    vec3 src(vec2 uv){
+      vec4 c = texture2D(tScene, uv);
+      vec3 b = uBg > 0.5 ? texture2D(tBg, uv*uBgFit.xy + uBgFit.zw).rgb : vec3(0.0);
+      return c.rgb + b*(1.0 - c.a);
+    }
+    float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233)))*43758.5453); }
+    float luma(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
+    float b2(vec2 a){ a = floor(a); return fract(a.x/2.0 + a.y*a.y*0.75); }
+    float bayer(vec2 a){ return b2(0.5*a)*0.25 + b2(a); }                   // 4x4 ordered dither, 0..1
+    vec2 bend(vec2 uv, float k){ uv = uv*2.0 - 1.0; uv *= 1.0 + k*dot(uv, uv)*0.5; uv += uv*uv.yx*uv.yx*k*0.5; return uv*0.5 + 0.5; }
+    float inside(vec2 uv, float r){ vec2 d = max(abs(uv - 0.5) - (0.5 - r), 0.0); return smoothstep(r, r*0.6, length(d)); }
+    vec3 osd(vec3 c){ if (uOsd < 0.5) return c; vec4 o = texture2D(tOsd, vUv); return mix(c, o.rgb, o.a); }
+    vec3 glow(vec2 uv, float r){
+      vec2 p = r/uRes; vec3 s = vec3(0.0);
+      s += src(uv + vec2(p.x, 0.0)) + src(uv - vec2(p.x, 0.0)) + src(uv + vec2(0.0, p.y)) + src(uv - vec2(0.0, p.y));
+      s += src(uv + p*0.7) + src(uv - p*0.7) + src(uv + vec2(p.x, -p.y)*0.7) + src(uv - vec2(p.x, -p.y)*0.7);
+      return s/8.0;
+    }
+    // scanlines: about one line per 4 screen pixels (240-540 lines), brighter lines spread over the gap like a real tube
+    vec3 scan(vec3 c, vec2 uv, float k, float depth){
+      float lines = clamp(uRes.y/4.0, 240.0, 540.0), s = 0.5 + 0.5*cos(uv.y*lines*6.2831853);
+      float w = mix(depth, 0.0, clamp(luma(c)*0.8, 0.0, 1.0)*0.6);
+      return c*mix(1.0, 1.0 - w + w*s*1.6, k);
+    }
+    vec3 mask(vec3 c, float k, float grille){                                // phosphor triads, in screen pixels
+      float m = mod(gl_FragCoord.x, 3.0); vec3 t = vec3(step(m, 1.0), step(1.0, m)*step(m, 2.0), step(2.0, m));
+      if (grille < 0.5) t *= 0.85 + 0.15*step(1.0, mod(gl_FragCoord.y + floor(gl_FragCoord.x/3.0)*2.0, 4.0));
+      return c*mix(vec3(1.0), 0.55 + t*0.9, k);
+    }
+  `;
+  const BODIES = {
+    none:`void main(){ gl_FragColor = vec4(src(vUv), 1.0); }`,
+    crt:`void main(){
+      float k = uAmt; vec2 uv = bend(vUv, 0.14*k);
+      vec3 c = src(uv), g = glow(uv, 2.5);
+      c = max(c, g*0.85) + g*g*0.25*k;
+      c = scan(c, uv, k, 0.55); c = mask(c, 0.45*k, 0.0);
+      vec2 d = uv - 0.5; c *= mix(1.0, 1.0 - dot(d, d)*1.1, k);
+      c *= 1.0 + 0.012*k*sin(uTime*55.0); c = pow(c, vec3(1.0 + 0.12*k))*(1.0 + 0.18*k);
+      gl_FragColor = vec4(c*inside(uv, 0.035*k + 0.002), 1.0);
+    }`,
+    pvm:`void main(){
+      float k = uAmt; vec2 uv = vUv;
+      vec3 c = src(uv), g = glow(uv, 1.5);
+      c = mix(c, max(c, g), 0.4*k);
+      float lines = clamp(uRes.y/3.0, 300.0, 720.0), s = abs(sin(uv.y*lines*3.14159265));
+      float w = mix(0.75, 0.25, clamp(luma(c), 0.0, 1.0));
+      c *= mix(1.0, 1.0 - w + w*pow(s, 0.8)*1.35, k);
+      c = mask(c, 0.35*k, 1.0); c = (c - 0.5)*(1.0 + 0.1*k) + 0.5 + 0.02*k;
+      gl_FragColor = vec4(c, 1.0);
+    }`,
+    arcade:`void main(){
+      float k = uAmt; vec2 uv = bend(vUv, 0.26*k);
+      vec3 c = src(uv), g = glow(uv, 4.0);
+      c = max(c, g) + g*0.35*k;
+      float l = luma(c); c = mix(vec3(l), c, 1.0 + 0.35*k);
+      c = scan(c, uv, k, 0.75); c = mask(c, 0.6*k, 0.0);
+      vec2 d = uv - 0.5; c *= mix(1.0, 1.0 - dot(d, d)*1.6, k); c *= 1.0 + 0.25*k;
+      gl_FragColor = vec4(c*inside(uv, 0.06*k + 0.002), 1.0);
+    }`,
+    vhs:`
+    const mat3 YIQ = mat3(0.299, 0.596, 0.211, 0.587, -0.274, -0.523, 0.114, -0.322, 0.312);
+    const mat3 RGB = mat3(1.0, 1.0, 1.0, 0.956, -0.272, -1.106, 0.621, -0.647, 1.703);
+    void main(){
+      float k = uAmt, t = uTime; vec2 uv = vUv;
+      float row = floor(uv.y*240.0), tick = floor(t*30.0);
+      uv.x += (hash(vec2(row, tick)) - 0.5)*0.0022*k;                               // line jitter
+      float by = 1.0 - fract(t*0.09), band = exp(-pow((uv.y - by)*30.0, 2.0));     // rolling tracking band
+      uv.x += band*0.012*k*sin(uv.y*260.0 + t*14.0);
+      float hs = smoothstep(0.04, 0.0, uv.y); uv.x += hs*0.03*k*(0.5 + 0.5*sin(t*9.0 + uv.y*90.0)); // head switching
+      vec3 y = YIQ*((src(uv - vec2(1.0/uRes.x, 0.0)) + src(uv) + src(uv + vec2(1.0/uRes.x, 0.0)))/3.0);
+      vec3 ch = vec3(0.0);
+      for (int i = 0; i < 8; i++) ch += YIQ*src(uv - vec2((float(i)*0.0022 + 0.004)*k, 0.0));
+      ch /= 8.0;
+      vec3 c = RGB*vec3(y.x, ch.y*0.85, ch.z*0.85);
+      c = mix(c, c*vec3(1.02, 0.98, 1.05) + 0.04, k);                               // lifted, slightly cool blacks
+      c += (hash(uv*uRes + t) - 0.5)*0.09*k;
+      c += band*step(0.85, hash(vec2(floor(uv.x*90.0), tick + row)))*0.45*k;
+      c *= 1.0 - hs*0.35*k;
+      gl_FragColor = vec4(osd(c), 1.0);
+    }`,
+    film:`void main(){
+      float k = uAmt, t = uTime, f = floor(t*24.0);
+      vec2 uv = vUv + vec2(hash(vec2(f, 1.0)) - 0.5, hash(vec2(f, 2.0)) - 0.5)*0.0018*k;  // gate weave
+      vec3 c = src(uv);
+      float l = luma(c); c = mix(c, vec3(l)*vec3(1.08, 0.98, 0.82), 0.35*k);
+      c = mix(c, smoothstep(0.0, 1.0, c), 0.5*k);
+      c *= 1.0 + (hash(vec2(f, 3.0)) - 0.5)*0.06*k;                                    // flicker
+      c += (hash(vUv*uRes*0.5 + f) - 0.5)*0.12*k;                                       // grain
+      float sx = hash(vec2(f, 4.0)); if (sx > 0.7) c *= 1.0 - 0.35*k*smoothstep(1.5/uRes.x, 0.0, abs(vUv.x - hash(vec2(f, 5.0))));
+      if (hash(vec2(f, 6.0)) > 0.6){ vec2 dp = vec2(hash(vec2(f, 7.0)), hash(vec2(f, 8.0))); c *= 1.0 - 0.6*k*smoothstep(4.0/uRes.y, 0.0, length((vUv - dp)*vec2(uRes.x/uRes.y, 1.0))); }
+      vec2 d = vUv - 0.5; c *= mix(1.0, 1.0 - dot(d, d)*1.8, k);
+      gl_FragColor = vec4(c, 1.0);
+    }`,
+    gameboy:`void main(){
+      float cell = floor(max(2.0, uRes.x/160.0));
+      vec2 p = floor(gl_FragCoord.xy/cell), uv = (p + 0.5)*cell/uRes;
+      float l = clamp(luma(src(uv))*1.1 + (bayer(p) - 0.5)*0.28, 0.0, 0.999);
+      float i = floor(l*4.0);
+      vec3 c = i < 1.0 ? vec3(0.06, 0.22, 0.06) : i < 2.0 ? vec3(0.19, 0.38, 0.19) : i < 3.0 ? vec3(0.55, 0.67, 0.06) : vec3(0.61, 0.74, 0.06);
+      vec2 g = fract(gl_FragCoord.xy/cell); c *= 1.0 - 0.18*uAmt*step(g.x, 1.0/cell)*1.0 - 0.18*uAmt*step(g.y, 1.0/cell);
+      gl_FragColor = vec4(mix(src(vUv), c, min(1.0, uAmt*1.5)), 1.0);
+    }`,
+    pixel:`
+    vec3 pal(int i){
+      if (i == 0) return vec3(0.0); if (i == 1) return vec3(0.114, 0.169, 0.325); if (i == 2) return vec3(0.494, 0.145, 0.325); if (i == 3) return vec3(0.0, 0.529, 0.318);
+      if (i == 4) return vec3(0.671, 0.322, 0.212); if (i == 5) return vec3(0.373, 0.341, 0.310); if (i == 6) return vec3(0.761, 0.765, 0.780); if (i == 7) return vec3(1.0, 0.945, 0.910);
+      if (i == 8) return vec3(1.0, 0.0, 0.302); if (i == 9) return vec3(1.0, 0.639, 0.0); if (i == 10) return vec3(1.0, 0.925, 0.153); if (i == 11) return vec3(0.0, 0.894, 0.212);
+      if (i == 12) return vec3(0.161, 0.678, 1.0); if (i == 13) return vec3(0.514, 0.463, 0.612); if (i == 14) return vec3(1.0, 0.467, 0.659); return vec3(1.0, 0.8, 0.667);
+    }
+    void main(){
+      float cell = floor(max(2.0, uRes.x/(120.0 + 120.0*(1.0 - uAmt))));
+      vec2 p = floor(gl_FragCoord.xy/cell), uv = (p + 0.5)*cell/uRes;
+      vec3 c = src(uv) + (bayer(p) - 0.5)*0.18;
+      float best = 9.0; vec3 o = c;
+      for (int i = 0; i < 16; i++){ vec3 q = pal(i), d = (c - q)*vec3(0.9, 1.2, 0.7); float e = dot(d, d); if (e < best){ best = e; o = q; } }
+      gl_FragColor = vec4(o, 1.0);
+    }`,
+    glitch:`void main(){
+      float k = uAmt, t = uTime, tick = floor(t*12.0); vec2 uv = vUv;
+      float blk = floor(uv.y*24.0 + hash(vec2(tick, 9.0))*6.0), burst = step(0.82, hash(vec2(floor(t*3.0), 4.0)));
+      float on = step(0.86 - burst*0.25, hash(vec2(blk, tick)));
+      uv.x += on*(hash(vec2(blk, tick + 1.0)) - 0.5)*0.16*k;
+      float sh = (0.004 + on*0.02 + burst*0.01)*k;
+      vec3 c = vec3(src(uv + vec2(sh, 0.0)).r, src(uv).g, src(uv - vec2(sh, 0.0)).b);
+      if (on > 0.5 && hash(vec2(blk, tick + 2.0)) > 0.6) c = c.brg;
+      c += step(0.985, hash(vec2(floor(uv.y*uRes.y*0.5), tick)))*0.5*k;
+      c *= 0.94 + 0.06*cos(uv.y*uRes.y*1.5);
+      gl_FragColor = vec4(c, 1.0);
+    }`,
+    dream:`void main(){
+      float k = uAmt; vec3 c = src(vUv);
+      vec3 g = (glow(vUv, 6.0) + glow(vUv, 14.0) + glow(vUv, 26.0))/3.0;
+      c = 1.0 - (1.0 - c)*(1.0 - g*0.75*k);                                           // screen-blend bloom
+      c = mix(c, c*vec3(1.04, 0.96, 1.08) + vec3(0.05, 0.02, 0.07), k);
+      float a = 1.5*k/uRes.x; vec2 d = vUv - 0.5;
+      c.r = mix(c.r, src(vUv + d*a*8.0).r, 0.5*k); c.b = mix(c.b, src(vUv - d*a*8.0).b, 0.5*k);
+      c = mix(c, c + 0.12, k*smoothstep(0.2, 0.75, length(d)));
+      gl_FragColor = vec4(c, 1.0);
+    }`,
+    comic:`void main(){
+      float k = uAmt; vec2 px = 1.6/uRes; vec3 c = src(vUv);
+      float tl = luma(src(vUv + vec2(-px.x, px.y))), tr = luma(src(vUv + px)), bl = luma(src(vUv - px)), br = luma(src(vUv + vec2(px.x, -px.y)));
+      float e = length(vec2(tr + br - tl - bl, tl + tr - bl - br));
+      float l = luma(c), q = floor(l*4.0 + 0.5)/4.0;
+      vec3 p = c*(q/max(l, 0.04)); p = mix(vec3(luma(p)), p, 1.35);
+      float cell = max(5.0, uRes.x/110.0); vec2 r = mat2(0.7071, -0.7071, 0.7071, 0.7071)*gl_FragCoord.xy/cell;
+      float dot_ = length(fract(r) - 0.5), dark = clamp(1.0 - l*1.6, 0.0, 1.0);
+      p *= 1.0 - step(dot_, dark*0.5)*0.55;
+      p *= 1.0 - smoothstep(0.12, 0.3, e);
+      gl_FragColor = vec4(mix(c, p, k), 1.0);
+    }`,
+    noir:`void main(){
+      float k = uAmt; vec3 c = src(vUv); float l = luma(c);
+      l = mix(l, smoothstep(0.08, 0.85, l), k); l += (hash(vUv*uRes + uTime) - 0.5)*0.06*k;
+      vec2 d = vUv - 0.5; l *= mix(1.0, 1.0 - dot(d, d)*1.6, k);
+      gl_FragColor = vec4(mix(c, vec3(l), min(1.0, k*1.4)), 1.0);
+    }`,
+    night:`void main(){
+      float k = uAmt; vec3 c = src(vUv), g = glow(vUv, 5.0);
+      float l = luma(max(c, g*0.9))*(1.6 + k); l += (hash(vUv*uRes*0.7 + uTime) - 0.5)*0.22*k;
+      vec3 n = vec3(0.15, 1.0, 0.25)*l + vec3(0.0, 0.03, 0.0);
+      n *= 0.9 + 0.1*cos(vUv.y*uRes.y*1.2);
+      float r = length((vUv - 0.5)*vec2(uRes.x/uRes.y, 1.0)), lim = 0.5*min(1.0, uRes.x/uRes.y) + 0.12;
+      n *= smoothstep(lim, lim - 0.12, r);
+      gl_FragColor = vec4(mix(c, n, min(1.0, k*1.5)), 1.0);
+    }`,
+    thermal:`void main(){
+      vec3 c = (src(vUv) + glow(vUv, 3.0))*0.5; float l = luma(c);
+      vec3 a = vec3(0.0, 0.0, 0.15), b = vec3(0.35, 0.0, 0.65), d = vec3(0.95, 0.1, 0.25), e = vec3(1.0, 0.65, 0.0), f = vec3(1.0, 1.0, 0.85);
+      vec3 h = l < 0.25 ? mix(a, b, l/0.25) : l < 0.5 ? mix(b, d, (l - 0.25)/0.25) : l < 0.75 ? mix(d, e, (l - 0.5)/0.25) : mix(e, f, (l - 0.75)/0.25);
+      gl_FragColor = vec4(mix(src(vUv), h, min(1.0, uAmt*1.5)), 1.0);
+    }`,
+    cctv:`void main(){
+      float k = uAmt; vec2 uv = bend(vUv, 0.3*k);
+      float l = luma(src(uv)); l = mix(l, l*0.85 + 0.08, k); l += (hash(uv*uRes*0.5 + uTime) - 0.5)*0.12*k;
+      vec3 c = mix(src(uv), vec3(l)*vec3(0.92, 1.0, 0.95), min(1.0, k*1.5));
+      c *= 0.92 + 0.08*cos(uv.y*uRes.y*1.6);
+      c += exp(-pow((uv.y - (1.0 - fract(uTime*0.15)))*14.0, 2.0))*0.05*k;
+      gl_FragColor = vec4(osd(c*inside(uv, 0.02)), 1.0);
+    }`
+  };
+  const U = {tScene:{value:null}, tBg:{value:null}, tOsd:{value:null}, uRes:{value:new THREE.Vector2(1, 1)}, uAmt:{value:0.7}, uTime:{value:0}, uBg:{value:0}, uOsd:{value:0},
+    uBgFit:{value:new THREE.Vector4(1, 1, 0, 0)}};
+  const mats = {}, quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2)), qs = new THREE.Scene(), qc = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  quad.frustumCulled = false; qs.add(quad);
+  const mat = id => mats[id] ||= new THREE.ShaderMaterial({uniforms:U, depthTest:false, depthWrite:false, blending:THREE.NoBlending,
+    vertexShader:`varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`, fragmentShader:HEAD + BODIES[id]});
+  let frame = null;
+  const bg = {c:document.createElement("canvas"), tex:null, key:"", vid:null};
+  bg.tex = new THREE.CanvasTexture(bg.c); bg.tex.colorSpace = THREE.NoColorSpace;
+  const osdC = document.createElement("canvas"), osdTex = new THREE.CanvasTexture(osdC); let osdKey = "";
+  const _v = new THREE.Vector2(), pad = n => String(n).padStart(2, "0");
+  function paintOsd(w, h){
+    const d = new Date(), id = S.fx, key = id + (id === "cctv" ? d.getSeconds() : d.getMinutes()) + w + "x" + h;
+    if (key === osdKey) return; osdKey = key;
+    const k = Math.min(1, 720/Math.max(w, h)); osdC.width = Math.round(w*k); osdC.height = Math.round(h*k);
+    const x = osdC.getContext("2d"), W = osdC.width, Hh = osdC.height, fs = Math.round(Math.min(W, Hh)*0.055);
+    x.clearRect(0, 0, W, Hh); x.font = `700 ${fs}px ui-monospace, "DejaVu Sans Mono", monospace`; x.textBaseline = "top";
+    x.shadowColor = "rgba(0,0,0,.85)"; x.shadowBlur = fs*0.15; x.shadowOffsetX = x.shadowOffsetY = fs*0.08;
+    const mon = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"][d.getMonth()];
+    if (id === "vhs"){
+      x.fillStyle = "#f2f2f2"; x.fillText("PLAY ▶", fs*0.9, fs*0.9);
+      const hr = d.getHours() % 12 || 12;
+      x.fillText(`${d.getHours() < 12 ? "AM" : "PM"} ${hr}:${pad(d.getMinutes())}`, fs*0.9, Hh - fs*3.1);
+      x.fillText(`${mon}. ${pad(d.getDate())} ${d.getFullYear()}`, fs*0.9, Hh - fs*1.9);
+    } else {
+      x.fillStyle = "#f4f4f4"; x.fillText("CAM 01", fs*0.9, fs*0.9);
+      x.fillText(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`, fs*0.9, Hh - fs*1.9);
+      if (d.getSeconds() % 2 === 0){ x.fillStyle = "#ff2a2a"; x.beginPath(); x.arc(W - fs*3.6, fs*1.4, fs*0.32, 0, 7); x.fill(); }
+      x.fillStyle = "#f4f4f4"; x.fillText("REC", W - fs*3.1, fs*0.9);
+    }
+    osdTex.needsUpdate = true;
+  }
+  // the background behind the scene: a video element is used directly, everything else is painted (small when it changes every frame)
+  function syncBg(w, h){
+    if (S.world){ U.uBg.value = 0; return; }
+    U.uBg.value = 1;
+    if (S.bg === "video" && !ambOn() && BGP.ready){
+      const v = BGP.el;
+      if (bg.vid?.image !== v){ bg.vid?.dispose(); bg.vid = new THREE.VideoTexture(v); bg.vid.colorSpace = THREE.NoColorSpace; }
+      const s = Math.max(w/v.videoWidth, h/v.videoHeight), fx = w/(v.videoWidth*s), fy = h/(v.videoHeight*s);
+      U.uBgFit.value.set(fx, fy, (1 - fx)/2, (1 - fy)/2); U.tBg.value = bg.vid; return;
+    }
+    U.uBgFit.value.set(1, 1, 0, 0); U.tBg.value = bg.tex;
+    const dyn = bgDynamic(), k = Math.min(1, (dyn ? 480 : 1280)/Math.max(w, h)), bw = Math.round(w*k), bh = Math.round(h*k);
+    const key = `${S.bg}|${S.bgColor}|${bgImg?.src || ""}|${bw}x${bh}`;
+    if (key === bg.key && !dyn) return;
+    if (bg.c.width !== bw || bg.c.height !== bh){ bg.c.width = bw; bg.c.height = bh; bg.tex.dispose(); }
+    paintBg(bg.c.getContext("2d"), bw, bh); bg.key = key; bg.tex.needsUpdate = true;
+  }
+  // after everything is drawn: copy the frame, filter it back onto the screen
+  function apply(now){
+    if (!fxActive()) return;
+    renderer.getDrawingBufferSize(_v);
+    const w = _v.x, h = _v.y;
+    if (!frame || frame.image.width !== w || frame.image.height !== h){
+      frame?.dispose(); frame = new THREE.FramebufferTexture(w, h);
+      frame.minFilter = frame.magFilter = THREE.LinearFilter;
+    }
+    renderer.setRenderTarget(null);
+    renderer.copyFramebufferToTexture(new THREE.Vector2(), frame);
+    syncBg(w, h);
+    const id = fxOn() && BODIES[S.fx] ? S.fx : "none", useOsd = id === "vhs" || id === "cctv";
+    if (useOsd){ paintOsd(w, h); U.tOsd.value = osdTex; }
+    U.uOsd.value = useOsd ? 1 : 0;
+    U.tScene.value = frame; U.uRes.value.set(w, h); U.uAmt.value = S.fxAmt; U.uTime.value = (now/1000) % 3600;
+    quad.material = mat(id);
+    const ac = renderer.autoClear; renderer.autoClear = false; renderer.render(qs, qc); renderer.autoClear = ac;
+  }
+  return {apply};
+})();
+
 /* ---------- physics + render loop ---------- */
 const spr = {}; for (const k of ["pitch","yaw","roll","tx","ty","lean","jaw","menu","gx","gy","gs","tilt","talk","pr","nx","ny","ns","nr","nsp","nti"]) spr[k] = {p: ["lean","menu","ns"].includes(k) ? 1 : 0, v: 0};
 function step(st, tgt, dt, k, zeta){ const c = 2*zeta*Math.sqrt(k); st.v += (k*(tgt - st.p) - c*st.v) * dt; st.p += st.v * dt; }
-let lastT = 0;
+let lastT = 0, lastDraw = 0;
+// Steady frame rate: frames are capped (so 90/120 Hz screens don't burn battery on frames nobody records), and
+// in Auto the drawing resolution steps down when the phone can't keep up, and back up once it can. A step down
+// that doesn't help is undone. The size never changes while recording or live.
+const PERF = {pr:0, avg:0, bad:0, good:0, calm:0, check:0, before:0, floor:1};
+const perfMax = () => { const d = devicePixelRatio || 1; return S.perf === "saver" ? Math.min(d, 1) : S.perf === "smooth" ? Math.min(d, 1.5) : Math.min(d, 2); };
+function setPixelRatio(v){ if (Math.abs(renderer.getPixelRatio() - v) < 0.01) return; renderer.setPixelRatio(v); resize(); }
+function perfStep(ms, now){
+  if (REC.on || liveOn() || document.hidden || ms > 250) return;
+  const max = perfMax();
+  if (S.perf !== "auto"){ PERF.pr = 0; setPixelRatio(max); return; }
+  if (!PERF.pr || PERF.pr > max) PERF.pr = max;
+  const want = 1000/(+S.fpsCap || 60);
+  PERF.avg = PERF.avg ? PERF.avg + (ms - PERF.avg)*0.05 : ms;
+  if (PERF.check && now > PERF.check){                 // did the last step down help?
+    if (PERF.avg > PERF.before*0.9){ PERF.floor = PERF.pr = Math.min(max, PERF.pr + 0.25); }
+    PERF.check = 0;
+  }
+  if (PERF.avg > want*1.3){
+    PERF.good = 0;
+    if ((PERF.bad += ms) > 2000 && PERF.pr - 0.25 >= PERF.floor && !PERF.check){
+      PERF.before = PERF.avg; PERF.pr -= 0.25; PERF.bad = 0; PERF.check = now + 3000; PERF.calm = now + 20000;
+    }
+  } else if (PERF.avg < want*1.08){
+    PERF.bad = 0;
+    if ((PERF.good += ms) > 8000 && now > PERF.calm && PERF.pr < max){ PERF.pr = Math.min(max, PERF.pr + 0.25); PERF.good = 0; }
+  }
+  setPixelRatio(PERF.pr);
+}
 function loop(now){
   requestAnimationFrame(loop);
+  const cap = +S.fpsCap || 60;
+  if (now - lastDraw < 1000/cap - 3) return;
+  try{ perfStep(now - lastDraw, now); }catch(e){ console.error(e); }
+  lastDraw = now;
   try{ track(now); }catch(e){ console.error(e); }
   try{ trackBody(now); }catch(e){ console.error(e); }
   const dt = Math.min(0.05, Math.max(0.001, (now - lastT) / 1000)); lastT = now;
@@ -6110,7 +6521,7 @@ function loop(now){
   try{ stepStudio(now, dt); loopCapture(now); stepTV(now); stepScene(now, dt); }catch(e){ console.error(e); }
   stepView(dt);
   const worldOn = S.world && (mode !== "menu" || scopeId === "peanut");
-  PSXU.uPsxJ.value = S.psx === "modern" ? 0 : S.wJitter;
+  PSXU.uPsxJ.value = S.psx === "modern" ? 0 : S.wJitter; PSXU.uAff.value = S.psx !== "modern" && S.wAffine ? 1 : 0;
   if (S.psx !== "modern"){
     WORLD.renderPSX(dt, now, worldOn, scene, camera);
   } else if (worldOn){
@@ -6118,6 +6529,7 @@ function loop(now){
     renderer.autoClear = false; renderer.clearDepth(); renderer.render(scene, camera); renderer.autoClear = true;
   } else renderer.render(scene, camera);
   renderTvFront();
+  FX.apply(now);
   recFrame();
   liveFrame();
   if (SHOT.pending) takeShot();

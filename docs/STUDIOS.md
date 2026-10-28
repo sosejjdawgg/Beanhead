@@ -2,11 +2,11 @@
 
 © 2026 James Scott. All rights reserved.
 
-Every scene in Peanut Cam is a studio: the character you opened plus any others you add. Open it with the **Studio** button in the bottom bar.
+Every scene in Peanut Cam is a studio: the character you opened plus any others you add. The **Studio** button in the bottom bar opens it, with four tabs: **Scene** (scene, background, 3D world, light and zoom), **TV**, **Cast** and **Cameras**.
 
 ## Scenes
 
-**Studio › Scene** opens the scene page. A scene is a ready-made set: props, light, a camera and a starting layout for the character and TV. It works for whoever hosts the studio (the Peanut, a picture character, a 3D model), and rigged models sit down in it.
+**Studio › Scene** lists the scenes at the top. A scene is a ready-made set: props, light, a camera and a starting layout for the character and TV. It works for whoever hosts the studio (the Peanut, a picture character, a 3D model), and rigged models sit down in it.
 
 - **TV night:** you sit on a couch facing an old CRT. Its back faces the viewers and its flicker, tinted by the video, lights your face. The video also plays big on the wall behind you, so viewers can watch along with your reactions. Pick the video with the TV's playlist (it opens the first time).
 - **Road trip:** you sit at the wheel of a low-poly car, filmed from the bonnet, with the Sunset Drive world rolling past, streetlights sweeping by and a little engine shake.
@@ -22,7 +22,7 @@ In a scene you can still move, turn and resize the character and the TV, zoom th
 
 - **Add a character** puts the Peanut, a picture character or a 3D model into the scene beside you.
 - Touch a cast member to move it: drag to move, pinch to resize, twist to turn. Tap it for its options: what it does when it isn't on camera, plus size, distance and turn sliders.
-- **Lock positions** (Studio panel) stops accidental moves while you perform.
+- **Lock positions** (Studio › Cast) stops accidental moves while you perform.
 
 ## Loops of you
 
@@ -42,9 +42,9 @@ In a scene you can still move, turn and resize the character and the TV, zoom th
 
 ## Videos
 
-- **Background › Video** plays a playlist behind your character. **Loop one video** repeats the current clip; **Play all in order, loop** plays the list and starts again.
-- **Settings › Look › Add a TV** puts a TV in the scene with its own playlist, so your character can watch and react. Tap the TV for its controls: a seek bar, play/pause, next/previous, **Camera on TV**, volume, the list and **TV settings**.
-- **TV settings:**
+- **Studio › Scene › Background › Video** plays a playlist behind your character. **Loop one video** repeats the current clip; **Play all in order, loop** plays the list and starts again.
+- **Studio › TV › Add a TV** puts a TV in the scene with its own playlist, so your character can watch and react. Tap the TV for its controls: a seek bar, play/pause, next/previous, **Camera on TV**, volume, the list and **TV settings**.
+- **TV settings** (Studio › TV, or the TV's own controls):
   - **Model:** Retro, Flat screen, Big CRT (curved glass, scanlines) or Computer monitor.
   - **Size and angle:** size up to 8×, tilt (tip it forward or back), lean and turn.
   - **Always in front** (on by default) draws the TV over everything, so no character blocks it, and keeps it sharp in the PS1/PS2 styles.
