@@ -306,8 +306,13 @@ public class MainActivity extends Activity {
     @Override
     @SuppressWarnings("deprecation")
     public void onBackPressed() {
-        if (web.canGoBack()) web.goBack();
-        else super.onBackPressed();
+        // the page closes its own panels and tools first (window.onBack); the app only closes from the main menu
+        web.evaluateJavascript("(window.onBack && window.onBack()) ? 1 : 0", r -> {
+            if (!"1".equals(r)) {
+                if (web.canGoBack()) web.goBack();
+                else finish();
+            }
+        });
     }
 
     @Override

@@ -97,13 +97,15 @@ body[data-mode=puppet].holding #gl{cursor:grabbing}
 .addbtn{margin-left:auto;height:34px;padding:0 12px 0 8px;border-radius:99px;display:flex;align-items:center;gap:4px;font-weight:600;font-size:13px;background:var(--ink);color:#1d1109}
 .addbtn svg{width:18px;height:18px;stroke-width:2.4}
 .char-row{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 6px;scrollbar-width:none;margin:0 -2px}
-.ctile{flex:none;width:104px;scroll-snap-align:start;position:relative;display:flex;flex-direction:column;gap:6px}
+.ctile{flex:none;width:104px;scroll-snap-align:start;position:relative;display:flex;flex-direction:column;gap:6px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.ctile.held .cface,#goPeanut.held{transform:scale(.96)}
+#goPeanut{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .cface{width:104px;height:124px;border-radius:20px;overflow:hidden;position:relative;box-shadow:inset 0 0 0 1px var(--line),0 10px 24px rgba(0,0,0,.35);transition:transform .35s var(--spring)}
 .cface:active{transform:scale(.94)}
 .cface img{position:absolute;inset:8px 8px 0;width:calc(100% - 16px);height:calc(100% - 8px);object-fit:contain;object-position:bottom;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))}
 .cface .w3d{position:absolute;left:6px;top:6px;font:600 9px var(--mono);letter-spacing:.1em;padding:3px 6px;border-radius:99px;background:rgba(0,0,0,.55);color:#fff}
 .cname{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 30px 0 2px}
-.cmore{position:absolute;right:0;bottom:-6px;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--mute)}
+.cmore{position:absolute;right:0;bottom:-6px;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--ink);background:rgba(255,255,255,.06)}
 .cmore svg{width:18px;height:18px}
 .ctile.new .cface{display:grid;place-items:center;align-content:center;gap:6px;text-align:center;font-size:12px;font-weight:600;color:var(--mute);
   background:repeating-linear-gradient(135deg,rgba(247,236,220,.04) 0 8px,transparent 8px 16px);box-shadow:inset 0 0 0 2px rgba(247,236,220,.16)}
@@ -450,6 +452,7 @@ body.rigging #hud *{pointer-events:none!important}
 #toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));z-index:50;transform:translate(-50%,-140%);max-width:calc(100% - 32px);
   padding:12px 18px;border-radius:16px;background:var(--ink);color:#1d1109;font-weight:600;font-size:14px;line-height:1.35;box-shadow:0 12px 30px rgba(0,0,0,.4);transition:transform .5s var(--spring)}
 #toast.show{transform:translate(-50%,0)}
+#toast button{margin-left:12px;padding:6px 12px;border-radius:10px;background:#1d1109;color:var(--ink);font:700 13px var(--display)}
 #busy{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(14,9,6,.72);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .3s}
 #busy.show{opacity:1;pointer-events:auto}
 #busy .bx{display:flex;flex-direction:column;align-items:center;gap:16px;font-weight:600;font-size:16px}
@@ -763,7 +766,11 @@ async function loadScope(id){
 /* ---------- small helpers: haptics, toast, busy ---------- */
 const buzz = ms => { try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} };
 let toastT;
-function toast(msg, ms = 2800){ const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), ms); }
+function toast(msg, ms = 2800, action){
+  const t = $("#toast"); t.textContent = msg;
+  if (action){ const b = document.createElement("button"); b.textContent = action.label; b.onclick = () => { t.classList.remove("show"); action.fn(); }; t.append(b); }
+  t.style.pointerEvents = action ? "auto" : ""; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), ms);
+}
 function busy(msg){ $("#busyMsg").textContent = msg || ""; $("#busy").classList.toggle("show", !!msg); }
 const withTimeout = (p, ms, msg) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms))]);
 const nextFrame = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -2546,7 +2553,7 @@ function mediaSheet(kind){
         nm.onclick = () => { buzz(6); P.on = true; P.jump(i); if (kind === "tv") st().i = i; save(); setTimeout(draw, 150); };
         up.onclick = () => { if (i){ [ids[i-1], ids[i]] = [ids[i], ids[i-1]]; buzz(5); apply(); draw(); } };
         dn.onclick = () => { if (i < ids.length - 1){ [ids[i+1], ids[i]] = [ids[i], ids[i+1]]; buzz(5); apply(); draw(); } };
-        rm.onclick = () => { const [id] = ids.splice(i, 1); idb.set("media:" + id, null); buzz(8); apply(); draw(); };
+        rm.onclick = () => { const [id] = ids.splice(i, 1); buzz(8); apply(); draw(); dropMedia(id); };
         list.append(r);
       }
     };
@@ -3484,22 +3491,50 @@ async function reprocess(){
 async function savePuppet(){ const c = CHARS.find(c => c.id === PUP?.id); if (c){ c.meta = PUP.meta; await persistChar(c); } }
 async function duplicateChar(id){
   const c = CHARS.find(c => c.id === id); if (!c) return;
-  const d = {...c, shot:null, id:newId(), name:(c.name + " copy").slice(0, 24), cfg:{...c.cfg}, meta:c.meta ? JSON.parse(JSON.stringify(c.meta)) : null, created:Date.now()};
+  const d = {...c, shot:null, id:newId(), name:(c.name + " copy").slice(0, 24), cfg:structuredClone(c.cfg || {}), meta:c.meta ? JSON.parse(JSON.stringify(c.meta)) : null, created:Date.now()};
   CHARS.splice(CHARS.indexOf(c) + 1, 0, d); await persistChar(d); await persistIndex(); renderChars(); toast("Duplicated");
 }
 async function deleteChar(id){
-  CHARS = CHARS.filter(c => c.id !== id); await idb.set("char:" + id, null); await persistIndex();
+  const i = CHARS.findIndex(c => c.id === id), c = CHARS[i]; if (!c) return;
+  const loop = await idb.get("loop:" + id).catch(() => null);
+  CHARS = CHARS.filter(c => c.id !== id); await idb.set("char:" + id, null); await idb.set("loop:" + id, null); await persistIndex();
   if (scopeId === id){ scopeId = "peanut"; clearPuppet(); PUP = null; if (mode === "puppet" || mode === "model") goMenu(); }
-  renderChars(); toast("Character deleted");
+  renderChars(); buzz([10, 40, 10]);
+  toast(`${c.name} deleted`, 6000, {label:"Undo", fn: async () => {
+    CHARS.splice(Math.min(i, CHARS.length), 0, c); await persistChar(c); if (loop) await idb.set("loop:" + id, loop); await persistIndex(); renderChars(); toast(`${c.name} is back`);
+  }});
+}
+// a clip can be in several playlists (duplicated characters share them): only delete the file when nothing uses it
+async function dropMedia(id){
+  const uses = cfg => cfg && ((cfg.bgList || []).includes(id) || (cfg.tv?.list || []).includes(id));
+  if (uses(S) || uses(scopeCfg("peanut")) || CHARS.some(c => uses(c.cfg))) return;
+  await idb.set("media:" + id, null);
+}
+async function moveCharFirst(id){
+  const c = CHARS.find(c => c.id === id); if (!c) return;
+  CHARS = [c, ...CHARS.filter(x => x !== c)]; await persistIndex(); renderChars();
 }
 const VIDEO_CSS = "repeating-linear-gradient(90deg,#1a1410 0 10px,#2b2018 10px 12px),#000";
 const bgCss = cfg => cfg.world ? "linear-gradient(180deg,#3a1250 0%,#ff4fd8 52%,#1b0f2e 52%,#120a20 100%)"
   : cfg.bg === "video" ? VIDEO_CSS : cfg.bg === "custom" || cfg.bg === "image" ? (cfg.bgColor || "#333") : (BGS[cfg.bg] || BGS.roastery);
+// tap opens; holding for half a second (or right-clicking) opens the options instead
+function holdable(tile, btn, tap, hold){
+  let timer = 0, held = false, down = 0, x0 = 0, y0 = 0;
+  const cancel = () => { clearTimeout(timer); down = 0; tile.classList.remove("held"); };
+  const fire = () => { if (held) return; held = true; cancel(); hold(); };
+  btn.addEventListener("pointerdown", e => { held = false; down = performance.now(); x0 = e.clientX; y0 = e.clientY; tile.classList.add("held"); timer = setTimeout(fire, 480); });
+  btn.addEventListener("pointermove", e => { if (down && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) cancel(); });
+  // a busy frame can delay the timer, so the press length is checked again on release
+  btn.addEventListener("pointerup", () => { if (down && performance.now() - down >= 480) fire(); else cancel(); });
+  btn.addEventListener("pointercancel", cancel);           // not pointerleave: the press animation can trigger it
+  btn.addEventListener("contextmenu", e => { e.preventDefault(); fire(); });
+  btn.onclick = e => { if (held){ held = false; e.preventDefault(); return; } tap(); };
+}
 function renderChars(){
   const row = $("#charRow"); if (!row) return;
   row.innerHTML = "";
   $("#charCount").textContent = CHARS.length ? CHARS.length : "";
-  const add = el("div", "ctile new", `<button class="cface press" aria-label="Add a character">${ico("image")}<span>Upload a<br>picture</span></button><div class="cname">New</div>`);
+  const add = el("div", "ctile new", `<button class="cface press" aria-label="Add a character">${ico("plus")}<span>Add a<br>character</span></button><div class="cname">New</div>`);
   add.querySelector("button").onclick = () => { buzz(8); chooseAdd(); };
   row.append(add);
   for (const c of CHARS){
@@ -3515,7 +3550,7 @@ function renderChars(){
       if (cfg.world) face.insertAdjacentHTML("beforeend", `<span class="w3d">3D</span>`);
     }
     t.querySelector(".cname").textContent = c.name;
-    face.onclick = () => { buzz(10); openChar(c.id); };
+    holdable(t, face, () => { buzz(10); openChar(c.id); }, () => { buzz(20); charOptions(c.id); });
     t.querySelector(".cmore").onclick = () => { buzz(8); charOptions(c.id); };
     row.append(t);
   }
@@ -3530,7 +3565,7 @@ function openModal(title, build){
   $("#modal").hidden = false;
 }
 /* ---------- about & legal ---------- */
-const VERSION = "5.0";
+const VERSION = "5.1";
 function openLegal(){
   openModal("About & legal", b => {
     const d = el("div", "legal");
@@ -3617,17 +3652,17 @@ function bgPicker(id, host){
 }
 function charOptions(id){
   const c = CHARS.find(c => c.id === id); if (!c) return;
-  openModal("Character", b => {
+  openModal(c.name, b => {
     const name = el("input", "namein"); name.value = c.name; name.maxLength = 24; name.setAttribute("aria-label", "Name");
-    name.onchange = () => { c.name = name.value.trim().slice(0, 24) || c.name; persistChar(c); };
-    b.append(name);
+    name.onchange = () => { c.name = name.value.trim().slice(0, 24) || c.name; $("#mTitle").textContent = c.name; persistChar(c); renderChars(); };
+    b.append(el("div", "sec", "Name"), name);
     const host = el("div"); b.append(host); bgPicker(id, host);
     const row = el("div", "btnrow");
     const open = el("button", "pill hot press", "Open"); open.onclick = () => { closeModal(); openChar(id); };
     const dup = el("button", "pill press", "Duplicate"); dup.onclick = () => { duplicateChar(id); closeModal(); };
-    const del = el("button", "pill press danger", "Delete");
-    del.onclick = () => { if (del.dataset.armed !== "1"){ del.dataset.armed = "1"; del.textContent = "Tap to confirm"; buzz(12); setTimeout(() => { del.dataset.armed = ""; del.textContent = "Delete"; }, 3000); return; } closeModal(); deleteChar(id); };
-    row.append(open, dup, del); b.append(row);
+    const first = el("button", "pill press", "Move to front"); first.onclick = () => { closeModal(); moveCharFirst(id); };
+    const del = el("button", "pill press danger", `${ico("trash")}Delete`); del.onclick = () => { closeModal(); deleteChar(id); };
+    row.append(open, dup); if (CHARS[0] !== c) row.append(first); row.append(del); b.append(row);
   });
 }
 $("#bgPeanut").onclick = e => { e.stopPropagation(); buzz(8); openModal("Peanut background", b => bgPicker("peanut", b)); };
@@ -5175,7 +5210,7 @@ async function goMenu(){
 }
 async function openPeanut(){ if (!(await ensureCamera())) return; await loadScope("peanut"); enterMode("peanut"); }
 $("#bHome").onclick = goMenu;
-$("#goPeanut").onclick = () => { buzz(10); openPeanut(); };
+holdable($("#goPeanut"), $("#goPeanut"), () => { buzz(10); openPeanut(); }, () => { buzz(20); openModal("Peanut background", b => bgPicker("peanut", b)); });
 $("#goPeanut").onkeydown = e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openPeanut(); } };
 let replacing = false;
 function pickImage(){ replacing = false; $("#pupFile").click(); }
@@ -5316,6 +5351,18 @@ canvas.addEventListener("click", () => {
   else if (sheet.classList.contains("open")) closeSheet();
 });
 addEventListener("keydown", e => { if ((e.key === "h" || e.key === "H") && mode !== "menu") document.body.classList.toggle("clean"); });
+// Back (Android's back button, Esc on a keyboard): closes the top-most thing, then leaves the character, and only
+// then lets the app close. Returns true when it handled it.
+window.onBack = () => {
+  const shown = sel => { const e = $(sel); return !!e && !e.closest("[hidden]") && e.getClientRects().length > 0; };
+  if (!$("#modal").hidden){ $("#mClose").click(); return true; }
+  if (sheet.classList.contains("open")){ closeSheet(); return true; }
+  for (const b of ["#cutCancel", "#camCancel", "#loopCancel", "#rigCancel", "#pfDone", "#edDone", "#tvClose"]) if (shown(b)){ $(b).click(); return true; }
+  if (document.body.classList.contains("clean")){ document.body.classList.remove("clean"); return true; }
+  if (mode !== "menu"){ goMenu(); return true; }
+  return false;
+};
+addEventListener("keydown", e => { if (e.key === "Escape" && !e.defaultPrevented) window.onBack(); });
 // card glow follows the finger
 for (const c of document.querySelectorAll(".card")){
   c.addEventListener("pointermove", e => { const r = c.getBoundingClientRect(); c.style.setProperty("--mx", (e.clientX - r.left) + "px"); c.style.setProperty("--my", (e.clientY - r.top) + "px"); c.classList.add("lit"); });

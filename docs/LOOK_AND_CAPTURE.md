@@ -14,6 +14,10 @@ The bottom bar has five buttons:
 | **Flip** | Front or back camera. |
 | **Hide** | Hides the controls. |
 
+**Home screen:** tap a character to open it. Hold it (or right-click, or tap its **⋯**) for its options: rename, background, **Open**, **Duplicate**, **Move to front** and **Delete** (with **Undo** for a few seconds). Holding the Peanut card opens its background.
+
+**Back:** Android's back button (Esc on a keyboard) closes whatever is on top (a dialog, the settings sheet, a tool), then goes back to the home screen. Only on the home screen does it close the app.
+
 ## Filters
 
 **Settings › Look › Filter** puts a finishing pass over the whole picture, background included, so it shows up in recordings, pictures and live streams too. **Strength** sets how strong it is.
