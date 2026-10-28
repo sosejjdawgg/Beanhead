@@ -124,6 +124,7 @@ public final class LiveController {
         if (pendingSound && !micOk) emit(ev("mic"));
         s.start();
         mic.start();
+        com.beanhead.peanutcam.audio.PhoneAudio.setLiveSink(mic::mixPhone);   // phone sound, when it's being captured
         LiveService.onStopRequested = this::stop;
         LiveService.start(act, pendingSound && micOk);
     }
@@ -194,6 +195,7 @@ public final class LiveController {
     }
 
     private void cleanup() {
+        com.beanhead.peanutcam.audio.PhoneAudio.setLiveSink(null);
         if (mic != null) mic.stop();
         mic = null;
         session = null;

@@ -17,7 +17,7 @@ The Android app can stream the scene live over RTMP or RTMPS to TikTok, YouTube,
 | Standard | 720p    | 3.5 Mbps      | about 5 Mbps    |
 | High     | 1080p   | 6 Mbps        | about 8 Mbps    |
 
-Sound is AAC at 128 kbps, 48 kHz. **Sound delay** (lip sync, default 100 ms) holds the sound back a little, because the picture runs slightly behind your voice after face tracking. Raise it if your mouth moves after you speak; lower it if the mouth moves first.
+Sound is AAC at 128 kbps, 48 kHz: your microphone, plus Peanut Cam's videos and the phone's own sound (music, other apps) if those switches are on (they're shared with recordings, see [LOOK_AND_CAPTURE.md](LOOK_AND_CAPTURE.md)). **Sound delay** (lip sync, default 100 ms) holds the sound back a little, because the picture runs slightly behind your voice after face tracking. Raise it if your mouth moves after you speak; lower it if the mouth moves first.
 
 ### TikTok
 

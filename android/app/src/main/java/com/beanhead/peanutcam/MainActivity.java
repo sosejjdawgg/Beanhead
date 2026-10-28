@@ -31,6 +31,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.beanhead.peanutcam.audio.PhoneAudio;
 import com.beanhead.peanutcam.live.LiveController;
 
 import java.io.ByteArrayInputStream;
@@ -59,6 +60,7 @@ public class MainActivity extends Activity {
 
     private WebView web;
     private LiveController live;
+    private PhoneAudio phoneAudio;
     private PermissionRequest pendingRequest;
     private ValueCallback<Uri[]> fileCallback;
     private volatile Uri sharedUri;
@@ -86,6 +88,8 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new NativeBridge(), "PeanutNative");
         live = new LiveController(this, web);
         web.addJavascriptInterface(live, "PeanutLive");
+        phoneAudio = new PhoneAudio(this, web);
+        web.addJavascriptInterface(phoneAudio, "PeanutAudio");
 
         web.setWebViewClient(new WebViewClient() {
             @Override
@@ -96,6 +100,7 @@ public class MainActivity extends Activity {
             @Override
             public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
                 live.release();             // a reloaded page can't feed a stream it doesn't know about
+                phoneAudio.stop();
             }
 
             @Override
@@ -244,6 +249,7 @@ public class MainActivity extends Activity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
         if (requestCode == LiveController.REQ_PERMISSIONS) { live.onPermissionsResult(); return; }
+        if (requestCode == PhoneAudio.REQ_MIC) { phoneAudio.onPermissionsResult(); return; }
         if (requestCode != REQ_CAMERA || pendingRequest == null) return;
         grantAllowed(pendingRequest);
         pendingRequest = null;
@@ -252,6 +258,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PhoneAudio.REQ_CONSENT) { phoneAudio.onConsent(resultCode, data); return; }
         if (requestCode == REQ_FILE && fileCallback != null) {
             Uri[] picked = null;
             if (resultCode == RESULT_OK && data != null) {
@@ -318,6 +325,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         if (live != null) live.release();
+        if (phoneAudio != null) phoneAudio.stop();
         if (web != null) web.destroy();
         super.onDestroy();
     }

@@ -705,7 +705,7 @@ const DEFAULTS = {
   nX:0, nY:0, nScale:1, nRot:0, nSpin:0, nTilt:0,
   world:false, wBiome:"auto", wMorph:20, wSpeed:0.35, wRes:240, wJitter:0.5, wAffine:true, wDither:0.7, wDepth:15, wFog:0.5, wParallax:0.6,
   coachSeen:false, psx:"modern", fx:"none", fxAmt:0.7, body:false,
-  recRes:"screen", recFps:30, recQ:"high", shotFmt:"jpg", perf:"auto", fpsCap:60,
+  recRes:"screen", recFps:30, recQ:"high", shotFmt:"jpg", perf:"auto", fpsCap:60, recPhone:true, recVideo:true, micId:"",
   faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mEyeZ:0, mMouthZ:0, mEyeRot:0, mMouthRot:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true, mFrame:"full",
   mirror:true, pip_on:true, deviceId:"", facing:"user", hearVideos:true,
   studio:{cast:[], shots:[], shot:-1, smooth:true, lock:false}, sceneId:"free", sceneBak:null,
@@ -2599,7 +2599,7 @@ $("#vidFiles").onchange = async e => {
 const TAP_SRC = `class PcTap extends AudioWorkletProcessor{ process(ins, outs){ const i = ins[0]; if (i && i.length){ this.port.postMessage([i[0].slice(0), (i[1] || i[0]).slice(0)]); } return true; } } registerProcessor("pc-tap", PcTap);`;
 const PCM = {buf:new Int16Array(960*2), n:0, frac:0};
 async function syncLiveTap(){
-  const N = window.PeanutLive, want = !!(AUD.ctx && AUD.gains.size && N?.pcm && typeof liveOn === "function" && liveOn());
+  const N = window.PeanutLive, want = !!(AUD.ctx && AUD.gains.size && S.recVideo && N?.pcm && typeof liveOn === "function" && liveOn());
   if (want && !AUD.tap){
     try{
       if (!AUD.tapReady){ const u = URL.createObjectURL(new Blob([TAP_SRC], {type:"text/javascript"})); await AUD.ctx.audioWorklet.addModule(u); AUD.tapReady = true; }
@@ -3565,7 +3565,7 @@ function openModal(title, build){
   $("#modal").hidden = false;
 }
 /* ---------- about & legal ---------- */
-const VERSION = "5.1";
+const VERSION = "5.2";
 function openLegal(){
   openModal("About & legal", b => {
     const d = el("div", "legal");
@@ -3578,7 +3578,7 @@ function openLegal(){
         <li>The app's own 3D Peanut, art, icons, animation, interface, text and logo.</li>
         <li>The name "Peanut Cam" and its logo, used as trade marks of James Scott.</li></ul>
       <h3>Your content</h3>
-      <p>Pictures, models, videos and screenshots you add or make are yours. Your camera, pictures and models are processed on this device and are not uploaded. If you go live, only the finished picture (your character and background) and, if you turn it on, your microphone sound are sent, and only to the streaming server you enter. Only add pictures and models you have the right to use, and don't use Peanut Cam to impersonate, harass or mislead anyone.</p>
+      <p>Pictures, models, videos and screenshots you add or make are yours. Your camera, pictures, models and any phone sound you record are processed on this device and are not uploaded. If you go live, only the finished picture (your character and background) and, if you turn it on, your microphone sound are sent, and only to the streaming server you enter. Only add pictures and models you have the right to use, and don't use Peanut Cam to impersonate, harass or mislead anyone.</p>
       <h3>You may</h3>
       <ul><li>Use the app and share the official link.</li>
         <li>Use what you make with it anywhere, including monetised streams, without selling or redistributing the app itself or suggesting we endorse you. "Made with Peanut Cam" is appreciated.</li>
@@ -3700,7 +3700,9 @@ const lookTab = ["look","Look",[{t:"fx"}, CH("psx","3D style",[["modern","Modern
     RG("wDither","Dithering",0,1,0.01), CH("wDepth","Colour depth",[[15,"15-bit"],[12,"12-bit"],[9,"9-bit"]]), TG("wAffine","Texture warp")]}]];
 // Capture: recordings, pictures, the live stream and how hard the phone works
 const captureTab = ["capture","Capture",[CH("recRes","Video size",[["screen","Full screen"],[1080,"1080p"],[720,"720p"],[540,"540p"]]),
-  CH("recFps","Video frame rate",[[30,"30 fps"],[60,"60 fps"]]), CH("recQ","Video quality",[["std","Standard"],["high","High"],["max","Best"]]), TG("recMic","Record sound"),
+  CH("recFps","Video frame rate",[[30,"30 fps"],[60,"60 fps"]]), CH("recQ","Video quality",[["std","Standard"],["high","High"],["max","Best"]]),
+  SEC("Sound"), {t:"if", when:() => phoneAudioOk(), items:[TG("recPhone","Phone sound (music, other apps)")]}, TG("recVideo","Peanut Cam videos (TV, background)"), TG("recMic","Microphone"),
+  {t:"if", when:() => S.recMic, items:[{t:"micsel"}]}, {t:"soundnote"},
   {t:"note", text:"Full screen records the picture exactly as drawn, which is the lightest on the phone. Smaller sizes make smaller files. 60 fps needs a phone that keeps up: watch the speed below."},
   CH("shotFmt","Picture format",[["jpg","JPEG"],["png","PNG (lossless)"]]),
   SEC("Live"), {t:"btns", items:[["Live stream settings","live"]]},
@@ -3778,6 +3780,10 @@ function afterChange(k){
   if (k === "mHeadBone" && MDL){ const c = CHARS.find(x => x.id === leadRef); if (c) setModelFrom(c).then(() => showStage("model")).catch(() => {}); }
   if (k === "roast"){ applyShell(); updateTint(); }
   if (k === "pBgRemove") reprocess();
+  if (k === "recVideo") syncLiveTap();
+  if (k === "recPhone" && liveOn()){ if (S.recPhone) phoneAudioOn(); else if (!REC.on) window.PeanutAudio?.stop?.(); }
+  if ((k === "recPhone" || k === "recVideo" || k === "recMic" || k === "micId") && REC.on) toast("Sound changes apply to your next recording.");
+  if (k === "recMic") syncMicBtn();
   save();
 }
 function onChange(k){
@@ -3879,6 +3885,27 @@ function buildItem(it){
     setTimeout(() => { const on = g.querySelector("[aria-pressed=true]"); if (on) g.scrollLeft = on.offsetLeft - g.clientWidth/2 + on.clientWidth/2; }, 0);
     w.append(el("p", "note", "Filters cover the whole picture, background included, and show up in recordings, pictures and live streams."));
     return w;
+  }
+  if (it.t === "micsel"){
+    const w = el("div"); w.append(el("div", "sec", "Which microphone"));
+    const g = el("div", "chips"); w.append(g);
+    const draw = list => {
+      g.innerHTML = "";
+      for (const [id, label] of [["", "Automatic"], ...list.map(d => [d.deviceId, d.label || "Microphone"])]){
+        const c = el("button", "chip press", label.replace(/</g, "&lt;")); c.setAttribute("aria-pressed", S.micId === id);
+        c.onclick = () => { S.micId = id; buzz(6); g.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === c)); afterChange("micId"); };
+        g.append(c);
+      }
+    };
+    draw([]);
+    navigator.mediaDevices?.enumerateDevices?.().then(ds => draw(ds.filter(d => d.kind === "audioinput" && d.deviceId && d.deviceId !== "default" && d.deviceId !== "communications"))).catch(() => {});
+    w.append(el("p", "note", "Automatic uses a headset or USB mic when one is plugged in, otherwise the phone's own. Pick one to always use it."));
+    return w;
+  }
+  if (it.t === "soundnote"){
+    return el("p", "note", phoneAudioOk()
+      ? "Phone sound records whatever is playing on the phone (music, videos, games), even through headphones. Android asks once per recording or stream; tap Start. A few apps (calls, some protected players) block it and stay silent. Peanut Cam's own videos are counted once, never twice."
+      : "Phone sound (other apps) can be recorded in the Android app.");
   }
   if (it.t === "perfinfo"){
     const p = el("p", "note"), show = () => {
@@ -5374,6 +5401,74 @@ for (const [id, d0] of [["tw1", 0], ["tw2", 0.35]]){
   [...t].forEach((ch, i) => { const s = el("span", "ch", ch); s.style.animationDelay = (d0 + i*0.05) + "s"; e.append(s); });
 }
 
+/* ---------- phone sound (Android): what other apps play, for recordings and live streams ----------
+   The app captures it (android/.../audio/PhoneAudio.java, Android 10+, after the system's consent prompt). Recordings
+   read it over the bridge every 25 ms and play it into their WebAudio mix through a small jitter buffer; a live stream
+   gets it inside the app. It's released as soon as neither needs it. */
+const PHONE = {waiters:[], ready:false, was:false};
+const phoneAudioOk = () => { try{ return !!window.PeanutAudio?.supported?.(); }catch(e){ return false; } };
+window.onPhoneAudio = e => {
+  const on = e?.state === "on";
+  if (!on){
+    if (e?.msg) toast(e.msg, 4500);
+    else if (e?.state === "denied") toast("Phone sound wasn't allowed, so only the other sound is captured.", 4000);
+    else if (e?.state === "off" && PHONE.was && (REC.on || liveOn())) toast("Phone sound capture ended.", 3500);
+  }
+  PHONE.was = on;
+  PHONE.waiters.splice(0).forEach(f => f(on));
+};
+function phoneAudioOn(){
+  if (!phoneAudioOk()) return Promise.resolve(false);
+  if (window.PeanutAudio.state() === "on") return Promise.resolve(true);
+  return new Promise(res => {
+    PHONE.waiters.push(res); window.PeanutAudio.start();
+    setTimeout(() => { const i = PHONE.waiters.indexOf(res); if (i >= 0){ PHONE.waiters.splice(i, 1); res(false); } }, 90000);
+  });
+}
+function phoneAudioRelease(){
+  if (REC.on || liveOn() || !phoneAudioOk()) return;
+  if (window.PeanutAudio.state() !== "off") window.PeanutAudio.stop();
+}
+// a jitter buffer that adapts: it starts at 100 ms in hand, and each time it runs dry (the page was busy and
+// couldn't hand sound over) it holds more, up to 600 ms, so one slow moment doesn't keep chopping the sound.
+const PLAY_SRC = `class PcPlay extends AudioWorkletProcessor{
+  constructor(){ super(); this.L = new Float32Array(96000); this.R = new Float32Array(96000); this.h = 0; this.n = 0; this.primed = false; this.want = 4800;
+    this.port.onmessage = e => { const d = e.data, N = this.L.length;
+      for (let i = 0; i + 1 < d.length; i += 2){ if (this.n === N){ this.h = (this.h + 1) % N; this.n--; } const j = (this.h + this.n) % N; this.L[j] = d[i]/32768; this.R[j] = d[i + 1]/32768; this.n++; } }; }
+  process(ins, outs){
+    const L = outs[0][0], R = outs[0][1] || L, N = this.L.length;
+    if (this.n > this.want*4){ const drop = this.n - this.want; this.h = (this.h + drop) % N; this.n -= drop; }   // far behind: catch up
+    if (!this.primed){ if (this.n < this.want) return true; this.primed = true; }
+    for (let i = 0; i < L.length; i++){
+      if (this.n){ L[i] = this.L[this.h]; R[i] = this.R[this.h]; this.h = (this.h + 1) % N; this.n--; }
+      else { L[i] = R[i] = 0; if (this.primed){ this.primed = false; this.want = Math.min(28800, Math.round(this.want*1.6)); } }
+    }
+    return true;
+  } }
+registerProcessor("pc-play", PcPlay);`;
+async function phonePlayer(ctx, dest){
+  if (!PHONE.ready){ await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([PLAY_SRC], {type:"text/javascript"}))); PHONE.ready = true; }
+  const node = new AudioWorkletNode(ctx, "pc-play", {numberOfInputs:0, numberOfOutputs:1, outputChannelCount:[2]});
+  node.connect(dest);
+  window.PeanutAudio.read();                                       // drop whatever piled up before the recording
+  const timer = setInterval(() => {
+    const b = window.PeanutAudio.read(); if (!b) return;
+    const s = atob(b), a = new Int16Array(s.length >> 1);
+    for (let i = 0; i < a.length; i++) a[i] = s.charCodeAt(i*2) | (s.charCodeAt(i*2 + 1) << 8);
+    node.port.postMessage(a, [a.buffer]);
+  }, 25);
+  return {node, timer};
+}
+// the chosen microphone (Settings › Capture), falling back to the default one
+async function openMic(){
+  const base = {echoCancellation:true, noiseSuppression:true};
+  try{ return await navigator.mediaDevices.getUserMedia({audio:S.micId ? {...base, deviceId:{exact:S.micId}} : base}); }
+  catch(e){
+    if (S.micId){ try{ const m = await navigator.mediaDevices.getUserMedia({audio:base}); toast("That microphone isn't connected, so the phone's own is used."); return m; }catch(e2){} }
+    toast("Microphone is blocked, so it isn't in this recording."); return null;
+  }
+}
+
 /* ---------- recording: scene (background + 3D) and optional microphone -> video in the gallery ---------- */
 const REC = {on:false, mr:null, chunks:[], c:null, x:null, bg:null, bgKey:"", t0:0, mic:null, mime:"", ext:""};
 function pickMime(){
@@ -5453,15 +5548,16 @@ async function startRec(){
     if (!REC.track.requestFrame){ REC.track.stop(); REC.track = REC.c.captureStream(fps).getVideoTracks()[0]; }
   }
   const tracks = [REC.track];
-  if (S.recMic){
-    try{ REC.mic = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}}); }
-    catch(e){ REC.mic = null; toast("Microphone is blocked, so this recording has no sound."); }
-  }
-  if (AUD.gains.size){
-    // videos are playing sound: record the mixer (videos + microphone) instead of the bare microphone
-    if (!AUD.rec){ AUD.rec = AUD.ctx.createMediaStreamDestination(); AUD.bus.connect(AUD.rec); }
-    if (REC.mic){ REC.micNode = AUD.ctx.createMediaStreamSource(REC.mic); REC.micNode.connect(AUD.rec); }
-    tracks.push(...AUD.rec.stream.getAudioTracks());
+  // sound: Peanut Cam's videos, the microphone and (Android) everything else playing on the phone, mixed in WebAudio
+  const phone = S.recPhone && phoneAudioOk() ? await phoneAudioOn() : false;      // Android asks for consent here
+  if (S.recMic) REC.mic = await openMic();
+  const ctx = (phone || S.recVideo) ? audioCtx() : null;
+  if (ctx){
+    REC.dest = ctx.createMediaStreamDestination();
+    if (S.recVideo) AUD.bus.connect(REC.dest);                    // also catches videos started mid-recording
+    if (REC.mic){ REC.micNode = ctx.createMediaStreamSource(REC.mic); REC.micNode.connect(REC.dest); }
+    if (phone){ try{ REC.phone = await phonePlayer(ctx, REC.dest); }catch(e){ console.error(e); toast("Phone sound couldn't be added to this recording."); } }
+    tracks.push(...REC.dest.stream.getAudioTracks());
   } else if (REC.mic) tracks.push(...REC.mic.getAudioTracks());
   try{ window.PeanutNative?.prepare?.(); }catch(e){}
   const bps = Math.round(clamp(P.w*P.h*fps*(REC_BPP[S.recQ] || REC_BPP.high), 2e6, 24e6));
@@ -5480,6 +5576,9 @@ function stopRec(){
   if (!REC.on) return;
   REC.on = false; try{ REC.mr.stop(); }catch(e){} REC.mic?.getTracks().forEach(t => t.stop()); REC.mic = null; REC.track?.stop(); REC.track = null;
   try{ REC.micNode?.disconnect(); }catch(e){} REC.micNode = null;
+  if (REC.dest){ try{ AUD.bus.disconnect(REC.dest); }catch(e){} REC.dest = null; }
+  if (REC.phone){ clearInterval(REC.phone.timer); try{ REC.phone.node.disconnect(); }catch(e){} REC.phone = null; }
+  phoneAudioRelease();
   $("#rec").classList.remove("on"); $("#rec").setAttribute("aria-label", "Start recording"); $("#recChip").hidden = true;
   buzz([15, 60, 15]);
 }
@@ -5567,11 +5666,12 @@ function syncMicBtn(){
   b.querySelector("use").setAttribute("href", S.recMic ? "#mic" : "#micoff");
   b.setAttribute("aria-label", "Record sound: " + (S.recMic ? "on" : "off"));
 }
-$("#micBtn").onclick = () => {
+holdable($("#micBtn"), $("#micBtn"), () => {
   if (REC.on){ toast("Change this before you start recording."); return; }
   S.recMic = !S.recMic; save(); syncMicBtn(); buzz(8);
-  toast(S.recMic ? "Recordings include your voice" : "Recordings are silent");
-};
+  const other = [S.recPhone && phoneAudioOk() && "phone sound", S.recVideo && "video sound"].filter(Boolean).join(" and ");
+  toast(S.recMic ? "Microphone on" + (other ? ", plus " + other : "") : "Microphone off" + (other ? ": recordings keep " + other : ": recordings are silent") + ". Hold for more.", 3200);
+}, () => { buzz(20); openSheet("settings", "capture"); });
 
 /* ---------- live streaming: the scene, encoded here, published over RTMP by the Android app ----------
    Viewers see what recordings capture (background + scene), never the menus, buttons or camera preview.
@@ -5663,6 +5763,7 @@ async function liveStart(){
   if (!LC.url.trim()){ liveEnd("error", "Enter the server URL first."); return; }
   const [w, h] = liveSize(), q = LIVE_Q[LC.q];
   LIVE.state = "starting"; LIVE.msg = ""; liveRender();
+  if (S.recPhone && phoneAudioOk()){ await phoneAudioOn(); if (LIVE.state !== "starting") return; }   // the app mixes it into the stream
   const cfg = await liveEncoderConfig(w, h, LC.fps, q.kbps);
   if (LIVE.state !== "starting") return;               // cancelled while checking
   if (!cfg){ liveEnd("error", `This phone can't encode ${w}×${h} H.264 video. Try a lower quality or 30 fps.`); return; }
@@ -5684,7 +5785,7 @@ function liveStop(){
 function liveEnd(state, msg){
   try{ if (LIVE.enc && LIVE.enc.state !== "closed") LIVE.enc.close(); }catch(e){}
   Object.assign(LIVE, {state, msg:msg || "", enc:null, encCfg:null, c:null, x:null, bg:null, stats:null});
-  liveRender();
+  liveRender(); phoneAudioRelease();
 }
 // events from the app (android/.../live/LiveController.java)
 window.onLive = e => {
@@ -5772,6 +5873,13 @@ function openLive(){
     const sw = el("button", "switch press"); sw.setAttribute("role", "switch"); sw.setAttribute("aria-label", "Microphone"); sw.setAttribute("aria-checked", LC.sound);
     sw.onclick = () => { LC.sound = !LC.sound; saveLive(); sw.setAttribute("aria-checked", LC.sound); buzz(6); if (liveOn()) window.PeanutLive?.sound(LC.sound); };
     r1.append(sw); b.append(r1);
+    for (const [k, label] of [["recPhone", "Phone sound (music, other apps)"], ["recVideo", "Peanut Cam videos (TV, background)"]]){
+      if (k === "recPhone" && !phoneAudioOk()) continue;
+      const r = el("div", "srow"); r.append(el("span", "slabel", label));
+      const t = el("button", "switch press"); t.setAttribute("role", "switch"); t.setAttribute("aria-label", label); t.setAttribute("aria-checked", !!S[k]);
+      t.onclick = () => { S[k] = !S[k]; t.setAttribute("aria-checked", S[k]); buzz(6); afterChange(k); };
+      r.append(t); b.append(r);
+    }
     const r2 = el("div", "srow"); r2.append(el("span", "slabel", "Sound delay <small style='color:var(--mute)'>(lip sync)</small>"));
     const ctl = el("div", "sctl"), val = el("span", "sval", ""), mk = (icon, d) => { const s = el("button", "step press", `<svg class="i"><use href="#${icon}"/></svg>`);
       s.setAttribute("aria-label", d < 0 ? "Less delay" : "More delay");

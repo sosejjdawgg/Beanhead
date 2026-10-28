@@ -58,6 +58,13 @@ The CRT-type filters were chosen because they're the most popular retro looks fo
 - **Video size:** Full screen records the picture exactly as drawn, straight from the 3D canvas, which is the lightest on the phone. 1080p, 720p and 540p scale it down for smaller files.
 - **Video frame rate:** 30 or 60 fps. Frames are handed to the recorder at exactly that rate.
 - **Video quality:** the bitrate follows the size and frame rate (about 0.08, 0.13 or 0.2 bits per pixel per frame, 2 to 24 Mbps).
-- **Record sound**, **Picture format** (JPEG or lossless PNG) and **Live stream settings**.
+- **Sound** (used by recordings and live streams), three switches you can mix freely:
+  - **Phone sound (music, other apps):** Android app, Android 10 or newer. Everything other apps play (Spotify, YouTube, games…) is captured, even while you listen on headphones. Android shows its "start recording or casting" prompt each time a recording or stream begins; tap **Start**. A notification shows while it runs. A few apps block capture (phone calls, some protected players) and stay silent.
+  - **Peanut Cam videos (TV, background):** the app's own video sound. It is never captured twice.
+  - **Microphone**, with **Which microphone**: Automatic (a headset or USB mic when plugged in), or a specific one.
+  - Tap the mic button on screen to switch the microphone; hold it to open these settings.
+- **Picture format** (JPEG or lossless PNG) and **Live stream settings**.
 - **Drawing quality:** Auto lowers the drawing resolution when the phone can't keep up and raises it again when it can (it undoes a step that doesn't help, and never changes mid-recording or live). Sharpest, Smooth and Battery saver fix it at 2×, 1.5× and 1×.
 - **Frame rate limit:** 60 or 30. On 90/120 Hz screens this stops the app drawing frames nobody records, which keeps the phone cooler and the frame rate steady.
+
+**For maintainers (phone sound):** `android/.../audio/PhoneAudio.java` is the `PeanutAudio` bridge. `start()` asks for the mic permission (playback capture needs it) and the MediaProjection consent; `PhoneAudioService` (foreground, type mediaProjection) must be running before the projection is taken. An `AudioRecord` with an `AudioPlaybackCaptureConfiguration` (media, game, unknown usages, our own UID excluded) fills a one-second ring that the page drains with `read()` every 25 ms into an AudioWorklet (`pc-play`, an adaptive jitter buffer, 100–600 ms) inside the recording's WebAudio mix. A live stream gets the same samples inside the app (`PhoneAudio.setLiveSink` → `MicEncoder.mixPhone`, its own jitter buffer). The capture stops as soon as neither a recording nor a stream needs it.
