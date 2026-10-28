@@ -12,7 +12,7 @@ Peanut Cam is an original app created and owned by James Scott. It is protected 
 
 This includes, but is not limited to:
 
-- the source code, the web version and the Android app;
+- the source code, the web version, the Android app and the Windows app;
 - the app's design and features as expressed in the App, including the live eye-and-mouth capture and blending engine, the 3D Peanut, the 2D characters on their wooden sticks, the PEANUT//VISION scan, the PSX worlds that morph into one another, the PS1/PS2 looks, the Place face tool, the rigging tool for two-legged and four-legged models, the character gallery and the touch controls;
 - the App's own 3D Peanut model, its looks and animations, and all other art, icons, animation and interface design;
 - the text, logo and title screen;
@@ -36,7 +36,7 @@ Only add pictures and models that you have the right to use, and do not use the 
 - Copy, re-host, mirror, frame or redistribute the App, its files or its Android package.
 - Sell, rent or otherwise commercially exploit the App or its assets.
 - Reuse the code, the 3D Peanut, the art, the worlds or other assets in any other project.
-- Extract, decompile or reverse-engineer the Android app, except as the law allows.
+- Extract, decompile or reverse-engineer the Android or Windows app, except as the law allows.
 - Make or publish clones, mods, ports or re-skins of the App.
 - Use the name "Peanut Cam" or its logo in a way that could confuse people about who made or approves something.
 - Use the App or its assets to train or improve machine-learning or AI systems.

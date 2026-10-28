@@ -16,6 +16,8 @@ The bottom bar has five buttons:
 
 **Home screen:** tap a character to open it. Hold it (or right-click, or tap its **⋯**) for its options: rename, background, **Open**, **Duplicate**, **Move to front** and **Delete** (with **Undo** for a few seconds). Holding the Peanut card opens its background.
 
+**Mouse and keyboard** (Windows app, or a browser on a computer): drag, scroll to resize (Shift + scroll to turn), double-click to reset, arrow keys for background and character, R record, P picture, S/L/T panels, H hide. See [WINDOWS.md](WINDOWS.md).
+
 **Back:** Android's back button (Esc on a keyboard) closes whatever is on top (a dialog, the settings sheet, a tool), then goes back to the home screen. Only on the home screen does it close the app.
 
 ## Filters

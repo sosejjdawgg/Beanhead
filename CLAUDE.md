@@ -2,7 +2,7 @@
 
 © 2026 James Scott. All rights reserved (see COPYRIGHT.md, LICENSE). The repo is public only so it can be built and hosted. It is not open source.
 
-Peanut Cam puts the user's real eyes and mouth, tracked live from the front camera, onto a character: a 3D peanut, a 2D cut-out picture on a wooden stick, or an imported 3D model. It runs as a web page and as an Android app.
+Peanut Cam puts the user's real eyes and mouth, tracked live from the front camera, onto a character: a 3D peanut, a 2D cut-out picture on a wooden stick, or an imported 3D model. It runs as a web page, an Android app and a Windows app.
 
 ## Layout
 
@@ -14,9 +14,11 @@ Peanut Cam puts the user's real eyes and mouth, tracked live from the front came
   - It also has: a camera/mic permission bridge, a multi-file chooser (ClipData), a share-intent image served at `/__shared`, and a `PeanutNative` JS bridge (begin/append/finish/prepare/hasShared/clearShared) that saves recordings and pictures to MediaStore Pictures/Movies/PeanutCam.
   - `audio/` captures phone sound (`PhoneAudio` = the `PeanutAudio` bridge, `PhoneAudioService` = the mediaProjection foreground service).
   - `live/` is live streaming, self-contained: the `PeanutLive` bridge (`LiveController`), RTMP (`RtmpPublisher`, `LiveSession`, `Amf0`, pure Java), mic AAC (`MicEncoder`) and a foreground service (`LiveService`). MainActivity only registers it, forwards permission results and calls `release()`. See `docs/LIVE_STREAMING.md`.
+- `desktop/` is the Windows app (Electron): `main.js` (serves `www` at `app://peanut/`, saving, permissions, PC sound), `preload.js` (the `PeanutNative`, `PeanutLive` and `PeanutDesktop` bridges), `rtmp.js` (the Java RTMP publisher/session ported to Node), `phonecam.js` (Android phone camera over USB: adb + scrcpy-server), `fetch-tools.js` (downloads adb and scrcpy-server into `vendor/`). See `docs/WINDOWS.md`.
+- `scripts/bundle-www.sh <dir>` fills a www folder (page, libraries, models, fonts, licence texts); both workflows use it.
+- `.github/workflows/windows.yml` builds `PeanutCam-Setup.exe` and `PeanutCam-Portable.exe` on `windows-latest` for every push to `main` and publishes the release **`latest-windows`**. Locally it builds with wine (`npx electron-builder --win --x64`).
 - `.github/workflows/android.yml` runs on every push to `main`. It:
-  - npm-installs three, tasks-vision and three-vrm;
-  - copies `index.html`, the libraries, the loaders and the MediaPipe models into `android/app/src/main/assets/www`, and bundles third-party licence texts into `www/licenses/`;
+  - runs `scripts/bundle-www.sh` into `android/app/src/main/assets/www` (libraries, models, fonts, licence texts);
   - builds a debug APK signed with the fixed `debug.keystore` (so updates install over the top);
   - publishes the APK as GitHub release **`latest`** (`PeanutCam.apk`).
 - `peanut-cam.html` is just a redirect to `./` (GitHub Pages hosts the web version).
@@ -28,7 +30,7 @@ Sections start with `/* ---------- name ---------- */`; grep for that to navigat
 
 Key ideas:
 
-- **Asset paths.** Local mode applies when the host is `appassets.androidplatform.net` or `localhost`: libraries come from `./lib`, models from `./models`. Otherwise libraries come from the jsdelivr CDN and models from storage.googleapis.com.
+- **Asset paths.** Local mode applies on `app:` (Windows), when the host is `appassets.androidplatform.net` or `localhost`: libraries come from `./lib`, models from `./models`. Otherwise libraries come from the jsdelivr CDN and models from storage.googleapis.com.
 - **Face features.** The eyes and mouth are ring meshes built from MediaPipe landmarks. Their UVs come from the camera frame; their positions come from frontalised landmarks. `placeFeature(..., rot)` lays them onto a surface function `SURF`:
   - `onSurface` (peanut);
   - `onFlat` (2D puppet);
@@ -48,6 +50,7 @@ Key ideas:
 - **Filters (`FX`).** After the render and `renderTvFront`, `FX.apply` copies the frame (`copyFramebufferToTexture`) and draws it back through a filter shader (`BODIES`), compositing the CSS background (`paintBg` into a texture, `VideoTexture` for video). Scoped keys `fx`, `fxAmt`. `glOpaque()` (world, filter, or a direct recording) means the canvas already has the background: captures must not paint it again.
 - **Menus.** One sheet, two tab sets: `TABS[tabKey()]` (Settings: character tab, Face, Look, Motion, Capture, Camera) and `STUDIO_TABS` (Scene, TV, Cast, Cameras); `openSheet(kind, tab)`, `SHEET.kind`, `curTab[tabId()]`. Item type `fn` renders a builder (`studioCastBody`, `studioCamsBody`, `tvSettingsBody`). Builders shared with modals close with `closePanels()`.
 - **Back and long-press.** `window.onBack()` closes the top layer (modal, sheet, tool bars by their cancel/done buttons, Hide, then the mode) and returns false only on the home screen; Android's `onBackPressed` calls it, Esc does too. New tools with their own bar must be added to its list. `holdable(tile, btn, tap, hold)` gives home-screen tiles tap/hold/right-click. Duplicating a character deep-clones `cfg`; clips are deleted through `dropMedia`, which keeps files another playlist still uses.
+- **Windows app.** `window.PeanutDesktop` marks it. Saving awaits `PeanutNative` (`writeNative`); live sound is encoded in the page (`LA`, `liveAudioStart`, AAC via WebCodecs) because `PeanutLive.encodesAudio`; `S.recPhone` means PC sound there (`pcSoundStream`, display-media loopback); the phone camera is `S.camSrc === "phone"` (`PCAM`, `phoneCamOpen`). Mouse/keyboard: `MOUSE` help, wheel/Shift-wheel, double-click, shortcuts R P S L T H, arrows; files can be dropped on the window.
 - **Speed.** `loop` caps frames to `S.fpsCap`; `perfStep` adapts the pixel ratio in Auto (`PERF`), never while recording or live.
 - **Recording.** `recPlan()`: at full screen size MediaRecorder records the WebGL canvas directly (the FX pass draws the background in); smaller sizes go through a 2D canvas fed with `requestFrame()` at `S.recFps`. Bitrate = pixels × fps × `REC_BPP[S.recQ]`. Recordings and pictures go to the gallery via the native bridge on Android. Sound: `S.recVideo` (the `AUD.bus` video mixer), `S.recMic` (`openMic`, `S.micId`) and, on Android, `S.recPhone` (other apps' sound: `PeanutAudio` bridge in `android/.../audio/`, MediaProjection playback capture, read into the `pc-play` worklet) are mixed into a per-recording `MediaStreamDestination` (`REC.dest`). Live streams take phone sound natively (`PhoneAudio.setLiveSink` → `MicEncoder.mixPhone`); `phoneAudioRelease()` stops capture when neither needs it.
 - **Camera (`VIEW`).** `resize()` sets a base framing (models: `S.mFrame` full/upper/head); `VIEW.over()` returns an override the camera glides to each frame (`stepView`): Place face (`placeView`) first, then the active studio camera (`studioView`). Don't set `camera.position` directly.

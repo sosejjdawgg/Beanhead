@@ -16,8 +16,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#0e0906">
 <title>Peanut Cam</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script>
+/* fonts: bundled with the Android and Windows apps (works offline), from Google Fonts on the web */
+(function(){
+  var app = location.protocol === "app:" || location.hostname === "appassets.androidplatform.net";
+  document.write('<link rel="stylesheet" href="' + (app ? "fonts/fonts.css" : "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500&display=swap") + '">');
+})();
+</script>
 <style>
 /* Layout: full-bleed 3D stage; menu sits over it; in a mode, a floating bottom bar and a short settings sheet */
 :root{
@@ -303,7 +308,7 @@ details.lvhelp code{font:12px var(--mono);color:var(--nut2);-webkit-user-select:
 #sheet.open{transform:translateY(0)}
 #sheet.dragging{transition:none}
 @media (min-width:900px){
-  #sheet{left:auto;right:16px;bottom:16px;top:16px;height:auto;width:380px;border-radius:26px;transform:translateX(calc(100% + 40px))}
+  #sheet{left:auto;right:16px;bottom:16px;top:16px;height:auto;width:420px;border-radius:26px;transform:translateX(calc(100% + 40px))}
   #sheet.open{transform:none}
   body.sheet-open #bar{transform:translateX(-50%);opacity:1}
 }
@@ -451,6 +456,7 @@ body.rigging #hud *{pointer-events:none!important}
 /* ---------- toast, busy ---------- */
 #toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));z-index:50;transform:translate(-50%,-140%);max-width:calc(100% - 32px);
   padding:12px 18px;border-radius:16px;background:var(--ink);color:#1d1109;font-weight:600;font-size:14px;line-height:1.35;box-shadow:0 12px 30px rgba(0,0,0,.4);transition:transform .5s var(--spring)}
+#toast:not(.show){visibility:hidden;transition:transform .5s var(--spring),visibility 0s .5s}
 #toast.show{transform:translate(-50%,0)}
 #toast button{margin-left:12px;padding:6px 12px;border-radius:10px;background:#1d1109;color:var(--ink);font:700 13px var(--display)}
 #busy{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(14,9,6,.72);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .3s}
@@ -469,7 +475,7 @@ body.rigging #hud *{pointer-events:none!important}
 <script>
 /* Loader: picks bundled files inside the Android app, CDN on the web, and reports any failure on screen */
 (function(){
-  var local = location.hostname === "appassets.androidplatform.net" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  var local = location.protocol === "app:" || location.hostname === "appassets.androidplatform.net" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
   var abs = function(p){ return new URL(p, location.href).href; };
   var PC = window.PC = {
     local: local, ready: false,
@@ -537,6 +543,7 @@ body.rigging #hud *{pointer-events:none!important}
   <symbol id="clap" viewBox="0 0 24 24"><path d="M4 10h16v9.5H4z"/><path d="M4 10 5.5 5l14 3.5L20 10"/><path d="M8.5 6.2 9.8 10M13 7.3l1.3 2.7"/></symbol>
   <symbol id="dots" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/></symbol>
   <symbol id="hand" viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10V4.5a1.5 1.5 0 0 1 3 0V11M14 10.5V6a1.5 1.5 0 0 1 3 0v7.5c0 4-2.5 7-6 7s-5-1.8-6.5-4.5L3 12.8a1.5 1.5 0 0 1 2.5-1.6L8 14"/></symbol>
+  <symbol id="phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></symbol>
   <symbol id="cube" viewBox="0 0 24 24"><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></symbol>
   <symbol id="x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="minus" viewBox="0 0 24 24"><path d="M6 12h12"/></symbol>
@@ -707,7 +714,7 @@ const DEFAULTS = {
   coachSeen:false, psx:"modern", fx:"none", fxAmt:0.7, body:false,
   recRes:"screen", recFps:30, recQ:"high", shotFmt:"jpg", perf:"auto", fpsCap:60, recPhone:true, recVideo:true, micId:"",
   faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mEyeZ:0, mMouthZ:0, mEyeRot:0, mMouthRot:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true, mFrame:"full",
-  mirror:true, pip_on:true, deviceId:"", facing:"user", hearVideos:true,
+  mirror:true, pip_on:true, deviceId:"", facing:"user", hearVideos:true, camRes:720, camSrc:"device", phoneSerial:"", phoneFacing:"back", phoneRes:1920, phoneFps:30, phoneRot:0,
   studio:{cast:[], shots:[], shot:-1, smooth:true, lock:false}, sceneId:"free", sceneBak:null,
   bgList:[], bgMode:"all", bgVol:0, tv:{on:false, x:1.05, y:1.3, z:0.4, s:1.0, r:-0.35, list:[], mode:"all", vol:0.8, i:0, playing:true,
     model:"retro", tilt:0, lean:0, fit:"fit", trim:true, zoom:1, sharp:0.35, bright:0.03, contrast:1.08, sat:1.12, scan:null, amb:false, speed:1, front:true}
@@ -715,6 +722,8 @@ const DEFAULTS = {
 const WORLD_OPTS = [["auto","Auto-morph"],["meadow","Meadow"],["canyon","Canyon"],["city","Neon City"],["islands","Islands"],["snow","Snowfield"],["alien","Alien"],
   ["haunted","Haunted Wood"],["volcano","Volcano"],["reef","Reef"],["drive","Sunset Drive"]];
 let S = {...DEFAULTS};
+// on Windows the "phone sound" switch records the PC's sound
+const SYS_LABEL = window.PeanutDesktop ? "PC sound (music, other apps)" : "Phone sound (music, other apps)";
 try{ Object.assign(S, JSON.parse(localStorage.getItem("peanutcam") || "{}")); }catch(e){}
 // settings that belong to "what's on screen": the peanut has its own copy, every character has its own
 const SCOPED = ["bg","bgColor","world","wBiome","wMorph","wSpeed","wRes","wJitter","wAffine","wDither","wDepth","wFog","wParallax","psx","fx","fxAmt",
@@ -2632,11 +2641,75 @@ let stream = null, camOn = false;
 function syncPip(){ video.hidden = !S.pip_on; video.classList.toggle("mirror", S.mirror); }
 async function openCamera(){
   stream?.getTracks().forEach(t => t.stop());
-  const v = {width:{ideal:1280}, height:{ideal:720}, frameRate:{ideal:30}};
+  if (S.camSrc === "phone" && window.PeanutDesktop){                // an Android phone over USB (Windows app)
+    try{ stream = await phoneCamOpen(); video.srcObject = stream; await video.play(); return; }
+    catch(e){ phoneCamStop(); toast((e?.message || e) + " Using this PC's camera for now.", 7000); }
+  } else phoneCamStop();
+  const r = +S.camRes || 720, v = {width:{ideal:Math.round(r*16/9)}, height:{ideal:r}, frameRate:{ideal:30}};
   if (S.deviceId) v.deviceId = {exact:S.deviceId}; else v.facingMode = S.facing;
   try{ stream = await navigator.mediaDevices.getUserMedia({video:v, audio:false}); }
   catch(e){ if (S.deviceId){ S.deviceId = ""; return openCamera(); } throw e; }
   video.srcObject = stream; await video.play();
+}
+/* ---------- phone camera over USB (Windows app) ----------
+   desktop/phonecam.js starts the phone's camera with adb + scrcpy-server and forwards its H.264 here as packets;
+   they're decoded with WebCodecs onto a canvas (turned as asked) whose stream is the camera for everything else. */
+const PCAM = {dec:null, cfg:null, cv:null, x:null, gotKey:false, serial:"", model:"", status:"off", msg:"", w:0, h:0, firstFrame:null, onStatus:null};
+if (window.PeanutDesktop){
+  window.PeanutDesktop.on("phone:packet", phonePacket);
+  window.PeanutDesktop.on("phone:status", st => {
+    PCAM.status = st.state; PCAM.msg = st.msg || "";
+    if (st.state === "error" && S.camSrc === "phone" && camOn && !PCAM.firstFrame) toast(st.msg, 7000);
+    PCAM.onStatus?.();
+  });
+}
+const avcCodec = sps => "avc1." + [sps[1], sps[2], sps[3]].map(b => b.toString(16).padStart(2, "0")).join("");
+function nalOf(b, type){ for (let i = 0; i + 4 < b.length; i++) if (b[i] === 0 && b[i + 1] === 0 && b[i + 2] === 1 && (b[i + 3] & 31) === type) return b.subarray(i + 3); return null; }
+function phonePacket(p){
+  const d = p.data instanceof Uint8Array ? p.data : new Uint8Array(p.data);
+  if (p.config){                                                    // SPS + PPS: (re)start the decoder
+    const sps = nalOf(d, 7); if (!sps) return;
+    PCAM.cfg = d.slice(); PCAM.gotKey = false;
+    try{ PCAM.dec?.close(); }catch(e){}
+    PCAM.dec = new VideoDecoder({output:phoneFrame, error:e => { console.error(e); PCAM.dec = null; toast("The phone's video couldn't be decoded. Pick the phone again in Settings › Camera."); }});
+    PCAM.dec.configure({codec:avcCodec(sps), optimizeForLatency:true});
+    return;
+  }
+  if (PCAM.dec?.state !== "configured") return;
+  if (!PCAM.gotKey){ if (!p.key) return; PCAM.gotKey = true; }
+  let data = d;
+  if (p.key && PCAM.cfg){ data = new Uint8Array(PCAM.cfg.length + d.length); data.set(PCAM.cfg); data.set(d, PCAM.cfg.length); }
+  try{ PCAM.dec.decode(new EncodedVideoChunk({type:p.key ? "key" : "delta", timestamp:p.pts, data})); }catch(e){ console.error(e); }
+}
+function phoneFrame(f){
+  const rot = ((S.phoneRot | 0) % 4 + 4) % 4, w = f.displayWidth, h = f.displayHeight, cw = rot % 2 ? h : w, ch = rot % 2 ? w : h;
+  if (PCAM.cv.width !== cw || PCAM.cv.height !== ch){ PCAM.cv.width = cw; PCAM.cv.height = ch; }
+  const x = PCAM.x; x.setTransform(1, 0, 0, 1, cw/2, ch/2); x.rotate(rot*Math.PI/2); x.drawImage(f, -w/2, -h/2, w, h);
+  f.close(); PCAM.w = cw; PCAM.h = ch;
+  if (PCAM.firstFrame){ PCAM.firstFrame(); PCAM.firstFrame = null; }
+}
+async function phoneCamOpen(){
+  const D = window.PeanutDesktop.phone, r = await D.list();
+  if (r.error) throw new Error(r.error);
+  const all = r.devices || [], ready = all.filter(d => d.state === "device"), d = ready.find(x => x.serial === S.phoneSerial) || ready[0];
+  if (!d){
+    if (all.some(x => x.state === "unauthorized")) throw new Error("Unlock the phone and allow USB debugging (tick \"Always allow from this computer\").");
+    throw new Error("No phone found. Plug it in with a USB data cable and turn on USB debugging (Settings › Camera has the steps).");
+  }
+  if (d.sdk && d.sdk < 31) throw new Error(`${d.model || "This phone"} has an Android version that's too old for camera over USB (it needs Android 12 or newer).`);
+  PCAM.serial = d.serial; PCAM.model = d.model;
+  if (!PCAM.cv){ PCAM.cv = document.createElement("canvas"); PCAM.cv.width = 1280; PCAM.cv.height = 720; PCAM.x = PCAM.cv.getContext("2d", {alpha:false}); }
+  const first = new Promise((res, rej) => { PCAM.firstFrame = res; setTimeout(() => { if (PCAM.firstFrame === res){ PCAM.firstFrame = null; rej(new Error("The phone's camera didn't send a picture. Unlock the phone and try again.")); } }, 20000); });
+  const st = await D.start({serial:d.serial, facing:S.phoneFacing, max:+S.phoneRes || 1920, fps:+S.phoneFps || 30});
+  if (st?.error){ PCAM.firstFrame = null; throw new Error(st.error); }
+  await first;
+  return PCAM.cv.captureStream(+S.phoneFps || 30);
+}
+function phoneCamStop(){
+  if (!window.PeanutDesktop || (!PCAM.serial && PCAM.status === "off")) return;
+  window.PeanutDesktop.phone.stop();
+  try{ PCAM.dec?.close(); }catch(e){}
+  PCAM.dec = null; PCAM.cfg = null; PCAM.serial = ""; PCAM.firstFrame = null;
 }
 async function cameraList(){
   try{ return (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput"); }catch(e){ return []; }
@@ -3443,6 +3516,16 @@ function chooseAdd(){
     b.append(el("p", "note", "Pictures: any head-and-shoulders photo or drawing. 3D models: .glb, .gltf, .vrm, .obj, .fbx, .stl, .ply or .dae. For a model with separate textures, select all of its files at once (model, .mtl/.bin and images) or pick a .zip of the folder. Models without bones can be rigged afterwards in Settings › Model."));
   });
 }
+// drop files onto the window (computers): a picture becomes a character, a 3D model (or its folder's files, or a zip) is imported
+addEventListener("dragover", e => { if (e.dataTransfer?.types?.includes("Files")) e.preventDefault(); });
+addEventListener("drop", e => {
+  const files = [...(e.dataTransfer?.files || [])]; if (!files.length) return;
+  e.preventDefault();
+  if (files.some(f => MODEL_EXT.includes(extOf(f.name)) || /\.zip$/i.test(f.name))){ addModel(files); return; }
+  const img = files.find(f => f.type.startsWith("image/"));
+  if (img){ addAndOpen(img, img.name.replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ").slice(0, 24)); return; }
+  if (files.some(f => f.type.startsWith("video/"))) toast("Add videos in Studio › Scene › Background › Video, or to the TV in Studio › TV.", 4500);
+});
 $("#modelFile").onchange = e => { const f = [...e.target.files]; e.target.value = ""; if (f.length) addModel(f); };
 // extra textures for a model that's already in the gallery
 $("#texFiles").onchange = async e => {
@@ -3565,7 +3648,7 @@ function openModal(title, build){
   $("#modal").hidden = false;
 }
 /* ---------- about & legal ---------- */
-const VERSION = "5.2";
+const VERSION = "5.3";
 function openLegal(){
   openModal("About & legal", b => {
     const d = el("div", "legal");
@@ -3573,7 +3656,7 @@ function openLegal(){
       <p class="own">Peanut Cam ${VERSION}<br>© 2026 James Scott. All rights reserved.</p>
       <p>Peanut Cam is an original app created and owned by James Scott, protected by the Copyright, Designs and Patents Act 1988 and international copyright treaties, including the Berne Convention.</p>
       <h3>What's protected</h3>
-      <ul><li>The source code, web version and Android app.</li>
+      <ul><li>The source code, web version, Android app and Windows app.</li>
         <li>The app's design and features as built here: the eye-and-mouth capture and blending engine, the 3D Peanut, stick characters, the PEANUT//VISION scan, the morphing PSX worlds, Place face, the rigging tool, the character gallery and touch controls.</li>
         <li>The app's own 3D Peanut, art, icons, animation, interface, text and logo.</li>
         <li>The name "Peanut Cam" and its logo, used as trade marks of James Scott.</li></ul>
@@ -3598,7 +3681,8 @@ function openLegal(){
         <li>MediaPipe Tasks Vision and its face, pose, hand and selfie models © Google LLC, Apache 2.0</li>
         <li>Draco © Google LLC and Basis Universal © Binomial LLC, Apache 2.0</li>
         <li>meshoptimizer © Arseny Kapoulkine, fflate © Arjun Barrett, ktx-parse and zstddec © Don McCurdy, MIT; Zstandard © Meta Platforms, BSD</li>
-        <li>Fonts: Bricolage Grotesque and IBM Plex Mono, SIL Open Font License 1.1</li></ul>
+        <li>Fonts: Bricolage Grotesque and IBM Plex Mono, SIL Open Font License 1.1</li>
+        <li>Windows app: Electron © OpenJS Foundation and Electron contributors, MIT (includes Chromium, BSD-style, and Node.js, MIT); scrcpy-server © Genymobile, Apache 2.0; Android SDK Platform-Tools (adb) © Google LLC</li></ul>
       <p>These stay the property of their owners and their licences don't grant rights in Peanut Cam.</p>
       <div class="btnrow"><button class="pill press" id="lgFull">Show full licence texts</button></div>
       <div id="lgText"></div>
@@ -3691,8 +3775,7 @@ const faceShared = (blendLabel) => [
 const motionTab = ["motion","Motion",[SEC("Body"), TG("body","Arm & hand tracking"),
   {t:"note", text:"Uses the camera to follow your shoulders, arms, hands and fingers. Prop the phone further away so your arms are in view. The peanut grows cartoon arms; rigged 3D models move their own."},
   {t:"gestures"}, SEC("Head"), RG("motion","Head motion",0,1.6,0.02,fmtX), RG("wobble","Wobble",0,1,0.01), RG("steady","Steadiness",0,1,0.01), TG("bounce","Bounce when talking"), TG("invYaw","Invert left/right turning"), TG("invPitch","Invert nodding")]];
-const cameraTab = ["camera","Camera",[{t:"camsel"}, TG("mirror","Mirror view (selfie)"), TG("pip_on","Show camera preview"),
-  {t:"note", text:"On Windows, connect your phone as a webcam (Phone Link, DroidCam or Iriun), then pick it above."},
+const cameraTab = ["camera","Camera",[{t:"camsrc"}, TG("mirror","Mirror view (selfie)"), TG("pip_on","Show camera preview"), {t:"camhelp"},
   SEC("App"), {t:"btns", items:[["About & legal","legal"],["Reset all settings","reset"]]}]];
 // Look: what the picture looks like (filters, retro rendering). The set itself (scene, background, TV, light) is in Studio.
 const lookTab = ["look","Look",[{t:"fx"}, CH("psx","3D style",[["modern","Modern"],["ps2","PS2"],["ps1","PS1"]]),
@@ -3701,7 +3784,7 @@ const lookTab = ["look","Look",[{t:"fx"}, CH("psx","3D style",[["modern","Modern
 // Capture: recordings, pictures, the live stream and how hard the phone works
 const captureTab = ["capture","Capture",[CH("recRes","Video size",[["screen","Full screen"],[1080,"1080p"],[720,"720p"],[540,"540p"]]),
   CH("recFps","Video frame rate",[[30,"30 fps"],[60,"60 fps"]]), CH("recQ","Video quality",[["std","Standard"],["high","High"],["max","Best"]]),
-  SEC("Sound"), {t:"if", when:() => phoneAudioOk(), items:[TG("recPhone","Phone sound (music, other apps)")]}, TG("recVideo","Peanut Cam videos (TV, background)"), TG("recMic","Microphone"),
+  SEC("Sound"), {t:"if", when:() => sysAudioOk(), items:[TG("recPhone", SYS_LABEL)]}, TG("recVideo","Peanut Cam videos (TV, background)"), TG("recMic","Microphone"),
   {t:"if", when:() => S.recMic, items:[{t:"micsel"}]}, {t:"soundnote"},
   {t:"note", text:"Full screen records the picture exactly as drawn, which is the lightest on the phone. Smaller sizes make smaller files. 60 fps needs a phone that keeps up: watch the speed below."},
   CH("shotFmt","Picture format",[["jpg","JPEG"],["png","PNG (lossless)"]]),
@@ -3784,6 +3867,10 @@ function afterChange(k){
   if (k === "recPhone" && liveOn()){ if (S.recPhone) phoneAudioOn(); else if (!REC.on) window.PeanutAudio?.stop?.(); }
   if ((k === "recPhone" || k === "recVideo" || k === "recMic" || k === "micId") && REC.on) toast("Sound changes apply to your next recording.");
   if (k === "recMic") syncMicBtn();
+  if ((k === "camRes" && S.camSrc !== "phone") || (/^phone(Facing|Res|Fps)$/.test(k) && S.camSrc === "phone")){
+    if (k === "phoneFacing"){ S.mirror = S.phoneFacing === "front"; syncPip(); }
+    busy(S.camSrc === "phone" ? "Starting the phone's camera…" : ""); openCamera().catch(() => toast("That camera couldn't start.")).finally(() => busy());
+  }
   save();
 }
 function onChange(k){
@@ -3903,6 +3990,7 @@ function buildItem(it){
     return w;
   }
   if (it.t === "soundnote"){
+    if (window.PeanutDesktop) return el("p", "note", "PC sound records everything playing on this PC (music, a browser, games). While Hear video sound is on, Peanut Cam's videos come through the PC sound, so they're counted once. Wear headphones with the microphone on, so it doesn't pick the sound up twice.");
     return el("p", "note", phoneAudioOk()
       ? "Phone sound records whatever is playing on the phone (music, videos, games), even through headphones. Android asks once per recording or stream; tap Start. A few apps (calls, some protected players) block it and stay silent. Peanut Cam's own videos are counted once, never twice."
       : "Phone sound (other apps) can be recorded in the Android app.");
@@ -3962,18 +4050,72 @@ function buildItem(it){
       m.vrm?.expressionManager || m.arkit ? "Face shapes found: choose \"Model's own face\" to drive them." : "No face shapes: your real eyes and mouth are used."];
     const w = el("div"); w.append(el("div", "sec", "About this model")); for (const l of lines) w.append(el("p", "note", l)); return w;
   }
-  if (it.t === "camsel"){
-    const s = el("select", "sel"); s.setAttribute("aria-label", "Camera");
-    cameraList().then(devs => {
-      const cur = stream?.getVideoTracks()[0]?.getSettings().deviceId;
-      s.innerHTML = devs.length ? devs.map((d, i) => `<option value="${d.deviceId}" ${d.deviceId === cur ? "selected" : ""}>${(d.label || "Camera " + (i+1)).replace(/</g, "&lt;")}</option>`).join("") : "<option>No camera found</option>";
-    });
-    s.onchange = async () => { S.deviceId = s.value; save(); try{ await openCamera(); }catch(e){ toast("That camera couldn't start."); } };
-    return s;
+  if (it.t === "camsrc"){
+    const w = el("div"), g = el("div", "chips"), extra = el("div");
+    w.append(el("div", "sec", "Camera"), g, extra);
+    const pick = async (src, id) => {
+      S.camSrc = src; if (src === "device") S.deviceId = id; save(); buzz(8);
+      busy(src === "phone" ? "Starting the phone's camera…" : "");
+      try{ await openCamera(); }catch(e){ toast("That camera couldn't start."); }
+      busy(); draw();
+    };
+    const draw = async () => {
+      const devs = await cameraList(), cur = stream?.getVideoTracks()[0]?.getSettings().deviceId, phone = S.camSrc === "phone" && !!window.PeanutDesktop;
+      g.innerHTML = "";
+      devs.forEach((d, i) => {
+        const c = el("button", "chip press", (d.label || "Camera " + (i + 1)).replace(/</g, "&lt;")); c.setAttribute("aria-pressed", !phone && d.deviceId === cur);
+        c.onclick = () => pick("device", d.deviceId); g.append(c);
+      });
+      if (window.PeanutDesktop){ const c = el("button", "chip press", `${ico("phone")}Phone over USB`); c.setAttribute("aria-pressed", phone); c.onclick = () => pick("phone"); g.append(c); }
+      if (!g.children.length) g.append(el("p", "note", "No camera found."));
+      extra.innerHTML = "";
+      if (phone) extra.append(phonePanel());
+      else extra.append(buildItem(CH("camRes", "Camera quality", [[720, "720p"], [1080, "1080p"], [2160, "4K"]])));
+    };
+    draw(); return w;
+  }
+  if (it.t === "camhelp"){
+    if (!window.PeanutDesktop) return el("div");
+    const find = name => { const b = el("button", "pill press", "Find it"); b.onclick = () => window.PeanutDesktop.openLink("https://www.google.com/search?q=" + encodeURIComponent(name + " official download")); return b; };
+    const d = el("details", "lvhelp"); d.innerHTML = `<summary>Use a camera (Canon, Sony, Nikon…)</summary>
+      <p>Webcams, USB cameras and HDMI capture cards work straight away: plug them in and pick them above. So does OBS Virtual Camera.</p>
+      <p><b>Mirrorless and DSLR cameras:</b> install the maker's free webcam software, connect the camera with USB, turn it on, then pick it above.</p>`;
+    for (const [brand, soft, tip] of [["Canon EOS and PowerShot", "Canon EOS Webcam Utility", ""], ["Sony Alpha and ZV", "Sony Imaging Edge Webcam", "Newer models also stream over USB on their own (menu: USB Streaming)."],
+      ["Nikon Z and DSLRs", "Nikon Webcam Utility", ""], ["Fujifilm X and GFX", "FUJIFILM X Webcam", ""], ["Panasonic LUMIX", "LUMIX Webcam Software", "Newer models have USB streaming built in."],
+      ["OM System / Olympus", "OM Capture webcam", ""], ["GoPro", "GoPro Webcam", ""]]){
+      const r = el("div", "srow"); r.append(el("span", "slabel", `<b>${brand}</b><br><small style="color:var(--mute)">${soft}${tip ? ". " + tip : ""}</small>`), find(soft)); d.append(r);
+    }
+    d.append(el("p", "note", "<b>Any camera with a clean HDMI output</b> (no on-screen info) works through a USB capture card, such as an Elgato Cam Link or a generic HDMI-to-USB capture stick. Keep the camera on mains power or a dummy battery for long sessions."));
+    d.append(el("p", "note", "<b>iPhone:</b> install a webcam app such as Camo or iVCam on the phone and this PC; it then appears above."));
+    return d;
   }
   return el("div");
 }
 let openScrub = null;
+// the phone over USB: status, which camera, quality, turning the picture, and the one-time setup
+function phonePanel(){
+  const w = el("div"), st = el("p", "note");
+  const show = () => { st.innerHTML = PCAM.status === "on" ? `Connected: <b>${(PCAM.model || "phone").replace(/</g, "&lt;")}</b>${PCAM.w ? `, ${PCAM.w}×${PCAM.h}` : ""}`
+    : PCAM.status === "starting" ? "Starting the phone's camera…" : PCAM.status === "error" ? (PCAM.msg || "The phone camera stopped.").replace(/</g, "&lt;") : "Not connected."; };
+  PCAM.onStatus = () => { if (st.isConnected) show(); };
+  show(); w.append(st);
+  w.append(buildItem(CH("phoneFacing", "Phone camera", [["back", "Back (best quality)"], ["front", "Front"]])),
+    buildItem(CH("phoneRes", "Phone quality", [[1280, "720p"], [1920, "1080p"]])), buildItem(CH("phoneFps", "Phone frame rate", [[30, "30 fps"], [60, "60 fps"]])));
+  const row = el("div", "btnrow");
+  const turn = el("button", "pill press", "Turn picture ↻"); turn.onclick = () => { S.phoneRot = ((S.phoneRot | 0) + 1) % 4; save(); buzz(6); toast(`Turned ${S.phoneRot*90}°`); };
+  const again = el("button", "pill press", "Reconnect"); again.onclick = async () => { buzz(8); busy("Starting the phone's camera…"); try{ await openCamera(); }catch(e){} busy(); show(); };
+  row.append(turn, again); w.append(row);
+  const d = el("details", "lvhelp"); d.innerHTML = `<summary>Set up a phone (once)</summary><ol>
+    <li>You need an Android phone with Android 12 or newer. Nothing needs installing on it.</li>
+    <li>On the phone, open <b>Settings › About phone</b> and tap <b>Build number</b> seven times. This turns on Developer options.</li>
+    <li>Open <b>Settings › System › Developer options</b> and turn on <b>USB debugging</b>.</li>
+    <li>Connect the phone to this PC with a USB <b>data</b> cable (some cables only charge). Unlock the phone and tap <b>Allow</b>, ticking <b>Always allow from this computer</b>.</li>
+    <li>Pick <b>Phone over USB</b> above. Switch between the front and back cameras here, or with <b>Flip</b>.</li></ol>
+    <p>Not found? Some phones need their maker's USB driver on Windows: for Samsung, the Samsung Android USB Driver; for Google Pixel, the Google USB Driver.</p>
+    <p>Android 14 and newer can also act as a plain webcam without USB debugging: plug in, open the USB notification on the phone and choose <b>Webcam</b>. It then appears in the list above (switch cameras on the phone).</p>`;
+  w.append(d);
+  return w;
+}
 function rangeRow(it){
   const row = el("div", "srow");
   row.innerHTML = `<span class="slabel">${it.label}</span><div class="sctl"><button class="step press" aria-label="Less ${it.label}">${ico("minus")}</button><button class="sval" aria-expanded="false" aria-label="${it.label}: fine adjust"></button><button class="step press" aria-label="More ${it.label}">${ico("plus")}</button></div><div class="scrub"><div><div class="track"><div class="fill"></div><span>Slide sideways</span></div></div></div>`;
@@ -5283,20 +5425,40 @@ const GESTURES = [
   ["3 fingers", "Swipe up / down", "Next or previous character (Peanut included)."],
   ["3 fingers", "Tap", "Hide or show the controls."]
 ];
+// with a mouse and keyboard (the Windows app, or a browser on a computer)
+const MOUSE = [
+  ["Drag", "Drag", "Character: move it. Peanut: spin and tilt it."],
+  ["Wheel", "Scroll", "Resize. Hold Shift to turn it instead."],
+  ["2×", "Double-click", "Put it back where it started."],
+  ["← →", "Arrow keys", "Previous or next background."],
+  ["↑ ↓", "Arrow keys", "Previous or next character."],
+  ["R  P", "Record, Picture", "Start or stop recording; take a picture."],
+  ["S  L  T", "Settings, Look, Studio", "Open the panels. Esc closes them."],
+  ["H  F11", "Hide, Full screen", "Hide the controls; fill the screen."]
+];
+const POINTER_FINE = matchMedia("(pointer:fine)").matches;
 function gestureList(){
   const g = el("div", "glist");
+  if (window.PeanutDesktop || POINTER_FINE){ for (const [k, what, why] of MOUSE) g.insertAdjacentHTML("beforeend", `<div class="gi">${k}</div><div><b>${what}</b><span>${why}</span></div>`); return g; }
   for (const [who, what, why] of GESTURES) g.insertAdjacentHTML("beforeend", `<div class="gi">${who.replace(" finger", "F").replace("s", "")}</div><div><b>${what}</b><span>${why}</span></div>`);
   return g;
 }
 function showGestures(){
-  openModal("Touch controls", b => {
+  const mouse = !!window.PeanutDesktop || POINTER_FINE;
+  openModal(mouse ? "Mouse and keyboard" : "Touch controls", b => {
     b.append(gestureList());
-    b.append(el("p", "note", "Some phones use a three-finger swipe down for screenshots; swipe up instead to change character."));
+    if (!mouse) b.append(el("p", "note", "Some phones use a three-finger swipe down for screenshots; swipe up instead to change character."));
     const ok = el("button", "pill hot press", "Got it"); ok.style.width = "100%"; ok.style.marginTop = "8px"; ok.onclick = closeModal; b.append(ok);
   });
 }
 $("#bFlip").onclick = async () => {
   buzz(8);
+  if (S.camSrc === "phone" && window.PeanutDesktop){                 // phone over USB: switch between its cameras
+    S.phoneFacing = S.phoneFacing === "front" ? "back" : "front"; S.mirror = S.phoneFacing === "front"; syncPip(); save();
+    flash(S.phoneFacing === "front" ? "Front" : "Back", "Phone camera");
+    try{ await openCamera(); }catch(err){ toast("Couldn't switch camera."); }
+    return;
+  }
   S.deviceId = ""; S.facing = S.facing === "user" ? "environment" : "user"; S.mirror = S.facing === "user"; syncPip(); save();
   try{ await openCamera(); }catch(err){ toast("Couldn't switch camera."); }
 };
@@ -5368,8 +5530,9 @@ const gEnd = e => {
 canvas.addEventListener("pointerup", gEnd); canvas.addEventListener("pointercancel", gEnd);
 canvas.addEventListener("wheel", e => {
   if (!canGesture()) return; e.preventDefault();
-  const f = Math.exp(-e.deltaY * 0.0012);
-  if (isPup()) S.pScale = clamp(S.pScale * f, 0.4, 2.2); else S.nScale = clamp(S.nScale * f, 0.35, 2.5);
+  const d = e.deltaY || e.deltaX, f = Math.exp(-d * 0.0012);
+  if (e.shiftKey){ if (isPup()) S.pRot += d*0.0015; else S.nRot += d*0.0015; }      // Shift + wheel turns it (two-finger twist)
+  else if (isPup()) S.pScale = clamp(S.pScale * f, 0.4, 2.2); else S.nScale = clamp(S.nScale * f, 0.35, 2.5);
   clearTimeout(canvas._wt); canvas._wt = setTimeout(save, 400);
 }, {passive:false});
 canvas.addEventListener("click", () => {
@@ -5377,7 +5540,22 @@ canvas.addEventListener("click", () => {
   if (document.body.classList.contains("clean")) document.body.classList.remove("clean");
   else if (sheet.classList.contains("open")) closeSheet();
 });
-addEventListener("keydown", e => { if ((e.key === "h" || e.key === "H") && mode !== "menu") document.body.classList.toggle("clean"); });
+canvas.addEventListener("dblclick", () => { if (canGesture()) resetPose(); });
+// keyboard shortcuts (ignored while typing in a box)
+addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || "") || e.target?.isContentEditable) return;
+  if (mode === "menu" || !$("#modal").hidden) return;
+  const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  const act = {
+    h: () => document.body.classList.toggle("clean"),
+    r: () => $("#rec").click(), p: () => $("#shot").click(),
+    s: () => $("#bSettings").click(), l: () => $("#bLook").click(), t: () => $("#bStudio").click(),
+    ArrowLeft: () => cycleBg(-1), ArrowRight: () => cycleBg(1), ArrowUp: () => cycleChar(-1), ArrowDown: () => cycleChar(1)
+  }[k];
+  if (!act || (editing || RIGE.on || PF.on) && k !== "h") return;
+  if (k.startsWith("Arrow") && sheet.classList.contains("open")) return;   // arrows scroll the panel
+  e.preventDefault(); act();
+});
 // Back (Android's back button, Esc on a keyboard): closes the top-most thing, then leaves the character, and only
 // then lets the app close. Returns true when it handled it.
 window.onBack = () => {
@@ -5407,6 +5585,17 @@ for (const [id, d0] of [["tw1", 0], ["tw2", 0.35]]){
    gets it inside the app. It's released as soon as neither needs it. */
 const PHONE = {waiters:[], ready:false, was:false};
 const phoneAudioOk = () => { try{ return !!window.PeanutAudio?.supported?.(); }catch(e){ return false; } };
+// the same switch on Windows records the PC's sound: display-media loopback (desktop/main.js answers the request)
+const sysAudioOk = () => phoneAudioOk() || !!window.PeanutDesktop;
+async function pcSoundStream(){
+  try{
+    const st = await navigator.mediaDevices.getDisplayMedia({video:true, audio:true});
+    st.getVideoTracks().forEach(t => { t.stop(); st.removeTrack(t); });
+    if (st.getAudioTracks().length) return st;
+    toast("PC sound isn't available on this PC.");
+  }catch(e){ toast("PC sound couldn't be captured: " + (e?.message || e)); }
+  return null;
+}
 window.onPhoneAudio = e => {
   const on = e?.state === "on";
   if (!on){
@@ -5550,11 +5739,14 @@ async function startRec(){
   const tracks = [REC.track];
   // sound: Peanut Cam's videos, the microphone and (Android) everything else playing on the phone, mixed in WebAudio
   const phone = S.recPhone && phoneAudioOk() ? await phoneAudioOn() : false;      // Android asks for consent here
+  REC.pc = S.recPhone && !phoneAudioOk() && window.PeanutDesktop ? await pcSoundStream() : null;
   if (S.recMic) REC.mic = await openMic();
-  const ctx = (phone || S.recVideo) ? audioCtx() : null;
+  const ctx = (phone || REC.pc || S.recVideo) ? audioCtx() : null;
   if (ctx){
     REC.dest = ctx.createMediaStreamDestination();
-    if (S.recVideo) AUD.bus.connect(REC.dest);                    // also catches videos started mid-recording
+    // also catches videos started mid-recording; with PC sound and the speaker on, they're already in the PC sound
+    if (S.recVideo && !(REC.pc && S.hearVideos)) AUD.bus.connect(REC.dest);
+    if (REC.pc) ctx.createMediaStreamSource(REC.pc).connect(REC.dest);
     if (REC.mic){ REC.micNode = ctx.createMediaStreamSource(REC.mic); REC.micNode.connect(REC.dest); }
     if (phone){ try{ REC.phone = await phonePlayer(ctx, REC.dest); }catch(e){ console.error(e); toast("Phone sound couldn't be added to this recording."); } }
     tracks.push(...REC.dest.stream.getAudioTracks());
@@ -5577,6 +5769,7 @@ function stopRec(){
   REC.on = false; try{ REC.mr.stop(); }catch(e){} REC.mic?.getTracks().forEach(t => t.stop()); REC.mic = null; REC.track?.stop(); REC.track = null;
   try{ REC.micNode?.disconnect(); }catch(e){} REC.micNode = null;
   if (REC.dest){ try{ AUD.bus.disconnect(REC.dest); }catch(e){} REC.dest = null; }
+  REC.pc?.getTracks().forEach(t => t.stop()); REC.pc = null;
   if (REC.phone){ clearInterval(REC.phone.timer); try{ REC.phone.node.disconnect(); }catch(e){} REC.phone = null; }
   phoneAudioRelease();
   $("#rec").classList.remove("on"); $("#rec").setAttribute("aria-label", "Start recording"); $("#recChip").hidden = true;
@@ -5586,22 +5779,28 @@ async function finishRec(){
   const type = REC.mime.split(";")[0], blob = new Blob(REC.chunks, {type}); REC.chunks = [];
   if (!blob.size){ toast("Nothing was recorded."); return; }
   busy("Saving video…");
-  try{ toast(await saveVideo(blob, REC.ext, type), 3600); }
+  try{ const m = await saveVideo(blob, REC.ext, type); if (m) toast(m, 3600); }
   catch(e){ console.error(e); toast("Couldn't save the video: " + (e?.message || e)); }
   busy();
 }
 const toB64 = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] || ""); r.onerror = () => rej(r.error); r.readAsDataURL(b); });
+// Android: into the gallery (Movies or Pictures › PeanutCam). Windows: into the Videos or Pictures folder, with a Show button.
+// The bridge calls are awaited: they return at once on Android and are promises on Windows.
+async function writeNative(blob, name, type, androidDir, pcDir){
+  const N = window.PeanutNative;
+  try{ N.prepare?.(); }catch(e){}
+  if (!(await N.begin(name, type))) throw new Error("the folder refused the file");
+  const CH = 3 * 262144;                         // multiple of 3 so each piece is valid base64 on its own
+  for (let o = 0; o < blob.size; o += CH){ if (!(await N.append(await toB64(blob.slice(o, o + CH))))) throw new Error("writing failed"); }
+  const done = await N.finish();
+  if (!done) throw new Error("finishing failed");
+  if (window.PeanutDesktop){ toast(`Saved to ${pcDir} › PeanutCam`, 5000, {label:"Show", fn:() => window.PeanutDesktop.showFile(done)}); return ""; }
+  return `Saved to your gallery (${androidDir} › PeanutCam)`;
+}
 async function saveVideo(blob, ext, type){
   const d = new Date(), z = n => String(n).padStart(2, "0");
   const name = `PeanutCam_${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.${ext}`;
-  const N = window.PeanutNative;
-  if (N?.begin){                                   // Android app: stream into the gallery (Movies/PeanutCam)
-    if (!N.begin(name, type)) throw new Error("the gallery refused the file");
-    const CH = 3 * 262144;                         // multiple of 3 so each piece is valid base64 on its own
-    for (let o = 0; o < blob.size; o += CH){ if (!N.append(await toB64(blob.slice(o, o + CH)))) throw new Error("writing failed"); }
-    if (!N.finish()) throw new Error("finishing failed");
-    return "Saved to your gallery (Movies › PeanutCam)";
-  }
+  if (window.PeanutNative?.begin) return writeNative(blob, name, type, "Movies", "Videos");
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
   document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
   return "Video downloaded: " + name;
@@ -5641,21 +5840,13 @@ function takeShot(){                                   // runs right after a fra
   if (mode === "puppet" || mode === "model"){ const ch = CHARS.find(k => k.id === scopeId); if (ch){ ch.shot = thumb; persistChar(ch); } }
   else { try{ localStorage.setItem("peanutcam.peanutShot", thumb); }catch(e){} }
   c.toBlob(async blob => {
-    try{ toast(await saveImage(blob)); }catch(e){ toast("Couldn't save the picture: " + (e?.message || e)); }
+    try{ const m = await saveImage(blob); if (m) toast(m); }catch(e){ toast("Couldn't save the picture: " + (e?.message || e)); }
   }, S.shotFmt === "png" ? "image/png" : "image/jpeg", 0.95);
 }
 async function saveImage(blob){
   const d = new Date(), z = n => String(n).padStart(2, "0"), png = blob.type === "image/png";
   const name = `PeanutCam_${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.${png ? "png" : "jpg"}`;
-  const N = window.PeanutNative;
-  if (N?.begin){
-    try{ N.prepare?.(); }catch(e){}
-    if (!N.begin(name, png ? "image/png" : "image/jpeg")) throw new Error("the gallery refused the file");
-    const CH = 3 * 262144;
-    for (let o = 0; o < blob.size; o += CH){ if (!N.append(await toB64(blob.slice(o, o + CH)))) throw new Error("writing failed"); }
-    if (!N.finish()) throw new Error("finishing failed");
-    return "Picture saved to your gallery (Pictures › PeanutCam)";
-  }
+  if (window.PeanutNative?.begin) return writeNative(blob, name, png ? "image/png" : "image/jpeg", "Pictures", "Pictures");
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
   document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
   return "Picture downloaded: " + name;
@@ -5689,6 +5880,60 @@ const LIVE = {state:"idle", msg:"", enc:null, encCfg:null, c:null, x:null, bg:nu
 const liveOn = () => ["connecting", "live", "reconnecting"].includes(LIVE.state);
 const liveBusy = () => liveOn() || LIVE.state === "starting" || LIVE.state === "stopping";
 const livePanelOpen = () => !$("#modal").hidden && !!$("#lvStat");
+// ---- live sound on the Windows app: the page mixes the microphone, Peanut Cam's videos and the PC sound, encodes
+// it as AAC with WebCodecs and hands it over with the picture's clock (Android does this in the app instead)
+const LA = {enc:null, node:null, mix:null, mic:null, micNode:null, micGain:null, sys:null, t0:0, n:0, cfg:false, gen:0};
+async function liveAudioStart(){
+  const N = window.PeanutLive, gen = ++LA.gen;
+  const ctx = audioCtx(); if (!ctx || !window.AudioEncoder){ toast("This PC can't encode sound for the stream, so it's silent.", 5000); return; }
+  const cfg = {codec:"mp4a.40.2", sampleRate:ctx.sampleRate, numberOfChannels:2, bitrate:128000};
+  const sup = await AudioEncoder.isConfigSupported(cfg).catch(() => null);
+  if (!sup?.supported){ toast("This PC can't encode AAC sound, so the stream is silent.", 5000); return; }
+  if (S.recPhone) LA.sys = await pcSoundStream();
+  if (gen !== LA.gen || !liveOn()){ liveAudioStop(); return; }
+  LA.mix = ctx.createGain();
+  LA.hum = ctx.createConstantSource(); LA.hum.offset.value = 0; LA.hum.connect(LA.mix); LA.hum.start();   // keeps the mix running when all is quiet, so the stream's sound never has gaps
+  if (S.recVideo && !(LA.sys && S.hearVideos)) AUD.bus.connect(LA.mix);
+  if (LA.sys) ctx.createMediaStreamSource(LA.sys).connect(LA.mix);
+  LA.micGain = ctx.createGain(); LA.micGain.connect(LA.mix);
+  await liveAudioMic();
+  if (!AUD.tapReady){ await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([TAP_SRC], {type:"text/javascript"}))); AUD.tapReady = true; }
+  if (gen !== LA.gen){ return; }
+  LA.node = new AudioWorkletNode(ctx, "pc-tap", {numberOfInputs:1, numberOfOutputs:1, outputChannelCount:[2]});
+  LA.sink = ctx.createGain(); LA.sink.gain.value = 0; LA.mix.connect(LA.node); LA.node.connect(LA.sink).connect(ctx.destination);
+  LA.cfg = false; LA.n = 0; LA.t0 = performance.now() - LIVE.t0;
+  LA.enc = new AudioEncoder({
+    output:(chunk, meta) => {
+      if (!LA.cfg && meta?.decoderConfig?.description){ N.audioConfig(u8b64(new Uint8Array(meta.decoderConfig.description))); LA.cfg = true; }
+      const b = new Uint8Array(chunk.byteLength); chunk.copyTo(b);
+      N.audio(u8b64(b), chunk.timestamp/1000 + LC.delay);
+    },
+    error:e => { console.error(e); toast("Stream sound stopped: " + (e?.message || e)); liveAudioStop(); }
+  });
+  LA.enc.configure({...cfg, aac:{format:"aac"}});
+  LA.node.port.onmessage = e => {
+    if (LA.enc?.state !== "configured") return;
+    const [L, R] = e.data, n = L.length, buf = new Float32Array(n*2); buf.set(L); buf.set(R, n);
+    const ad = new AudioData({format:"f32-planar", sampleRate:ctx.sampleRate, numberOfFrames:n, numberOfChannels:2, timestamp:Math.round((LA.t0 + LA.n*1000/ctx.sampleRate)*1000), data:buf});
+    LA.n += n;
+    try{ LA.enc.encode(ad); }catch(err){ console.error(err); } finally{ ad.close(); }
+  };
+}
+async function liveAudioMic(){
+  if (!LA.micGain) return;
+  if (LC.sound && !LA.mic){ LA.mic = await openMic(); if (LA.mic && LA.micGain){ LA.micNode = AUD.ctx.createMediaStreamSource(LA.mic); LA.micNode.connect(LA.micGain); } }
+  LA.micGain.gain.value = LC.sound ? 1 : 0;
+}
+function liveAudioStop(){
+  LA.gen++;
+  try{ if (LA.enc && LA.enc.state !== "closed") LA.enc.close(); }catch(e){}
+  try{ AUD.bus?.disconnect(LA.mix); }catch(e){}
+  try{ LA.hum?.stop(); }catch(e){}
+  for (const n of [LA.node, LA.mix, LA.micNode, LA.micGain, LA.sink, LA.hum]) try{ n?.disconnect(); }catch(e){}
+  if (LA.node) LA.node.port.onmessage = null;
+  LA.mic?.getTracks().forEach(t => t.stop()); LA.sys?.getTracks().forEach(t => t.stop());
+  Object.assign(LA, {enc:null, node:null, mix:null, mic:null, micNode:null, micGain:null, sys:null, sink:null, hum:null});
+}
 function u8b64(u){ let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
 function liveSize(){ const s = LIVE_Q[LC.q].h, l = Math.round(s*16/9/2)*2; return LC.shape === "landscape" ? [l, s] : [s, l]; }
 
@@ -5759,7 +6004,7 @@ function liveFrame(){                                    // runs right after eac
 async function liveStart(){
   const N = window.PeanutLive;
   if (!N || liveBusy()) return;
-  if (!window.VideoEncoder || !window.VideoFrame){ liveEnd("error", "This phone's web engine is too old to stream. Update “Android System WebView” (or Chrome) from the Play Store."); return; }
+  if (!window.VideoEncoder || !window.VideoFrame){ liveEnd("error", window.PeanutDesktop ? "This build can't encode video. Reinstall Peanut Cam." : "This phone's web engine is too old to stream. Update “Android System WebView” (or Chrome) from the Play Store."); return; }
   if (!LC.url.trim()){ liveEnd("error", "Enter the server URL first."); return; }
   const [w, h] = liveSize(), q = LIVE_Q[LC.q];
   LIVE.state = "starting"; LIVE.msg = ""; liveRender();
@@ -5775,6 +6020,7 @@ async function liveStart(){
   const err = N.start(JSON.stringify({url:LC.url, key:LC.key, width:w, height:h, fps:LC.fps, kbps:q.kbps, sound:LC.sound, offsetMs:LC.delay}));
   if (err){ liveEnd("error", err); return; }
   LIVE.state = "connecting"; liveRender();
+  if (N.encodesAudio) liveAudioStart();
 }
 function liveStop(){
   if (LIVE.state === "starting"){ liveEnd("idle"); return; }
@@ -5785,7 +6031,7 @@ function liveStop(){
 function liveEnd(state, msg){
   try{ if (LIVE.enc && LIVE.enc.state !== "closed") LIVE.enc.close(); }catch(e){}
   Object.assign(LIVE, {state, msg:msg || "", enc:null, encCfg:null, c:null, x:null, bg:null, stats:null});
-  liveRender(); phoneAudioRelease();
+  liveRender(); phoneAudioRelease(); liveAudioStop();
 }
 // events from the app (android/.../live/LiveController.java)
 window.onLive = e => {
@@ -5811,6 +6057,7 @@ window.onLive = e => {
     try{ if (LIVE.enc?.state === "configured") LIVE.enc.configure({...LIVE.encCfg, bitrate:e.kbps*1000}); }catch(err){ console.error(err); }
   } else if (e.type === "mic") toast("The microphone isn't available, so the stream is silent for now.", 4000);
 };
+window.PeanutDesktop?.on("live", e => window.onLive(e));         // the Windows app sends the same events over IPC
 const clock = s => `${Math.floor(s/3600) ? Math.floor(s/3600) + ":" : ""}${String(Math.floor(s/60) % 60).padStart(Math.floor(s/3600) ? 2 : 1, "0")}:${String(s % 60).padStart(2, "0")}`;
 function liveRender(){
   syncLiveTap();
@@ -5871,10 +6118,10 @@ function openLive(){
     b.append(el("div", "sec", "Sound"));
     const r1 = el("div", "srow"); r1.append(el("span", "slabel", "Microphone"));
     const sw = el("button", "switch press"); sw.setAttribute("role", "switch"); sw.setAttribute("aria-label", "Microphone"); sw.setAttribute("aria-checked", LC.sound);
-    sw.onclick = () => { LC.sound = !LC.sound; saveLive(); sw.setAttribute("aria-checked", LC.sound); buzz(6); if (liveOn()) window.PeanutLive?.sound(LC.sound); };
+    sw.onclick = () => { LC.sound = !LC.sound; saveLive(); sw.setAttribute("aria-checked", LC.sound); buzz(6); if (liveOn()){ window.PeanutLive?.sound(LC.sound); liveAudioMic(); } };
     r1.append(sw); b.append(r1);
-    for (const [k, label] of [["recPhone", "Phone sound (music, other apps)"], ["recVideo", "Peanut Cam videos (TV, background)"]]){
-      if (k === "recPhone" && !phoneAudioOk()) continue;
+    for (const [k, label] of [["recPhone", SYS_LABEL], ["recVideo", "Peanut Cam videos (TV, background)"]]){
+      if (k === "recPhone" && !sysAudioOk()) continue;
       const r = el("div", "srow"); r.append(el("span", "slabel", label));
       const t = el("button", "switch press"); t.setAttribute("role", "switch"); t.setAttribute("aria-label", label); t.setAttribute("aria-checked", !!S[k]);
       t.onclick = () => { S[k] = !S[k]; t.setAttribute("aria-checked", S[k]); buzz(6); afterChange(k); };
@@ -5887,7 +6134,7 @@ function openLive(){
     const upd = () => { val.textContent = LC.delay + " ms"; val.style.display = "grid"; val.style.placeItems = "center"; };
     ctl.append(mk("minus", -50), val, mk("plus", 50)); upd(); r2.append(ctl); b.append(r2);
 
-    b.append(el("p", "note", "Only your character and its background are sent. Menus, buttons and the camera preview never appear on the stream. Your server URL and stream key are saved only on this phone."));
+    b.append(el("p", "note", "Only your character and its background are sent. Menus, buttons and the camera preview never appear on the stream. Your server URL and stream key are saved only on this " + (window.PeanutDesktop ? "computer" : "phone") + "."));
 
     b.insertAdjacentHTML("beforeend", `
       <details class="lvhelp"><summary>Stream to TikTok</summary><ol>
@@ -5898,7 +6145,7 @@ function openLive(){
       <details class="lvhelp"><summary>Stream into OBS on your computer</summary><ol>
         <li>OBS can't receive a stream by itself. On the computer, download and run <b>MediaMTX</b> (free, from github.com/bluenviron/mediamtx). It listens on port 1935.</li>
         <li>Find the computer's local IP address (Windows: <code>ipconfig</code>; Mac: System Settings › Wi-Fi › Details), for example 192.168.1.20.</li>
-        <li>Here, set the server URL to <code>rtmp://192.168.1.20/live</code> and the stream key to <code>peanut</code>, then tap Go live. The phone and computer must be on the same Wi-Fi. If your firewall asks, allow MediaMTX.</li>
+        <li>${window.PeanutDesktop ? "Here (on the same computer), set the server URL to <code>rtmp://localhost/live</code> and the stream key to <code>peanut</code>, then click Go live. Or skip MediaMTX: in OBS add a <b>Window Capture</b> of Peanut Cam and press H here to hide the controls." : "Here, set the server URL to <code>rtmp://192.168.1.20/live</code> and the stream key to <code>peanut</code>, then tap Go live. The phone and computer must be on the same Wi-Fi. If your firewall asks, allow MediaMTX."}</li>
         <li>In OBS: Sources › + › <b>Media Source</b>, untick “Local File”, set Input to <code>rtmp://localhost/live/peanut</code>, and tick “Use hardware decoding when available”.</li>
         <li>For a green-screen key in OBS, choose the <b>Green screen</b> background in Peanut Cam and add a Chroma Key filter.</li></ol></details>
       <details class="lvhelp"><summary>YouTube, Twitch, Kick and others</summary><ol>

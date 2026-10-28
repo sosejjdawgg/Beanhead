@@ -1,0 +1,58 @@
+name: Build Windows app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Bundle the page, 3D engine, face tracker, models and fonts into the app
+        run: bash scripts/bundle-www.sh desktop/www
+
+      - name: Install the build tools (Electron, electron-builder)
+        working-directory: desktop
+        run: npm ci --no-audit --no-fund
+
+      - name: Fetch adb and scrcpy-server (phone camera over USB) and the licence texts
+        working-directory: desktop
+        run: node fetch-tools.js
+
+      - name: Build the installer and the portable app
+        working-directory: desktop
+        run: npx electron-builder --win --x64 --publish never
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PeanutCam-windows
+          path: |
+            desktop/dist/PeanutCam-Setup.exe
+            desktop/dist/PeanutCam-Portable.exe
+
+      - name: Publish to Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest-windows --yes --cleanup-tag || true
+          gh release create latest-windows desktop/dist/PeanutCam-Setup.exe desktop/dist/PeanutCam-Portable.exe \
+            --title "Peanut Cam for Windows (latest build)" \
+            --notes "Built from commit ${GITHUB_SHA::7}. PeanutCam-Setup.exe installs Peanut Cam with a Start menu entry; PeanutCam-Portable.exe runs without installing. Windows may warn that the app is unrecognised (it isn't code-signed yet): choose More info › Run anyway." \
+            --latest=false

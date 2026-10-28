@@ -14,7 +14,15 @@ Peanut Cam is © 2026 James Scott. All rights reserved. It includes the followin
 | [fflate](https://github.com/101arrowz/fflate) | Opening .zip and compressed files | © 2020 Arjun Barrett | [MIT](https://github.com/101arrowz/fflate/blob/master/LICENSE) |
 | [ktx-parse](https://github.com/donmccurdy/KTX-Parse) | KTX2 textures | © Don McCurdy | [MIT](https://github.com/donmccurdy/KTX-Parse/blob/main/LICENSE) |
 | [zstddec](https://github.com/donmccurdy/zstddec) (includes Zstandard) | KTX2 textures | © Don McCurdy; Zstandard © Meta Platforms, Inc. | [MIT](https://github.com/donmccurdy/zstddec/blob/main/LICENSE); Zstandard [BSD](https://github.com/facebook/zstd/blob/dev/LICENSE) |
-| [Bricolage Grotesque](https://fonts.google.com/specimen/Bricolage+Grotesque) | Interface font (loaded from Google Fonts) | © The Bricolage Grotesque Project Authors (Mathieu Triay) | [SIL OFL 1.1](https://openfontlicense.org) |
-| [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono) | Scan screen font (loaded from Google Fonts) | © IBM Corp. | [SIL OFL 1.1](https://openfontlicense.org) |
+| [Bricolage Grotesque](https://fonts.google.com/specimen/Bricolage+Grotesque) | Interface font (bundled in the apps; from Google Fonts on the web) | © The Bricolage Grotesque Project Authors (Mathieu Triay) | [SIL OFL 1.1](https://openfontlicense.org) |
+| [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono) | Scan screen font (bundled in the apps; from Google Fonts on the web) | © IBM Corp. | [SIL OFL 1.1](https://openfontlicense.org) |
+
+**Windows app only:**
+
+| Component | Used for | Copyright | Licence |
+|---|---|---|---|
+| [Electron](https://github.com/electron/electron) 33 (includes Chromium and Node.js) | The Windows app's window, web engine and system access | © OpenJS Foundation and Electron contributors; Chromium © The Chromium Authors; Node.js © Node.js contributors | [MIT](https://github.com/electron/electron/blob/main/LICENSE); Chromium [BSD-style and others](https://chromium.googlesource.com/chromium/src/+/main/LICENSE) (full list in `LICENSES.chromium.html` next to the app) |
+| [scrcpy-server](https://github.com/Genymobile/scrcpy) 3.1 | Android phone camera over USB | © Genymobile, Romain Vimont | [Apache 2.0](https://github.com/Genymobile/scrcpy/blob/master/LICENSE) |
+| [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools) (adb) | Talking to the phone over USB | © Google LLC and the Android Open Source Project | [Android SDK terms](https://developer.android.com/studio/terms); notices bundled (`licenses/THIRD_PARTY_LICENSES.txt`) |
 
 These licences apply only to the components listed. They do not grant any rights in Peanut Cam itself; see [COPYRIGHT.md](COPYRIGHT.md) and [LICENSE](LICENSE).

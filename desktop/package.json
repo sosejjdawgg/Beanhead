@@ -1,0 +1,79 @@
+{
+  "name": "peanut-cam",
+  "productName": "Peanut Cam",
+  "version": "5.3.0",
+  "description": "Your real eyes and mouth, on anything",
+  "author": "James Scott",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "www": "bash ../scripts/bundle-www.sh www",
+    "tools": "node fetch-tools.js",
+    "start": "electron .",
+    "dist": "electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8",
+    "adm-zip": "0.5.16"
+  },
+  "build": {
+    "appId": "com.beanhead.peanutcam",
+    "productName": "Peanut Cam",
+    "copyright": "\u00a9 2026 James Scott. All rights reserved.",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "phonecam.js",
+      "rtmp.js",
+      "package.json",
+      "build/icon.png"
+    ],
+    "extraResources": [
+      {
+        "from": "www",
+        "to": "www"
+      },
+      {
+        "from": "vendor",
+        "to": "vendor"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "legalTrademarks": "Peanut Cam"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Peanut Cam",
+      "artifactName": "PeanutCam-Setup.exe",
+      "license": "build/license.txt"
+    },
+    "portable": {
+      "artifactName": "PeanutCam-Portable.exe"
+    },
+    "publish": null
+  }
+}
