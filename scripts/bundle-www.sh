@@ -13,7 +13,7 @@ cp "$REPO/index.html" "$W/index.html"
 DEPS=$(mktemp -d)
 cd "$DEPS"
 npm init -y >/dev/null
-npm install --no-audit --no-fund three@0.160.0 @mediapipe/tasks-vision@0.10.14 @pixiv/three-vrm@2.1.0
+npm install --no-audit --no-fund three@0.160.0 @mediapipe/tasks-vision@0.10.14 @pixiv/three-vrm@2.1.0 mp4-muxer@5.2.2
 cd "$REPO"
 
 cp -r $DEPS/node_modules/three/build "$W/lib/three/build"
@@ -25,6 +25,7 @@ mkdir -p "$W/lib/three-vrm" && ls $DEPS/node_modules/@pixiv/three-vrm/lib/
 cp $DEPS/node_modules/@pixiv/three-vrm/lib/three-vrm.module.js "$W/lib/three-vrm/three-vrm.module.js"
 cp $DEPS/node_modules/@mediapipe/tasks-vision/vision_bundle.mjs "$W/lib/tasks-vision/"
 cp -r $DEPS/node_modules/@mediapipe/tasks-vision/wasm "$W/lib/tasks-vision/wasm"
+mkdir -p "$W/lib/mp4-muxer" && cp $DEPS/node_modules/mp4-muxer/build/mp4-muxer.mjs "$W/lib/mp4-muxer/"
 
 curl -fsSL --retry 3 -o "$W/models/face_landmarker.task" \
   https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task
@@ -68,6 +69,7 @@ add "MediaPipe Tasks Vision 0.10.14 and the Face Landmarker, Pose Landmarker, Ha
 add "Draco decoder (c) Google LLC - Apache License 2.0" "see the Apache License 2.0 text above"
 add "Basis Universal transcoder (c) Binomial LLC - Apache License 2.0" "see the Apache License 2.0 text above"
 add "meshoptimizer (c) Arseny Kapoulkine - MIT License" https://raw.githubusercontent.com/zeux/meshoptimizer/master/LICENSE.md
+add "mp4-muxer 5.2.2 (c) Vanilagy - MIT License" "$N/mp4-muxer/LICENSE"
 add "fflate (c) Arjun Barrett - MIT License" https://raw.githubusercontent.com/101arrowz/fflate/master/LICENSE
 add "ktx-parse (c) Don McCurdy - MIT License" https://raw.githubusercontent.com/donmccurdy/KTX-Parse/main/LICENSE
 add "zstddec (c) Don McCurdy - MIT License" https://raw.githubusercontent.com/donmccurdy/zstddec/main/LICENSE

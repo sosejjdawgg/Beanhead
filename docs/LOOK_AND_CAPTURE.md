@@ -59,6 +59,8 @@ The CRT-type filters were chosen because they're the most popular retro looks fo
 
 - **Video size:** Full screen records the picture exactly as drawn, straight from the 3D canvas, which is the lightest on the phone. 1080p, 720p and 540p scale it down for smaller files.
 - **Video frame rate:** 30 or 60 fps. Frames are handed to the recorder at exactly that rate.
+- **Files:** recordings are standard MP4 (H.264 video, AAC sound) made with the phone's or PC's own encoders, so they play with sound in any gallery and upload anywhere. On a device that can't encode AAC, the app falls back to the browser recorder and saves WebM (Opus sound) rather than an MP4 that galleries would play silently.
+- **Sound meter:** while recording, the bar next to the timer shows the sound going into the recording; if nothing arrives after a few seconds, the app says so.
 - **Video quality:** the bitrate follows the size and frame rate (about 0.08, 0.13 or 0.2 bits per pixel per frame, 2 to 24 Mbps).
 - **Sound** (used by recordings and live streams), three switches you can mix freely:
   - **Phone sound (music, other apps):** Android app, Android 10 or newer. Everything other apps play (Spotify, YouTube, games…) is captured, even while you listen on headphones. Android shows its "start recording or casting" prompt each time a recording or stream begins; tap **Start**. A notification shows while it runs. A few apps block capture (phone calls, some protected players) and stay silent.

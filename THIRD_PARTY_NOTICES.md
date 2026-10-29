@@ -11,6 +11,7 @@ Peanut Cam is © 2026 James Scott. All rights reserved. It includes the followin
 | [Draco](https://github.com/google/draco) decoder | Compressed 3D meshes | © Google LLC | [Apache 2.0](https://github.com/google/draco/blob/main/LICENSE) |
 | [Basis Universal](https://github.com/BinomialLLC/basis_universal) transcoder | Compressed textures | © Binomial LLC | [Apache 2.0](https://github.com/BinomialLLC/basis_universal/blob/master/LICENSE) |
 | [meshoptimizer](https://github.com/zeux/meshoptimizer) decoder | Compressed 3D meshes | © 2016–2022 Arseny Kapoulkine | [MIT](https://github.com/zeux/meshoptimizer/blob/master/LICENSE.md) |
+| [mp4-muxer](https://github.com/Vanilagy/mp4-muxer) 5.2.2 | Writing recordings as MP4 (H.264 + AAC) | © Vanilagy | [MIT](https://github.com/Vanilagy/mp4-muxer/blob/main/LICENSE) |
 | [fflate](https://github.com/101arrowz/fflate) | Opening .zip and compressed files | © 2020 Arjun Barrett | [MIT](https://github.com/101arrowz/fflate/blob/master/LICENSE) |
 | [ktx-parse](https://github.com/donmccurdy/KTX-Parse) | KTX2 textures | © Don McCurdy | [MIT](https://github.com/donmccurdy/KTX-Parse/blob/main/LICENSE) |
 | [zstddec](https://github.com/donmccurdy/zstddec) (includes Zstandard) | KTX2 textures | © Don McCurdy; Zstandard © Meta Platforms, Inc. | [MIT](https://github.com/donmccurdy/zstddec/blob/main/LICENSE); Zstandard [BSD](https://github.com/facebook/zstd/blob/dev/LICENSE) |

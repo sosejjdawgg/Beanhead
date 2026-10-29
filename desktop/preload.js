@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld("PeanutNative", {
   prepare: () => true,
   begin: (name, mime) => ipcRenderer.invoke("save:begin", String(name), String(mime)),
   append: b64 => ipcRenderer.invoke("save:append", String(b64)),
+  patch: (b64, pos) => ipcRenderer.invoke("save:patch", String(b64), +pos),
   finish: () => ipcRenderer.invoke("save:finish"),
   hasShared: () => false,
   clearShared: () => {}

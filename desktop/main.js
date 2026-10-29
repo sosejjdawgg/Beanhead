@@ -104,6 +104,9 @@ ipcMain.handle("save:begin", async (e, name, mime) => {
 ipcMain.handle("save:append", async (e, b64) => {
   try { fs.writeSync(SAVE.fd, Buffer.from(b64, "base64")); return true; } catch (err) { return false; }
 });
+ipcMain.handle("save:patch", async (e, b64, pos) => {
+  try { const b = Buffer.from(b64, "base64"); fs.writeSync(SAVE.fd, b, 0, b.length, Math.max(0, pos | 0)); return true; } catch (err) { return false; }
+});
 ipcMain.handle("save:finish", async () => {
   try { fs.closeSync(SAVE.fd); SAVE.fd = null; return SAVE.file; } catch (err) { return false; }
 });

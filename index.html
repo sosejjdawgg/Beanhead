@@ -196,6 +196,9 @@ body.sheet-open #bar{transform:translate(-50%,140%);opacity:0}
 #recChip{position:absolute;left:50%;top:calc(18px + env(safe-area-inset-top,0px));transform:translateX(-50%);display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:99px;
   background:#ff3b30;color:#fff;font:500 13px var(--mono);letter-spacing:.06em;box-shadow:0 8px 24px rgba(255,59,48,.35)}
 #recChip b{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s steps(2) infinite}
+#recLvl{width:30px;height:6px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden;display:block}
+#recLvl::after{content:"";display:block;height:100%;width:calc(var(--lvl,0) * 100%);background:#7dffa0;transition:width .08s}
+#recLvl.off{display:none}
 body.sheet-open #rec,body.sheet-open #micBtn,body.sheet-open #shot,body.sheet-open #resetBtn{transform:translateY(calc(100% + 160px));opacity:0}
 #rec,#micBtn,#shot,#resetBtn{transition:transform .45s var(--spring),opacity .3s,box-shadow .3s}
 @keyframes recpulse{0%{box-shadow:inset 0 0 0 3px #ff3b30,0 0 0 0 rgba(255,59,48,.5)}70%{box-shadow:inset 0 0 0 3px #ff3b30,0 0 0 16px rgba(255,59,48,0)}100%{box-shadow:inset 0 0 0 3px #ff3b30,0 0 0 0 rgba(255,59,48,0)}}
@@ -481,6 +484,7 @@ body.rigging #hud *{pointer-events:none!important}
     local: local, ready: false,
     three: local ? abs("./lib/three/") : "https://cdn.jsdelivr.net/npm/three@0.160.0/",
     mp: local ? abs("./lib/tasks-vision") : "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14",
+    mp4mux: local ? abs("./lib/mp4-muxer/mp4-muxer.mjs") : "https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.mjs",
     model: local ? abs("./models/face_landmarker.task") : "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
     seg: local ? abs("./models/selfie_segmenter.tflite") : "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite",
     pose: local ? abs("./models/pose_landmarker_lite.task") : "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
@@ -588,7 +592,7 @@ body.rigging #hud *{pointer-events:none!important}
   <button class="fab press" id="bHome"><svg class="i"><use href="#back"/></svg>Menu</button>
   <video id="pip" playsinline muted autoplay></video>
   <div id="chip" hidden>Loading face tracker…</div>
-  <div id="recChip" hidden><b></b><span id="recTime">0:00</span></div>
+  <div id="recChip" hidden><b></b><span id="recTime">0:00</span><i id="recLvl" aria-hidden="true"></i></div>
   <button class="press" id="micBtn" aria-label="Record sound: on"><svg class="i"><use href="#mic"/></svg></button>
   <button id="rec" aria-label="Start recording"><i></i></button>
   <button class="press" id="shot" aria-label="Take a picture"><svg class="i"><use href="#t-camera"/></svg></button>
@@ -2607,6 +2611,20 @@ $("#vidFiles").onchange = async e => {
 // ---- video sound into the live stream: 20 ms blocks of 48 kHz stereo PCM, base64, to the app
 const TAP_SRC = `class PcTap extends AudioWorkletProcessor{ process(ins, outs){ const i = ins[0]; if (i && i.length){ this.port.postMessage([i[0].slice(0), (i[1] || i[0]).slice(0)]); } return true; } } registerProcessor("pc-tap", PcTap);`;
 const PCM = {buf:new Int16Array(960*2), n:0, frac:0};
+// The tap delivers 128 samples at a time; audio encoders choke on hundreds of tiny calls a second, so blocks of 2048
+// (about 43 ms) are gathered first. emit(planar Float32Array [L..., R...], frames).
+function audioBatcher(emit, size = 2048){
+  const buf = new Float32Array(size*2); let n = 0;
+  return (L, R) => {
+    let i = 0;
+    while (i < L.length){
+      const k = Math.min(size - n, L.length - i);
+      buf.set(L.subarray(i, i + k), n); buf.set(R.subarray(i, i + k), size + n);
+      n += k; i += k;
+      if (n === size){ emit(buf.slice(), size); n = 0; }
+    }
+  };
+}
 async function syncLiveTap(){
   const N = window.PeanutLive, want = !!(AUD.ctx && AUD.gains.size && S.recVideo && N?.pcm && typeof liveOn === "function" && liveOn());
   if (want && !AUD.tap){
@@ -3648,7 +3666,7 @@ function openModal(title, build){
   $("#modal").hidden = false;
 }
 /* ---------- about & legal ---------- */
-const VERSION = "5.3";
+const VERSION = "5.4";
 function openLegal(){
   openModal("About & legal", b => {
     const d = el("div", "legal");
@@ -3681,6 +3699,7 @@ function openLegal(){
         <li>MediaPipe Tasks Vision and its face, pose, hand and selfie models © Google LLC, Apache 2.0</li>
         <li>Draco © Google LLC and Basis Universal © Binomial LLC, Apache 2.0</li>
         <li>meshoptimizer © Arseny Kapoulkine, fflate © Arjun Barrett, ktx-parse and zstddec © Don McCurdy, MIT; Zstandard © Meta Platforms, BSD</li>
+        <li>mp4-muxer © Vanilagy, MIT (writes the recordings)</li>
         <li>Fonts: Bricolage Grotesque and IBM Plex Mono, SIL Open Font License 1.1</li>
         <li>Windows app: Electron © OpenJS Foundation and Electron contributors, MIT (includes Chromium, BSD-style, and Node.js, MIT); scrcpy-server © Genymobile, Apache 2.0; Android SDK Platform-Tools (adb) © Google LLC</li></ul>
       <p>These stay the property of their owners and their licences don't grant rights in Peanut Cam.</p>
@@ -5659,11 +5678,13 @@ async function openMic(){
 }
 
 /* ---------- recording: scene (background + 3D) and optional microphone -> video in the gallery ---------- */
-const REC = {on:false, mr:null, chunks:[], c:null, x:null, bg:null, bgKey:"", t0:0, mic:null, mime:"", ext:""};
+const REC = {on:false, busy:false, mr:null, chunks:[], c:null, x:null, bg:null, bgKey:"", t0:0, mic:null, mime:"", ext:""};
+// MediaRecorder is the fallback. AAC first; then WebM (Opus plays everywhere in WebM) before MP4 with Opus,
+// which many phone galleries play silently.
 function pickMime(){
   if (!window.MediaRecorder) return null;
-  for (const [m, e] of [["video/mp4;codecs=avc1.42E01E,mp4a.40.2","mp4"],["video/mp4;codecs=avc1,opus","mp4"],["video/mp4","mp4"],
-                        ["video/webm;codecs=vp9,opus","webm"],["video/webm;codecs=vp8,opus","webm"],["video/webm","webm"]])
+  for (const [m, e] of [["video/mp4;codecs=avc1.42E01E,mp4a.40.2","mp4"],["video/webm;codecs=vp9,opus","webm"],["video/webm;codecs=vp8,opus","webm"],
+                        ["video/mp4;codecs=avc1,opus","mp4"],["video/mp4","mp4"],["video/webm","webm"]])
     if (MediaRecorder.isTypeSupported(m)) return [m, e];
   return null;
 }
@@ -5706,74 +5727,238 @@ function recPlan(){
   const w = Math.round(cw*k/2)*2, h = Math.round(ch*k/2)*2;
   return {w, h, direct: w === cw && h === ch && !!canvas.captureStream};
 }
+// The main recorder: the phone's (or PC's) own encoders through WebCodecs, H.264 + AAC, written into a standard MP4
+// (mp4-muxer) that streams straight into the gallery file as it's made. Plays with sound everywhere and uploads anywhere.
+async function recVideoConfig(w, h, fps, bps){
+  const mbs = Math.ceil(w/16)*Math.ceil(h/16), rate = mbs*fps;
+  const lvl = mbs <= 8192 && rate <= 245760 ? "28" : mbs <= 8704 && rate <= 522240 ? "2A" : rate <= 983040 ? "33" : "34";
+  for (const hw of ["prefer-hardware", "no-preference"]) for (const p of ["6400", "4D40", "42E0"]){
+    const cfg = {codec:`avc1.${p}${lvl}`, width:w, height:h, bitrate:bps, framerate:fps, hardwareAcceleration:hw, latencyMode:"quality", bitrateMode:"variable", avc:{format:"avc"}};
+    try{ if ((await VideoEncoder.isConfigSupported(cfg)).supported) return cfg; }catch(e){}
+  }
+  return null;
+}
+async function recCodecs(w, h, fps, bps, rate){
+  if (!window.VideoEncoder || !window.AudioEncoder || !window.VideoFrame || !window.AudioData) return null;
+  const v = await recVideoConfig(w, h, fps, bps); if (!v) return null;
+  const a = {codec:"mp4a.40.2", sampleRate:rate, numberOfChannels:2, bitrate:128000};
+  try{ if (!(await AudioEncoder.isConfigSupported(a)).supported) return null; }catch(e){ return null; }
+  try{ REC.Mp4 ||= await import(PC.mp4mux); }catch(e){ console.warn("mp4 muxer:", e); return null; }
+  return {v, a};
+}
+// where a recording goes while it's made: the gallery / Videos folder (native bridge), or memory (web download)
+function fileSink(name, type){
+  const N = window.PeanutNative, native = !!N?.begin, parts = [];
+  let size = 0, ok = true, chain = Promise.resolve();
+  if (native){ try{ N.prepare?.(); }catch(e){} chain = Promise.resolve(N.begin(name, type)).then(r => { if (!r) ok = false; }); }
+  return {
+    write(d, pos){
+      const c = d.slice();
+      if (!native){ parts.push([pos, c]); size = Math.max(size, pos + c.length); return; }
+      chain = chain.then(async () => {
+        if (!ok) return;
+        const b = u8b64(c), end = pos === size;
+        const r = end ? await N.append(b) : await N.patch?.(b, pos);   // patch: the MP4's box sizes at the end
+        if (end) size += c.length;
+        if (!r) ok = false;
+      });
+    },
+    async finish(){
+      await chain;
+      if (native){ const done = await N.finish(); return {ok:ok && !!done, file:done}; }
+      const all = new Uint8Array(size); for (const [p, d] of parts) all.set(d, p);
+      return {ok:true, blob:new Blob([all], {type})};
+    }
+  };
+}
+function recName(ext){ const d = new Date(), z = n => String(n).padStart(2, "0"); return `PeanutCam_${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.${ext}`; }
+
 function recFrame(){
   if (!REC.on) return;
   const now = performance.now(), t = Math.floor((now - REC.t0) / 1000);
   if (t !== REC.shownT){ REC.shownT = t; $("#recTime").textContent = `${Math.floor(t/60)}:${String(t % 60).padStart(2, "0")}`; }
-  if (REC.direct) return;
+  recMeter(now);
+  if (REC.direct && !REC.wc) return;                 // MediaRecorder takes the canvas by itself
   if (now - REC.last < 1000/REC.fps - 4) return;     // pace to the recording's frame rate
   REC.last = now;
-  const w = REC.c.width, h = REC.c.height;
-  if (glOpaque()) REC.x.drawImage(canvas, 0, 0, w, h);
-  else {
-    const k = `${S.bg}|${S.bgColor}|${bgImg?.src || ""}|${w}x${h}`;
-    if (k !== REC.bgKey || bgDynamic()){ paintBg(REC.bg.getContext("2d"), w, h); REC.bgKey = k; }   // a video background changes every frame
-    REC.x.drawImage(REC.bg, 0, 0);
-    REC.x.drawImage(canvas, 0, 0, w, h);
+  let src = canvas;
+  if (!REC.direct){
+    const w = REC.c.width, h = REC.c.height;
+    if (glOpaque()) REC.x.drawImage(canvas, 0, 0, w, h);
+    else {
+      const k = `${S.bg}|${S.bgColor}|${bgImg?.src || ""}|${w}x${h}`;
+      if (k !== REC.bgKey || bgDynamic()){ paintBg(REC.bg.getContext("2d"), w, h); REC.bgKey = k; }   // a video background changes every frame
+      REC.x.drawImage(REC.bg, 0, 0);
+      REC.x.drawImage(canvas, 0, 0, w, h);
+    }
+    src = REC.c;
   }
-  REC.track.requestFrame?.();
+  if (!REC.wc){ REC.track.requestFrame?.(); return; }
+  const E = REC.wc;
+  if (E.venc.state !== "configured" || E.venc.encodeQueueSize > 4) return;    // encoder behind: skip a frame rather than pile up
+  const ts = Math.round((now - REC.t0)*1000), key = ts - E.lastKey >= 2e6;
+  if (key) E.lastKey = ts;
+  let f = null;
+  try{ f = new VideoFrame(src, {timestamp:ts, duration:Math.round(1e6/REC.fps)}); E.venc.encode(f, {keyFrame:key}); }
+  catch(e){ console.error(e); }
+  finally{ f?.close(); }
+}
+// the level meter in the recording chip, and a warning when no sound reaches the recording at all
+function recMeter(now){
+  const an = REC.an, el = $("#recLvl");
+  el.classList.toggle("off", !an);
+  if (!an) return;
+  const buf = REC.anBuf ||= new Float32Array(1024); an.getFloatTimeDomainData(buf);
+  let sum = 0; for (let i = 0; i < buf.length; i++) sum += buf[i]*buf[i];
+  const rms = Math.sqrt(sum/buf.length); REC.peak = Math.max(REC.peak, rms);
+  el.style.setProperty("--lvl", Math.min(1, Math.sqrt(rms)*2.2).toFixed(3));
+  if (!REC.warned && now - REC.t0 > 4000){
+    REC.warned = true;
+    if (AUD.ctx?.state !== "running") toast("Sound is paused on this device, so this recording may be silent. Stop, tap the screen once, and record again.", 6000);
+    else if (REC.peak < 1e-4 && (S.recMic || REC.phone || REC.pc)) toast("No sound is reaching the recording yet. Check Settings › Capture › Sound (hold the mic button).", 6000);
+  }
 }
 async function startRec(){
-  const mm = pickMime();
-  if (!mm || !HTMLCanvasElement.prototype.captureStream){ toast("This device can't record video here."); return; }
-  [REC.mime, REC.ext] = mm;
-  const P = recPlan(), fps = +S.recFps || 30;
-  REC.direct = P.direct; REC.fps = fps; REC.last = 0; REC.shownT = -1;
-  if (P.direct){ REC.c = null; REC.track = canvas.captureStream(fps).getVideoTracks()[0]; }
-  else {
+  if (REC.on || REC.busy) return;
+  REC.busy = true;
+  try{ await recStart(); } finally{ REC.busy = false; }
+}
+async function recStart(){
+  if (!HTMLCanvasElement.prototype.captureStream && !window.VideoEncoder){ toast("This device can't record video here."); return; }
+  // start the sound engine inside this tap: later (after the consent prompts) the browser may refuse to
+  const ctx = audioCtx();
+  const P = recPlan(), fps = +S.recFps || 30, bps = Math.round(clamp(P.w*P.h*fps*(REC_BPP[S.recQ] || REC_BPP.high), 2e6, 24e6));
+  // sound: Peanut Cam's videos, the microphone and everything else playing on the phone / PC, mixed in WebAudio
+  const phone = S.recPhone && phoneAudioOk() ? await phoneAudioOn() : false;      // Android asks for consent here
+  REC.pc = S.recPhone && !phoneAudioOk() && window.PeanutDesktop ? await pcSoundStream() : null;
+  if (S.recMic) REC.mic = await openMic();
+  if (ctx && ctx.state !== "running") await Promise.race([ctx.resume().catch(() => {}), new Promise(r => setTimeout(r, 800))]);
+  const mixOk = !!ctx && ctx.state === "running", wantSound = S.recMic || phone || !!REC.pc || S.recVideo;
+  REC.an = null; REC.peak = 0; REC.warned = false; REC.mix = null;
+  if (mixOk && wantSound){
+    REC.mix = ctx.createGain();
+    REC.hum = ctx.createConstantSource(); REC.hum.offset.value = 0; REC.hum.connect(REC.mix); REC.hum.start();   // keeps the mix flowing in silence
+    // also catches videos started mid-recording; with PC sound and the speaker on, they're already in the PC sound
+    if (S.recVideo && !(REC.pc && S.hearVideos)) AUD.bus.connect(REC.mix);
+    if (REC.pc) ctx.createMediaStreamSource(REC.pc).connect(REC.mix);
+    if (REC.mic){ REC.micNode = ctx.createMediaStreamSource(REC.mic); REC.micNode.connect(REC.mix); }
+    if (phone){ try{ REC.phone = await phonePlayer(ctx, REC.mix); }catch(e){ console.error(e); toast("Phone sound couldn't be added to this recording."); } }
+    REC.an = ctx.createAnalyser(); REC.an.fftSize = 1024; REC.mix.connect(REC.an);
+  } else if (wantSound && REC.mic && !mixOk){
+    toast("Recording your microphone only: this device paused the sound mixer.", 4500);
+  }
+  try{ window.PeanutNative?.prepare?.(); }catch(e){}
+  REC.direct = P.direct; REC.fps = fps; REC.last = 0; REC.shownT = -1; REC.wc = null;
+  const scaled = () => {
     REC.c = document.createElement("canvas"); REC.c.width = P.w; REC.c.height = P.h; REC.x = REC.c.getContext("2d", {alpha:false});
     REC.bg = document.createElement("canvas"); REC.bg.width = P.w; REC.bg.height = P.h; REC.bgKey = "";
+  };
+  // 1) WebCodecs + MP4 (H.264 + AAC)
+  const cod = await recCodecs(P.w, P.h, fps, bps, ctx?.sampleRate || 48000);
+  if (cod){
+    try{ await recStartWC(P, cod, scaled); return; }
+    catch(e){ console.error(e); recTeardown(); }
+  }
+  // 2) MediaRecorder
+  const mm = pickMime();
+  if (!mm || !HTMLCanvasElement.prototype.captureStream){ recTeardown(); toast("This device can't record video here."); return; }
+  [REC.mime, REC.ext] = mm;
+  if (P.direct){ REC.c = null; REC.track = canvas.captureStream(fps).getVideoTracks()[0]; }
+  else {
+    scaled();
     REC.track = REC.c.captureStream(0).getVideoTracks()[0];
     if (!REC.track.requestFrame){ REC.track.stop(); REC.track = REC.c.captureStream(fps).getVideoTracks()[0]; }
   }
   const tracks = [REC.track];
-  // sound: Peanut Cam's videos, the microphone and (Android) everything else playing on the phone, mixed in WebAudio
-  const phone = S.recPhone && phoneAudioOk() ? await phoneAudioOn() : false;      // Android asks for consent here
-  REC.pc = S.recPhone && !phoneAudioOk() && window.PeanutDesktop ? await pcSoundStream() : null;
-  if (S.recMic) REC.mic = await openMic();
-  const ctx = (phone || REC.pc || S.recVideo) ? audioCtx() : null;
-  if (ctx){
-    REC.dest = ctx.createMediaStreamDestination();
-    // also catches videos started mid-recording; with PC sound and the speaker on, they're already in the PC sound
-    if (S.recVideo && !(REC.pc && S.hearVideos)) AUD.bus.connect(REC.dest);
-    if (REC.pc) ctx.createMediaStreamSource(REC.pc).connect(REC.dest);
-    if (REC.mic){ REC.micNode = ctx.createMediaStreamSource(REC.mic); REC.micNode.connect(REC.dest); }
-    if (phone){ try{ REC.phone = await phonePlayer(ctx, REC.dest); }catch(e){ console.error(e); toast("Phone sound couldn't be added to this recording."); } }
-    tracks.push(...REC.dest.stream.getAudioTracks());
-  } else if (REC.mic) tracks.push(...REC.mic.getAudioTracks());
-  try{ window.PeanutNative?.prepare?.(); }catch(e){}
-  const bps = Math.round(clamp(P.w*P.h*fps*(REC_BPP[S.recQ] || REC_BPP.high), 2e6, 24e6));
+  if (REC.mix){ REC.dest = ctx.createMediaStreamDestination(); REC.mix.connect(REC.dest); tracks.push(...REC.dest.stream.getAudioTracks()); }
+  else if (REC.mic) tracks.push(...REC.mic.getAudioTracks());
   try{ REC.mr = new MediaRecorder(new MediaStream(tracks), {mimeType:REC.mime, videoBitsPerSecond:bps, audioBitsPerSecond:128000}); }
-  catch(e){ REC.mic?.getTracks().forEach(t => t.stop()); REC.track?.stop(); toast("Couldn't start recording."); return; }
+  catch(e){ recTeardown(); toast("Couldn't start recording."); return; }
   REC.chunks = [];
   REC.mr.ondataavailable = e => { if (e.data?.size) REC.chunks.push(e.data); };
   REC.mr.onstop = finishRec;
   REC.mr.onerror = e => { console.error(e); toast("Recording stopped: " + (e?.error?.message || "the encoder failed")); stopRec(); };
-  REC.on = true; REC.t0 = performance.now(); recFrame();
+  recBegin();
   REC.mr.start(1000);
+}
+async function recStartWC(P, cod, scaled){
+  if (!P.direct) scaled();
+  const {Muxer, StreamTarget} = REC.Mp4, sound = !!REC.mix;
+  const sink = fileSink(recName("mp4"), "video/mp4");
+  const muxer = new Muxer({
+    target:new StreamTarget({onData:(d, pos) => sink.write(d, pos), chunked:true, chunkSize:1 << 20}),
+    video:{codec:"avc", width:P.w, height:P.h, frameRate:REC.fps},
+    audio:sound ? {codec:"aac", numberOfChannels:2, sampleRate:cod.a.sampleRate} : undefined,
+    fastStart:false, firstTimestampBehavior:"cross-track-offset"
+  });
+  const E = REC.wc = {muxer, sink, lastKey:-1e9, failed:null, aenc:null, tap:null, n:0, a0:null};
+  const fail = e => { console.error(e); if (!E.failed){ E.failed = e; toast("Recording stopped: " + (e?.message || "the encoder failed")); stopRec(); } };
+  E.venc = new VideoEncoder({output:(c, m) => { try{ muxer.addVideoChunk(c, m); }catch(err){ fail(err); } }, error:fail});
+  E.venc.configure(cod.v);
+  if (sound){
+    const ctx = AUD.ctx;
+    E.aenc = new AudioEncoder({output:(c, m) => { try{ muxer.addAudioChunk(c, m); }catch(err){ fail(err); } }, error:fail});
+    E.aenc.configure(cod.a);
+    if (!AUD.tapReady){ await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([TAP_SRC], {type:"text/javascript"}))); AUD.tapReady = true; }
+    E.tap = new AudioWorkletNode(ctx, "pc-tap", {numberOfInputs:1, numberOfOutputs:1, outputChannelCount:[2]});
+    E.sinkNode = ctx.createGain(); E.sinkNode.gain.value = 0;
+    REC.mix.connect(E.tap); E.tap.connect(E.sinkNode).connect(ctx.destination);
+    const rate = ctx.sampleRate, batch = audioBatcher((buf, n) => {
+      if (E.aenc.state !== "configured") return;
+      const ad = new AudioData({format:"f32-planar", sampleRate:rate, numberOfFrames:n, numberOfChannels:2, timestamp:Math.round((E.a0 + E.n*1000/rate)*1000), data:buf});
+      E.n += n;
+      try{ E.aenc.encode(ad); }catch(err){ fail(err); } finally{ ad.close(); }
+    });
+    E.tap.port.onmessage = ev => {
+      if (!REC.on) return;
+      const [L, R] = ev.data;
+      if (E.a0 === null) E.a0 = Math.max(0, performance.now() - REC.t0 - L.length*1000/rate);   // when the first block was heard
+      batch(L, R);
+    };
+  }
+  recBegin();
+}
+function recBegin(){
+  $("#recLvl").style.setProperty("--lvl", "0");
+  REC.on = true; REC.t0 = performance.now(); recFrame();
   $("#rec").classList.add("on"); $("#rec").setAttribute("aria-label", "Stop recording"); $("#recChip").hidden = false; $("#recTime").textContent = "0:00";
   buzz(25);
 }
-function stopRec(){
-  if (!REC.on) return;
-  REC.on = false; try{ REC.mr.stop(); }catch(e){} REC.mic?.getTracks().forEach(t => t.stop()); REC.mic = null; REC.track?.stop(); REC.track = null;
+// releases the sound sources and the mix (the encoders are finished by finishRec / finishWC)
+function recTeardown(){
+  REC.mic?.getTracks().forEach(t => t.stop()); REC.mic = null; REC.track?.stop(); REC.track = null;
   try{ REC.micNode?.disconnect(); }catch(e){} REC.micNode = null;
-  if (REC.dest){ try{ AUD.bus.disconnect(REC.dest); }catch(e){} REC.dest = null; }
+  if (REC.mix){ try{ AUD.bus?.disconnect(REC.mix); }catch(e){} try{ REC.mix.disconnect(); }catch(e){} REC.mix = null; }
+  try{ REC.hum?.stop(); REC.hum?.disconnect(); }catch(e){} REC.hum = null;
+  REC.dest = null; REC.an = null;
   REC.pc?.getTracks().forEach(t => t.stop()); REC.pc = null;
   if (REC.phone){ clearInterval(REC.phone.timer); try{ REC.phone.node.disconnect(); }catch(e){} REC.phone = null; }
   phoneAudioRelease();
+}
+function stopRec(){
+  if (!REC.on) return;
+  REC.on = false;
+  const E = REC.wc;
+  if (E){ if (E.tap){ E.tap.port.onmessage = null; try{ E.tap.disconnect(); E.sinkNode.disconnect(); }catch(e){} } finishWC(E); }
+  else { try{ REC.mr.stop(); }catch(e){} }
+  recTeardown();
   $("#rec").classList.remove("on"); $("#rec").setAttribute("aria-label", "Start recording"); $("#recChip").hidden = true;
   buzz([15, 60, 15]);
+}
+async function finishWC(E){
+  REC.wc = null;
+  busy("Saving video…");
+  try{
+    await E.venc.flush().catch(() => {});
+    if (E.aenc) await E.aenc.flush().catch(() => {});
+    E.muxer.finalize();
+    const r = await E.sink.finish();
+    if (!r.ok) throw new Error("the file couldn't be written");
+    if (r.blob){ const name = recName("mp4"), a = document.createElement("a"); a.href = URL.createObjectURL(r.blob); a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000); toast("Video downloaded: " + name, 3600); }
+    else if (window.PeanutDesktop) toast("Saved to Videos › PeanutCam", 5000, {label:"Show", fn:() => window.PeanutDesktop.showFile(r.file)});
+    else toast("Saved to your gallery (Movies › PeanutCam)", 3600);
+  }catch(e){ console.error(e); toast("Couldn't save the video: " + (e?.message || e)); }
+  finally{ try{ E.venc.close(); }catch(e){} try{ E.aenc?.close(); }catch(e){} busy(); }
 }
 async function finishRec(){
   const type = REC.mime.split(";")[0], blob = new Blob(REC.chunks, {type}); REC.chunks = [];
@@ -5911,13 +6096,13 @@ async function liveAudioStart(){
     error:e => { console.error(e); toast("Stream sound stopped: " + (e?.message || e)); liveAudioStop(); }
   });
   LA.enc.configure({...cfg, aac:{format:"aac"}});
-  LA.node.port.onmessage = e => {
+  const batch = audioBatcher((buf, n) => {
     if (LA.enc?.state !== "configured") return;
-    const [L, R] = e.data, n = L.length, buf = new Float32Array(n*2); buf.set(L); buf.set(R, n);
     const ad = new AudioData({format:"f32-planar", sampleRate:ctx.sampleRate, numberOfFrames:n, numberOfChannels:2, timestamp:Math.round((LA.t0 + LA.n*1000/ctx.sampleRate)*1000), data:buf});
     LA.n += n;
     try{ LA.enc.encode(ad); }catch(err){ console.error(err); } finally{ ad.close(); }
-  };
+  });
+  LA.node.port.onmessage = e => { const [L, R] = e.data; batch(L, R); };
 }
 async function liveAudioMic(){
   if (!LA.micGain) return;

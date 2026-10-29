@@ -20,6 +20,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.PermissionRequest;
@@ -369,7 +370,10 @@ public class MainActivity extends Activity {
                             ? MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
                             : MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), v);
                     if (uri == null) return false;
-                    out = getContentResolver().openOutputStream(uri);
+                    // a file descriptor (not just a stream) so the end of a recording can patch its header (patch())
+                    ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(uri, "rw");
+                    if (pfd == null) return false;
+                    out = new ParcelFileDescriptor.AutoCloseOutputStream(pfd);
                 } else {
                     boolean image = mime != null && mime.startsWith("image/");
                     File dir = new File(Environment.getExternalStoragePublicDirectory(image ? Environment.DIRECTORY_PICTURES : Environment.DIRECTORY_MOVIES), "PeanutCam");
@@ -387,6 +391,21 @@ public class MainActivity extends Activity {
         public synchronized boolean append(String b64) {
             try {
                 out.write(Base64.decode(b64, Base64.DEFAULT));
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        /** Overwrites bytes already written (an MP4's box sizes, filled in when the recording ends). */
+        @JavascriptInterface
+        public synchronized boolean patch(String b64, double position) {
+            try {
+                if (!(out instanceof FileOutputStream)) return false;
+                java.nio.channels.FileChannel ch = ((FileOutputStream) out).getChannel();
+                java.nio.ByteBuffer b = java.nio.ByteBuffer.wrap(Base64.decode(b64, Base64.DEFAULT));
+                long pos = (long) position;
+                while (b.hasRemaining()) pos += ch.write(b, pos);
                 return true;
             } catch (Exception e) {
                 return false;

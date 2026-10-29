@@ -10,8 +10,8 @@ android {
         applicationId "com.beanhead.peanutcam"
         minSdk 26
         targetSdk 34
-        versionCode 23
-        versionName "5.3"
+        versionCode 24
+        versionName "5.4"
     }
 
     // Fixed test key so each new build installs over the previous one.
