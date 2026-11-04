@@ -717,7 +717,7 @@ const DEFAULTS = {
   world:false, wBiome:"auto", wMorph:20, wSpeed:0.35, wRes:240, wJitter:0.5, wAffine:true, wDither:0.7, wDepth:15, wFog:0.5, wParallax:0.6,
   coachSeen:false, psx:"modern", fx:"none", fxAmt:0.7, body:false,
   recRes:"screen", recFps:30, recQ:"high", shotFmt:"jpg", perf:"auto", fpsCap:60, recPhone:true, recVideo:true, micId:"",
-  faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mEyeZ:0, mMouthZ:0, mEyeRot:0, mMouthRot:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true, mFrame:"full",
+  faceMode:"overlay", mEyeSpacing:0, mEyeY:0, mMouthY:0, mEyeSize:1, mMouthSize:1, mFaceZ:0, mEyeZ:0, mMouthZ:0, mEyeRot:0, mMouthRot:0, mCurve:1, mFaceK:1, mTurn:0, mHeadBone:true, mFrame:"full", mAnim:"auto", mAnimAmt:1, mAnimSpeed:1,
   mirror:true, pip_on:true, deviceId:"", facing:"user", hearVideos:true, camRes:720, camSrc:"device", phoneSerial:"", phoneFacing:"back", phoneRes:1920, phoneFps:30, phoneRot:0,
   studio:{cast:[], shots:[], shot:-1, smooth:true, lock:false}, sceneId:"free", sceneBak:null,
   bgList:[], bgMode:"all", bgVol:0, tv:{on:false, x:1.05, y:1.3, z:0.4, s:1.0, r:-0.35, list:[], mode:"all", vol:0.8, i:0, playing:true,
@@ -735,7 +735,7 @@ const SCOPED = ["bg","bgColor","world","wBiome","wMorph","wSpeed","wRes","wJitte
   "bgList","bgMode","bgVol","tv","studio","sceneId","sceneBak"];
 const NUT_KEYS = ["nX","nY","nScale","nRot","nSpin","nTilt"];
 const CHAR_KEYS = ["pX","pY","pScale","pRot","pEyeSize","pMouthSize","pMove","pStick","pShadow"];
-const MODEL_KEYS = ["faceMode","mEyeSpacing","mEyeY","mMouthY","mEyeSize","mMouthSize","mFaceZ","mEyeZ","mMouthZ","mEyeRot","mMouthRot","mCurve","mFaceK","mTurn","mHeadBone","mFrame"];
+const MODEL_KEYS = ["faceMode","mEyeSpacing","mEyeY","mMouthY","mEyeSize","mMouthSize","mFaceZ","mEyeZ","mMouthZ","mEyeRot","mMouthRot","mCurve","mFaceK","mTurn","mHeadBone","mFrame","mAnim","mAnimAmt","mAnimSpeed"];
 const charType = id => CHARS.find(c => c.id === id)?.type || "image";
 let scopeId = "peanut";   // whose studio is open (background, cast, cameras)
 let leadRef = "peanut";   // who wears the live face; the studio's owner unless a studio camera moved it to a cast member
@@ -1168,7 +1168,7 @@ async function buildModel(c, turnSteps = 0){
   root.traverse(o => { if (o.morphTargetDictionary && o.morphTargetInfluences){ const map = {}; for (const [k, i] of Object.entries(o.morphTargetDictionary)) map[k.toLowerCase().replace(/^.*[.:]/, "").replace(/[^a-z]/g, "")] = i; morphs.push({o, map}); } });
   const arkit = morphs.some(m => "jawopen" in m.map || "eyeblinkleft" in m.map);
   rt.dispose();
-  return {id:c.id, root, vrm, rig, morphs, arkit, head:rig.head, own, autoRig:auto ? c.cfg.autoRig.type : null, tail:auto?.tail || [], turn, bx:bx.clone(), cfg:c.cfg, applied, anims:anims || []};
+  return {id:c.id, root, vrm, rig, morphs, arkit, head:rig.head, own, autoRig:auto ? c.cfg.autoRig.type : null, tail:auto?.tail || [], turn, bx:bx.clone(), cfg:c.cfg, applied, anims:anims || [], builtin:!!c.builtin};
 }
 // the model's own face, driven by your expressions (VRM expressions or ARKit-named shape keys)
 const swapLR = n => n.replace(/left/g, "#").replace(/right/g, "left").replace(/#/g, "right");
@@ -1249,6 +1249,95 @@ function paintFace(f){
     if (f.freckles){ x.fillStyle = "rgba(140,80,50,.45)"; for (let i = 0; i < 26; i++){ const a = i*2.39996, r = 4 + (i % 7)*2; x.fillRect(cx + (a % 2 < 1 ? -1 : 1)*(16 + Math.cos(a)*r*0.6), 70 + Math.sin(a)*4, 1.5, 1.5); } }
     if (f.wrinkles){ x.strokeStyle = "rgba(90,55,40,.3)"; x.lineWidth = 1; for (const s of [-1, 1]){ x.beginPath(); x.moveTo(cx + s*12, 78); x.quadraticCurveTo(cx + s*16, 86, cx + s*13, 94); x.stroke(); } x.beginPath(); x.moveTo(cx - 12, 41); x.lineTo(cx + 12, 41); x.stroke(); }
   });
+}
+// ---- ambient animations: a few loops per character, from keyframed poses. Bones rest unrotated, so a pose is
+// plain angles: -x raises a limb forward, +z swings the left arm out (-z the right), +x on a shin bends the knee.
+const qa = (x, y, z) => new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z)).toArray();
+const PM = (...o) => Object.assign({}, ...o);
+// knees bent by a (thigh forward, shin back, foot level); dy is how far the hips drop to keep the feet down
+const crouch = a => ({LeftUpLeg:[-a, 0, 0], LeftLeg:[2*a, 0, 0], LeftFoot:[-a, 0, 0], RightUpLeg:[-a, 0, 0], RightLeg:[2*a, 0, 0], RightFoot:[-a, 0, 0]});
+const drop = a => -0.84*(1 - Math.cos(a));
+const arms = (lx, lz, rx, rz, lf = 0, rf = 0) => ({LeftArm:[lx, 0, lz], RightArm:[rx, 0, rz], LeftForeArm:[lf, 0, 0], RightForeArm:[rf, 0, 0]});
+// keys: [time, pose, hips height offset?]; a bone missing from a key is back at rest there
+function poseClip(name, keys, extra = []){
+  const times = keys.map(k => k[0]), bones = new Set();
+  keys.forEach(k => Object.keys(k[1]).forEach(b => bones.add(b)));
+  const tracks = [...bones].map(b => new THREE.QuaternionKeyframeTrack(`mixamorig_${b}.quaternion`, times, keys.flatMap(k => qa(...(k[1][b] || [0, 0, 0])))));
+  if (keys.some(k => k[2])) tracks.push(new THREE.VectorKeyframeTrack("mixamorig_Hips.position", times, keys.flatMap(k => [0, 0.96 + (k[2] || 0), 0])));
+  return new THREE.AnimationClip(name, times[times.length - 1], [...tracks, ...extra]);
+}
+const loopKeys = (dur, list) => [...list, [dur, list[0][1], list[0][2]]];   // ends where it started
+const HUMAN_ANIMS = {
+  Idle:() => poseClip("Idle", [[0, {Spine2:[0, 0, 0], Hips:[0, 0, 0.02], Head:[0, 0, 0]}], [1, {Spine2:[0.025, 0.02, 0], Hips:[0, 0.03, 0.03], Head:[0.04, 0.18, 0], LeftArm:[0.06, 0, 0.03], RightArm:[-0.05, 0, -0.02]}],
+    [2, {Hips:[0, 0, -0.02], Head:[0, 0, 0.03]}], [3, {Spine2:[0.025, -0.02, 0], Hips:[0, -0.03, -0.03], Head:[0.03, -0.2, 0], LeftArm:[-0.05, 0, 0.02], RightArm:[0.06, 0, -0.03]}], [4, {Spine2:[0, 0, 0], Hips:[0, 0, 0.02], Head:[0, 0, 0]}]]),
+  Groove:() => poseClip("Groove", loopKeys(2, [
+    [0, PM(crouch(0.08), arms(-0.1, 0.12, -0.1, -0.12, -0.5, -0.5), {Hips:[0, 0.08, 0.04], Spine2:[0, -0.08, 0]}), drop(0.08)],
+    [0.5, PM(crouch(0.3), arms(-0.35, 0.2, -0.05, -0.1, -1.0, -0.6), {Spine2:[0.05, 0, 0]}), drop(0.3)],
+    [1, PM(crouch(0.08), arms(-0.1, 0.12, -0.1, -0.12, -0.5, -0.5), {Hips:[0, -0.08, -0.04], Spine2:[0, 0.08, 0]}), drop(0.08)],
+    [1.5, PM(crouch(0.3), arms(-0.05, 0.1, -0.35, -0.2, -0.6, -1.0), {Spine2:[0.05, 0, 0]}), drop(0.3)]])),
+  Talk:() => poseClip("Talk", loopKeys(3, [
+    [0, PM(arms(-0.15, 0.1, -0.3, -0.15, -0.8, -1.1))], [0.6, PM(arms(-0.25, 0.15, -0.45, -0.25, -1.1, -1.4), {Spine2:[0.03, 0.05, 0]})],
+    [1.2, PM(arms(-0.1, 0.08, -0.2, -0.1, -0.7, -0.9))], [1.9, PM(arms(-0.4, 0.2, -0.3, -0.2, -1.3, -1.0), {Spine2:[0.03, -0.05, 0]})], [2.5, PM(arms(-0.15, 0.1, -0.35, -0.2, -0.9, -1.2))]])),
+  Wave:() => poseClip("Wave", Array.from({length:9}, (_, i) => [i*0.25, {RightArm:[-0.2, 0, -2.5], RightForeArm:[0, 0, i % 2 ? -0.4 : 0.3], LeftArm:[0, 0, 0.05], Spine2:[0, 0, 0.04]}])),
+  // ---- their own moves
+  Ollie:() => poseClip("Ollie", loopKeys(1.6, [
+    [0, PM(crouch(0.1), arms(0, 0.2, 0, -0.2)), drop(0.1)], [0.35, PM(crouch(0.5), arms(-0.2, 0.5, -0.2, -0.5, -0.4, -0.4), {Spine2:[0.2, 0, 0]}), drop(0.5)],
+    [0.6, PM({LeftUpLeg:[-0.7, 0, 0], LeftLeg:[1.0, 0, 0], LeftFoot:[-0.3, 0, 0], RightUpLeg:[-0.7, 0, 0], RightLeg:[1.0, 0, 0], RightFoot:[-0.3, 0, 0]}, arms(-0.3, 0.9, -0.3, -0.9, -0.3, -0.3)), 0.12],
+    [0.85, PM(crouch(0.45), arms(-0.1, 0.6, -0.1, -0.6, -0.3, -0.3), {Spine2:[0.15, 0, 0]}), drop(0.45)], [1.2, PM(crouch(0.12), arms(0, 0.25, 0, -0.25)), drop(0.12)]]),
+    [new THREE.VectorKeyframeTrack("Skater_Board.position", [0, 0.35, 0.6, 0.85, 1.6], [0, 0, 0.045, 0, 0, 0.045, 0, 0.13, 0.045, 0, 0, 0.045, 0, 0, 0.045]),
+     new THREE.QuaternionKeyframeTrack("Skater_Board.quaternion", [0, 0.35, 0.5, 0.7, 0.85, 1.6], [[0, 0, 0], [0, 0, 0], [-0.3, 0, 0], [0.05, 0, 0], [0, 0, 0], [0, 0, 0]].flatMap(e => qa(...e)))]),
+  Balance:() => poseClip("Balance", loopKeys(3, [
+    [0, PM(crouch(0.2), arms(0, 1.35, 0, -1.05), {Hips:[0, 0, 0.06], Spine2:[0, 0, -0.05]}), drop(0.2)], [0.75, PM(crouch(0.22), arms(0, 1.2, 0, -1.2)), drop(0.22)],
+    [1.5, PM(crouch(0.2), arms(0, 1.05, 0, -1.35), {Hips:[0, 0, -0.06], Spine2:[0, 0, 0.05]}), drop(0.2)], [2.25, PM(crouch(0.22), arms(0, 1.2, 0, -1.2)), drop(0.22)]])),
+  Headbang:() => poseClip("Headbang", loopKeys(0.8, [
+    [0, PM(arms(-0.3, 0.3, -0.3, -0.3, -1.2, -1.2), crouch(0.12)), drop(0.12)], [0.2, PM(arms(-0.3, 0.3, -0.3, -0.3, -1.2, -1.2), crouch(0.2), {Spine1:[0.2, 0, 0], Spine2:[0.35, 0, 0]}), drop(0.2)],
+    [0.4, PM(arms(-0.3, 0.3, -0.3, -0.3, -1.2, -1.2), crouch(0.12)), drop(0.12)], [0.6, PM(arms(-0.3, 0.3, -0.3, -0.3, -1.2, -1.2), crouch(0.2), {Spine1:[0.2, 0, 0], Spine2:[0.35, 0, 0]}), drop(0.2)]])),
+  "Air guitar":() => poseClip("Air guitar", loopKeys(1, [0, 0.25, 0.5, 0.75].map((t, i) => [t, PM(crouch(0.15), {LeftArm:[-0.9, 0, 0.5], LeftForeArm:[-0.6, 0, 0], RightArm:[-0.4, 0, -0.25], RightForeArm:[i % 2 ? -0.9 : -1.5, 0, 0], Hips:[0, 0, i % 2 ? 0.03 : -0.03]}), drop(0.15)]))),
+  Toprock:() => poseClip("Toprock", loopKeys(2, [
+    [0, PM(crouch(0.1), arms(-0.6, 0.3, -0.6, -0.3, -1.2, -1.2)), drop(0.1)],
+    [0.5, PM({LeftUpLeg:[-0.55, 0, 0.1], LeftLeg:[0.7, 0, 0], LeftFoot:[-0.15, 0, 0], RightUpLeg:[0.1, 0, 0], Hips:[0, 0.25, 0]}, arms(-0.9, 0.2, -0.3, -0.3, -1.5, -0.9)), -0.02],
+    [1, PM(crouch(0.1), arms(-0.6, 0.3, -0.6, -0.3, -1.2, -1.2)), drop(0.1)],
+    [1.5, PM({RightUpLeg:[-0.55, 0, -0.1], RightLeg:[0.7, 0, 0], RightFoot:[-0.15, 0, 0], LeftUpLeg:[0.1, 0, 0], Hips:[0, -0.25, 0]}, arms(-0.3, 0.3, -0.9, -0.2, -0.9, -1.5)), -0.02]])),
+  Bounce:() => { const fold = {LeftArm:[-0.5, 0, -0.15], LeftForeArm:[-1.6, 0, 0], RightArm:[-0.5, 0, 0.15], RightForeArm:[-1.6, 0, 0]};
+    return poseClip("Bounce", loopKeys(1, [[0, PM(fold, crouch(0.1)), drop(0.1)], [0.5, PM(fold, crouch(0.3), {Spine2:[0.08, 0, 0]}), drop(0.3)]])); },
+  Surf:() => { const st = s => PM(crouch(0.35), {LeftUpLeg:[-0.35, 0, 0.18], RightUpLeg:[-0.35, 0, -0.18], Spine2:[0, 0.15, -0.06*s], Hips:[0, 0, 0.08*s]}, arms(-0.2, 1.1 + 0.15*s, 0.2, -1.1 + 0.15*s));
+    return poseClip("Surf", loopKeys(3, [[0, st(1), drop(0.35)], [1.5, st(-1), drop(0.35)]])); },
+  "Hang loose":() => poseClip("Hang loose", Array.from({length:9}, (_, i) => [i*0.25, {RightArm:[-0.9, 0, -0.9], RightForeArm:[-0.6, 0, 0], RightHand:[0, 0, i % 2 ? 0.35 : -0.35], Hips:[0, 0, 0.04]}])),
+  "Check watch":() => { const w = PM({LeftArm:[-0.7, 0, -0.15], LeftForeArm:[-1.7, 0, 0], Spine2:[0.12, 0, 0]});
+    return poseClip("Check watch", loopKeys(3, [[0, {}], [0.8, w], [2.2, w]])); },
+  Shrug:() => { const s = PM({LeftShoulder:[0, 0, 0.25], RightShoulder:[0, 0, -0.25]}, arms(-0.3, 0.45, -0.3, -0.45, -1.0, -1.0));
+    return poseClip("Shrug", loopKeys(2, [[0, {}], [0.6, s], [1.2, s]])); },
+  Knit:() => poseClip("Knit", loopKeys(1.2, [0, 0.3, 0.6, 0.9].map((t, i) => [t, {LeftArm:[-0.55, 0, -0.25], RightArm:[-0.55, 0, 0.25], LeftForeArm:[-1.2 + (i % 2 ? 0.12 : -0.12), 0, 0], RightForeArm:[-1.2 + (i % 2 ? -0.12 : 0.12), 0, 0], Spine2:[0.1, 0, 0]}]))),
+  Rock:() => { const rest = {LeftArm:[-0.3, 0, -0.1], LeftForeArm:[-0.9, 0, 0], RightArm:[-0.3, 0, 0.1], RightForeArm:[-0.9, 0, 0]};
+    return poseClip("Rock", loopKeys(4, [[0, PM(rest, {Hips:[0.06, 0, 0], Spine2:[0.03, 0, 0]})], [2, PM(rest, {Hips:[-0.06, 0, 0], Spine2:[-0.03, 0, 0]})]])); },
+  Stir:() => poseClip("Stir", loopKeys(1.6, [0, 0.4, 0.8, 1.2].map((t, i) => { const a = i*Math.PI/2;
+    return [t, {LeftArm:[-0.5, 0, -0.1], LeftForeArm:[-1.4, 0, 0], RightArm:[-0.5 + 0.12*Math.cos(a), 0, -0.15 + 0.12*Math.sin(a)], RightForeArm:[-1.2, 0, 0], Spine2:[0.06, 0, 0]}]; }))),
+  "Chef's kiss":() => { const k = {RightArm:[-0.8, 0, -0.05], RightForeArm:[-2.1, 0, 0]}, out = {RightArm:[-0.6, 0, -0.9], RightForeArm:[-0.6, 0, 0]};
+    return poseClip("Chef's kiss", loopKeys(2.6, [[0, {}], [0.6, k], [1.0, k], [1.4, out], [2.0, out]])); },
+  Float:() => { const f = (s, up) => [PM({LeftUpLeg:[0.12*s, 0, 0], LeftLeg:[0.25, 0, 0], RightUpLeg:[-0.12*s, 0, 0], RightLeg:[0.25, 0, 0]}, arms(0, 0.5 + 0.1*s, 0, -0.5 + 0.1*s, -0.3, -0.3)), up];
+    return poseClip("Float", loopKeys(3, [[0, ...f(1, 0.02)], [1.5, ...f(-1, 0.1)]])); },
+  Robot:() => { const a = PM(arms(-0.6, 0.1, 0, -0.1, -1.5, 0), {Spine2:[0, 0.2, 0]}), b = PM(arms(0, 0.1, -0.6, -0.1, 0, -1.5), {Spine2:[0, -0.2, 0]});
+    return poseClip("Robot", [[0, a], [0.4, a], [0.5, b], [0.9, b], [1.0, a], [1.4, a], [1.5, b], [1.9, b], [2.0, a]]); }
+};
+const PEOPLE_MOVES = {skater:["Ollie", "Balance"], punk:["Headbang", "Air guitar"], bboy:["Toprock", "Bounce"], surfer:["Surf", "Hang loose"],
+  office:["Check watch", "Shrug"], grandma:["Knit", "Rock"], chef:["Stir", "Chef's kiss"], alien:["Float", "Robot"]};
+const humanAnims = key => ["Idle", "Groove", "Talk", "Wave", ...(PEOPLE_MOVES[key] || [])].map(n => HUMAN_ANIMS[n]());
+// ---- the same for fruit and oddities: the whole body (<id>_Body) bounces, wobbles and dances
+const VT = (n, times, vals) => new THREE.VectorKeyframeTrack(n, times, vals.flat());
+const QT = (n, times, eulers) => new THREE.QuaternionKeyframeTrack(n, times, eulers.flatMap(e => qa(...e)));
+function propAnims(id){
+  const b = id + "_Body";
+  return [
+    new THREE.AnimationClip("Idle", 4, [QT(`${b}.quaternion`, [0, 1, 2, 3, 4], [[0, 0, 0.04], [0.02, 0.12, 0], [0, 0, -0.04], [0.02, -0.12, 0], [0, 0, 0.04]]),
+      VT(`${b}.position`, [0, 1, 2, 3, 4], [[0, 0, 0], [0, 0.03, 0], [0, 0, 0], [0, 0.03, 0], [0, 0, 0]])]),
+    new THREE.AnimationClip("Bounce", 1.2, [VT(`${b}.position`, [0, 0.15, 0.6, 1.05, 1.2], [[0, 0, 0], [0, 0, 0], [0, 0.12, 0], [0, 0, 0], [0, 0, 0]]),
+      VT(`${b}.scale`, [0, 0.15, 0.6, 1.05, 1.2], [[1, 1, 1], [1.1, 0.88, 1.1], [0.95, 1.07, 0.95], [1.1, 0.88, 1.1], [1, 1, 1]])]),
+    new THREE.AnimationClip("Jelly", 1.4, [VT(`${b}.scale`, [0, 0.2, 0.45, 0.7, 0.95, 1.2, 1.4], [[1, 1, 1], [1.1, 0.88, 1.1], [0.93, 1.09, 0.93], [1.05, 0.95, 1.05], [0.97, 1.03, 0.97], [1.01, 0.99, 1.01], [1, 1, 1]])]),
+    new THREE.AnimationClip("Dance", 2, [QT(`${b}.quaternion`, [0, 0.5, 1, 1.5, 2], [[0, 0.2, 0.15], [0, 0, 0], [0, -0.2, -0.15], [0, 0, 0], [0, 0.2, 0.15]]),
+      VT(`${b}.position`, [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2], [[0, 0, 0], [0, 0.07, 0], [0, 0, 0], [0, 0.07, 0], [0, 0, 0], [0, 0.07, 0], [0, 0, 0], [0, 0.07, 0], [0, 0, 0]])]),
+    new THREE.AnimationClip("Hop", 2, [VT(`${b}.position`, [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2], [[0, 0, 0], [0.05, 0.1, 0], [0.1, 0, 0], [0.05, 0.1, 0], [0, 0, 0], [-0.05, 0.1, 0], [-0.1, 0, 0], [-0.05, 0.1, 0], [0, 0, 0]]),
+      QT(`${b}.quaternion`, [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2], [[0, 0, 0], [0, 0, -0.12], [0, 0, 0], [0, 0, -0.12], [0, 0, 0], [0, 0, 0.12], [0, 0, 0], [0, 0, 0.12], [0, 0, 0]])])
+  ];
 }
 // a person. Fields (all optional except those the skater sets): skin, face{...}, hair{style,color}, hat{kind,color,color2,back},
 // glasses, top{kind,color,tex,sleeve,collar}, bottom{kind,color,tex}, feet{kind,color,sole}, band, girth, head (scale), extra(add)
@@ -1408,7 +1497,7 @@ async function makeHuman(sp){
     }
     for (let k = 1; k <= 3; k++) skin("skin", limb(J[`${L}HandThumb${k}`].p, J[`${L}HandThumb${k + 1}`].p, 0.011, 0.0095, 5, 1), rigid(`${L}HandThumb${k}`));
   }
-  sp.extra?.({skin, boxAt, limb, rigid, V, J, hs});
+  sp.extra?.({skin, boxAt, limb, rigid, V, J, hs, ARM});
   // ---- textures (small, like the era) and materials
   const T = {
     skin:paintTex(64, 64, (x, w, h) => grain(x, w, h, sp.skin, 0.06)),
@@ -1438,18 +1527,9 @@ async function makeHuman(sp){
     const m = new THREE.SkinnedMesh(geo, M[k]); m.name = root.name + "_" + k; m.frustumCulled = false;
     root.add(m); m.bind(skel);
   }
-  // ---- idle: breathing, a little weight shift, looking around, arms swaying (for when it's a cast member)
-  const q = (x, y, z) => new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z)).toArray();
-  const track = (b, times, eulers) => new THREE.QuaternionKeyframeTrack(`mixamorig_${b}.quaternion`, times, eulers.flatMap(e => q(...e)));
-  const tt = [0, 1, 2, 3, 4];
-  const idle = new THREE.AnimationClip("Idle", 4, [
-    track("Spine2", tt, [[0, 0, 0], [0.025, 0.02, 0], [0, 0, 0], [0.025, -0.02, 0], [0, 0, 0]]),
-    track("Hips", tt, [[0, 0, 0.02], [0, 0.03, 0.03], [0, 0, -0.02], [0, -0.03, -0.03], [0, 0, 0.02]]),
-    track("Head", tt, [[0, 0, 0], [0.04, 0.18, 0], [0, 0, 0.03], [0.03, -0.2, 0], [0, 0, 0]]),
-    track("LeftArm", tt, [[0, 0, 0], [0.06, 0, 0.03], [0, 0, 0], [-0.05, 0, 0.02], [0, 0, 0]]),
-    track("RightArm", tt, [[0, 0, 0], [-0.05, 0, -0.02], [0, 0, 0], [0.06, 0, -0.03], [0, 0, 0]])
-  ]);
-  return {root, anims:[idle], applied:0};
+  sp.props?.({root, V});
+  // ---- ambient animations (Idle, Groove, Talk, Wave and two of their own)
+  return {root, anims:humanAnims(sp.key), applied:0};
 }
 
 // ---- the people
@@ -1473,7 +1553,16 @@ const PEOPLE = {
       for (const px of [26, 90]){ x.strokeRect(px, 50, 22, 26); x.beginPath(); x.moveTo(px, 56); x.lineTo(px + 22, 56); x.stroke(); }  // cargo pockets
       x.strokeStyle = "rgba(220,200,140,.5)"; x.lineWidth = 1; x.setLineDash([3, 2]); x.beginPath(); x.moveTo(64, 0); x.lineTo(64, 128); x.moveTo(0, 6); x.lineTo(128, 6); x.stroke();
     })},
-    feet:{kind:"skate", color:"#1e1e22"}},
+    feet:{kind:"skate", color:"#1e1e22"},
+    props:({root, V}) => {                                                     // his board, under his feet (the Ollie lifts it)
+      const bd = new THREE.Group(); bd.name = "Skater_Board"; bd.position.set(0, 0, 0.045); root.add(bd);
+      const deck = new THREE.MeshStandardMaterial({map:paintTex(128, 32, (x, w, h) => { grain(x, w, h, "#c8542a", 0.1); x.fillStyle = "#f2d23a"; x.fillRect(w*0.4, 0, w*0.2, h); x.fillStyle = "#1a1a1a"; x.fillRect(0, 0, 6, h); x.fillRect(w - 6, 0, 6, h); }), roughness:0.7});
+      bd.add(new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.022, 0.22).translate(0, -0.012, 0), deck));
+      for (const x of [-0.27, 0.27]){
+        bd.add(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.03, 0.16).translate(x, -0.035, 0), new THREE.MeshStandardMaterial({color:0x9a9aa2, metalness:0.6, roughness:0.4})));
+        for (const z of [-0.075, 0.075]) bd.add(new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.03, 8).rotateX(Math.PI/2).translate(x, -0.055, z), new THREE.MeshStandardMaterial({color:0xf0ead8, roughness:0.6})));
+      }
+    }},
   punk:{name:"Punk", icon:"🎸", skin:"#e2b394", face:{brow:"#1a1210", eyes:"#3b5a7a", lips:"#7a3b4a"}, hair:{style:"mohawk", color:"#e0247a"}, glasses:null,
     top:{kind:"long", color:"#1c1a1d", sleeve:"#1c1a1d", collar:0x111111, tex:(x, w, h) => {
       x.strokeStyle = "rgba(255,255,255,.12)"; x.lineWidth = 2; x.beginPath(); x.moveTo(110, 0); x.lineTo(124, 130); x.moveTo(146, 0); x.lineTo(132, 130); x.stroke();   // open leather jacket
@@ -1487,21 +1576,26 @@ const PEOPLE = {
       x.strokeStyle = "#f2f0ea"; x.lineWidth = 2; x.beginPath(); x.moveTo(120, 0); x.lineTo(118, 40); x.moveTo(136, 0); x.lineTo(138, 44); x.stroke();   // drawstrings
       x.fillStyle = "#f2f0ea"; x.font = "bold 22px sans-serif"; x.fillText("FRESH", 96, 110);
     }},
-    bottom:{kind:"pants", color:"#5a5f6a", flare:true, pattern:"denim"}, feet:{kind:"sneaker", color:"#f0f0f0", lace:"#c43a3a", sole:0xe8e8e8}},
+    bottom:{kind:"pants", color:"#5a5f6a", flare:true, pattern:"denim"}, feet:{kind:"sneaker", color:"#f0f0f0", lace:"#c43a3a", sole:0xe8e8e8},
+    mats:std => ({gold:std({color:0xe8b830, metalness:0.9, roughness:0.3})}),
+    extra:({skin, rigid}) => { const ch = new THREE.TorusGeometry(0.105, 0.011, 5, 16); ch.rotateX(Math.PI/2 - 0.35); ch.translate(0, 1.46, 0.035); skin("gold", ch, rigid("Spine2")); }},
   surfer:{name:"Surfer", icon:"🏄", skin:"#d9a17a", face:{freckles:true, lashes:true, lips:"#b5655a", eyes:"#3a6a5a", blush:"rgba(255,150,130,.25)"}, hair:{style:"long", color:"#e3c27a"},
     top:{kind:"tank", color:"#f4f1e8", collar:0xf4f1e8, tex:(x, w, h) => {
       x.fillStyle = "#ff8a3d"; x.beginPath(); x.arc(128, 96, 24, Math.PI, 0); x.fill();                                           // sunset
       x.strokeStyle = "#2a8ab0"; x.lineWidth = 5; for (let i = 0; i < 3; i++){ x.beginPath(); for (let k = 0; k <= 60; k++) x.lineTo(98 + k, 100 + i*9 + Math.sin(k/6 + i)*3); x.stroke(); }
     }},
     bottom:{kind:"shorts", color:"#2a9a9a", pattern:"stripe"}, feet:{kind:"sandal", color:"#8a5a30", sole:0x3a2a20}},
-  office:{name:"Office Worker", icon:"💼", skin:"#e8c1a0", girth:1.08, face:{brow:"#5a4a3a", eyes:"#4a6a8a"}, hair:{style:"short", color:"#7a6a5a"}, glasses:0x2a2a2a,
-    top:{kind:"long", color:"#e9eef6", sleeve:"#e9eef6", collar:0xf4f6fa, belly:true, tex:(x, w, h) => {
+  office:{name:"Office Worker", icon:"💼", skin:"#e8c1a0", girth:1.12, face:{brow:"#5a4a3a", eyes:"#4a6a8a"}, hair:{style:"short", color:"#7a6a5a"}, glasses:0x2a2a2a,
+    top:{kind:"long", color:"#e9eef6", sleeve:"#e9eef6", collar:0xf4f6fa, tex:(x, w, h) => {
       x.fillStyle = "#1f3a7a"; x.beginPath(); x.moveTo(122, 0); x.lineTo(134, 0); x.lineTo(138, 14); x.lineTo(141, 150); x.lineTo(128, 168); x.lineTo(115, 150); x.lineTo(118, 14); x.fill();   // tie
       x.strokeStyle = "rgba(255,255,255,.35)"; x.lineWidth = 3; for (let y = 30; y < 160; y += 18){ x.beginPath(); x.moveTo(118, y); x.lineTo(140, y + 10); x.stroke(); }
       x.fillStyle = "rgba(80,90,110,.35)"; x.fillRect(150, 50, 26, 22);                                                       // pocket
       x.fillStyle = "#2a2a2a"; x.fillRect(0, 220, w, 14);                                                                    // belt
     }},
-    bottom:{kind:"pants", color:"#3a3f4a"}, feet:{kind:"dress", color:"#2a1a10", sole:0x1a1210}, sock:0x2a2a30},
+    bottom:{kind:"pants", color:"#3a3f4a"}, feet:{kind:"dress", color:"#2a1a10", sole:0x1a1210}, sock:0x2a2a30,
+    mats:std => ({mug:std({map:paintTex(64, 32, (x, w, h) => { grain(x, w, h, "#f4f0e8", 0.05); x.fillStyle = "#c8342a"; x.font = "bold 14px sans-serif"; x.fillText("#1", 22, 22); }), roughness:0.4})}),
+    extra:({skin, rigid, ARM}) => { const A = ARM.Right, c = A.wr.clone().addScaledVector(A.lo, 0.07); c.z += 0.05;    // a coffee mug in his right hand
+      skin("mug", new THREE.CylinderGeometry(0.04, 0.036, 0.1, 10).translate(c.x, c.y, c.z), rigid("RightHand")); }},
   grandma:{name:"Grandma", icon:"👵", skin:"#eac6ad", face:{wrinkles:true, lipstick:true, lips:"#b8485a", eyes:"#5a7a9a", brow:"#a8a29a"}, hair:{style:"bun", color:"#d8d6d2"}, glasses:0x8a6a3a,
     top:{kind:"long", color:"#8a5aa8", sleeve:"#8a5aa8", cuff:"#6a3a88", collar:0xf2ece4, tex:(x, w, h) => {
       x.strokeStyle = "rgba(0,0,0,.15)"; for (let j = 0; j < 256; j += 8) for (let i = 0; i < 256; i += 8){ x.beginPath(); x.moveTo(i, j); x.lineTo(i + 4, j + 6); x.lineTo(i + 8, j); x.stroke(); }   // knit
@@ -1509,22 +1603,35 @@ const PEOPLE = {
       x.fillStyle = "#e8d070"; for (let y = 30; y < 240; y += 34){ x.beginPath(); x.arc(128, y, 4, 0, 7); x.fill(); }             // buttons
       x.fillStyle = "#f6a6b6"; x.beginPath(); x.arc(160, 60, 6, 0, 7); x.fill();                                              // a brooch
     }},
-    bottom:{kind:"skirt", color:"#4a4a6a", pattern:"check"}, feet:{kind:"dress", color:"#3a2a2a", sole:0x2a1a1a}, sock:0xd8c8b8},
-  chef:{name:"Chef", icon:"🧑‍🍳", skin:"#c88a64", face:{beard:"rgba(40,26,16,.85)", brow:"#2a1a10"}, hair:{style:"short", color:"#2a1a10"}, hat:{kind:"toque", color:0xf8f8f6}, girth:1.05,
-    top:{kind:"long", color:"#f6f6f2", sleeve:"#f6f6f2", collar:0xf6f6f2, belly:true, tex:(x, w, h) => {
+    bottom:{kind:"skirt", color:"#4a4a6a", pattern:"check"}, feet:{kind:"dress", color:"#3a2a2a", sole:0x2a1a1a}, sock:0xd8c8b8,
+    mats:std => ({needle:std({color:0xc8c8d0, metalness:0.7, roughness:0.3}), yarn:std({color:0xd84a8a, roughness:0.95})}),
+    extra:({skin, rigid, limb, ARM, V}) => {                                    // knitting needles, and the start of a scarf
+      for (const [L, s] of [["Left", 1], ["Right", -1]]){ const A = ARM[L], h = A.wr.clone().addScaledVector(A.lo, 0.06);
+        skin("needle", limb(h.clone().add(V(0.02*s, 0.03, -0.02)), h.clone().add(V(-0.12*s, 0.02, 0.2)), 0.005, 0.004, 4, 1), rigid(L + "Hand")); }
+      const A = ARM.Left, h = A.wr.clone().addScaledVector(A.lo, 0.06); skin("yarn", new THREE.BoxGeometry(0.1, 0.12, 0.02).translate(h.x - 0.07, h.y - 0.04, h.z + 0.12), rigid("LeftHand")); }},
+  chef:{name:"Chef", icon:"🧑‍🍳", skin:"#c88a64", face:{beard:"rgba(40,26,16,.85)", brow:"#2a1a10"}, hair:{style:"short", color:"#2a1a10"}, hat:{kind:"toque", color:0xf8f8f6}, girth:1.1,
+    top:{kind:"long", color:"#f6f6f2", sleeve:"#f6f6f2", collar:0xf6f6f2, tex:(x, w, h) => {
       x.strokeStyle = "rgba(0,0,0,.12)"; x.lineWidth = 2; x.beginPath(); x.moveTo(150, 0); x.lineTo(150, 256); x.stroke();
       x.fillStyle = "#2a2a2a"; for (let y = 30; y < 200; y += 34) for (const px of [110, 146]){ x.beginPath(); x.arc(px, y, 3.5, 0, 7); x.fill(); }   // double-breasted
       x.fillStyle = "#f6f6f2"; x.fillRect(0, 180, w, 76); x.strokeStyle = "rgba(0,0,0,.15)"; x.strokeRect(1, 180, w - 2, 74);           // apron
       x.fillStyle = "rgba(190,60,40,.5)"; x.beginPath(); x.arc(170, 214, 6, 0, 7); x.fill(); x.beginPath(); x.arc(92, 232, 4, 0, 7); x.fill();   // sauce
     }},
-    bottom:{kind:"pants", color:"#d8d8d0", pattern:"check"}, feet:{kind:"dress", color:"#1a1a1a"}},
+    bottom:{kind:"pants", color:"#d8d8d0", pattern:"check"}, feet:{kind:"dress", color:"#1a1a1a"},
+    mats:std => ({wood:std({color:0xb07a40, roughness:0.8})}),
+    extra:({skin, rigid, limb, ARM, V}) => { const A = ARM.Right, h = A.wr.clone().addScaledVector(A.lo, 0.06), tip = h.clone().add(V(0.02, -0.1, 0.22));   // a wooden spoon
+      skin("wood", limb(h.clone().add(V(0, 0.04, -0.04)), tip, 0.009, 0.008, 5, 1), rigid("RightHand"));
+      skin("wood", new THREE.SphereGeometry(0.03, 7, 5).scale(1, 0.4, 1.4).translate(tip.x, tip.y, tip.z + 0.03), rigid("RightHand")); }},
   alien:{name:"Alien", icon:"👽", cat:"odd", skin:"#9ac0a0", alien:true, head:1.45, hair:{style:"bald"},
     top:{kind:"long", color:"#b8bcc8", sleeve:"#b8bcc8", cuff:"#7a7e8a", collar:0x7a7e8a, tex:(x, w, h) => {
       x.fillStyle = "#e84a3a"; x.beginPath(); x.arc(128, 70, 16, 0, 7); x.fill(); x.fillStyle = "#f2f0ea"; x.beginPath(); x.moveTo(120, 76); x.lineTo(128, 58); x.lineTo(136, 76); x.fill();   // badge
       x.strokeStyle = "rgba(0,0,0,.25)"; x.lineWidth = 3; x.beginPath(); x.moveTo(0, 130); x.lineTo(256, 130); x.stroke();
     }},
-    bottom:{kind:"pants", color:"#b8bcc8"}, feet:{kind:"boot", color:"#7a7e8a", sole:0x3a3e4a}}
+    bottom:{kind:"pants", color:"#b8bcc8"}, feet:{kind:"boot", color:"#7a7e8a", sole:0x3a3e4a},
+    mats:std => ({antenna:std({color:0x7ad07a, roughness:0.5, emissive:0x1a3a1a})}),
+    extra:({skin, rigid, limb, V, hs}) => { for (const s of [1, -1]){ const base = V(0.05*s, 1.6 + 0.22*hs, 0), top = V(0.11*s, 1.6 + 0.33*hs, 0.02);   // antennae
+      skin("antenna", limb(base, top, 0.008, 0.006, 5, 1), rigid("Head")); skin("antenna", new THREE.SphereGeometry(0.025, 8, 6).translate(top.x, top.y, top.z), rigid("Head")); } }}
 };
+for (const [k, sp] of Object.entries(PEOPLE)) sp.key = k;
 for (const [k, sp] of Object.entries(PEOPLE)) BUILTIN[k] = {name:sp.name, icon:sp.icon, cat:sp.cat || "people", make:() => makeHuman(sp),
   cfg:{mFrame:"upper", facePt:PEOPLE_HEAD(sp), mFaceK:sp.alien ? 1.1 : 0.9}};
 
@@ -1536,15 +1643,9 @@ function makeProp(name, build){
   const flat = (o) => new THREE.MeshStandardMaterial({roughness:0.75, flatShading:true, ...o});
   const add = (geo, mat, at, rot) => { const m = new THREE.Mesh(geo, mat); if (at) m.position.set(...at); if (rot) m.rotation.set(...rot); body.add(m); return m; };
   const lathe = (pts, segs = 12) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(Math.max(r, 0.0001), y)), segs);
-  const idleTracks = build({add, flat, lathe, body}) || [];
-  const q = (x, y, z) => new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z)).toArray();
-  const tt = [0, 1, 2, 3, 4];
-  const idle = new THREE.AnimationClip("Idle", 4, [
-    new THREE.QuaternionKeyframeTrack(`${body.name}.quaternion`, tt, [[0, 0, 0.04], [0.02, 0.12, 0], [0, 0, -0.04], [0.02, -0.12, 0], [0, 0, 0.04]].flatMap(e => q(...e))),
-    new THREE.VectorKeyframeTrack(`${body.name}.position`, [0, 1, 2, 3, 4], [0, 0, 0, 0, 0.03, 0, 0, 0, 0, 0, 0.03, 0, 0, 0, 0]),
-    ...idleTracks
-  ]);
-  return {root, anims:[idle], applied:0};
+  const name_ = (m, part) => { m.name = id + "_" + part; return m; };
+  const own = build({add, flat, lathe, body, name:name_}) || (() => []);
+  return {root, anims:[...propAnims(id), ...own(id + "_Body", id)], applied:0};
 }
 // speckled / striped canvas skins for the fruit
 const skinTex = (base, fn, w = 128, h = 128) => paintTex(w, h, (x) => { grain(x, w, h, base, 0.1, 9); fn?.(x, w, h); });
@@ -1566,7 +1667,6 @@ const PROPS = {
       for (let j = 0; j <= rs; j++){ const vi = i*(rs + 1) + j; pos.setXYZ(vi, c.x + (pos.getX(vi) - c.x)*k, c.y + (pos.getY(vi) - c.y)*k, c.z + (pos.getZ(vi) - c.z)*k); } }
     g.computeVertexNormals();
     const tex = skinTex("#f2d23a", (x, w, h) => { dots(x, w, h, "rgba(110,70,20,.55)", 30, 1.6); x.fillStyle = "#6a4a1a"; x.fillRect(0, 0, 6, h); x.fillRect(w - 5, 0, 5, h); x.fillStyle = "rgba(120,170,40,.35)"; x.fillRect(w - 26, 0, 21, h); });
-    tex.rotation = Math.PI/2; tex.center.set(0.5, 0.5);
     add(g, flat({map:tex}));
     add(new THREE.CylinderGeometry(0.03, 0.045, 0.14, 5), stemMat(flat), [-0.19, 1.6, 0], [0, 0, 0.9]);
   })},
@@ -1605,14 +1705,20 @@ const PROPS = {
     add(new THREE.CylinderGeometry(0.02, 0.03, 0.08, 5), stemMat(flat), [0, 1.05, 0]);
   })},
   // ---- oddities
-  toaster:{name:"Toaster", icon:"🍞", cat:"odd", face:[0, 0.5, 0.33], k:1.45, make:() => makeProp("Toaster", ({add, flat}) => {
+  toaster:{name:"Toaster", icon:"🍞", cat:"odd", face:[0, 0.52, 0.33], k:1.6, make:() => makeProp("Toaster", ({add, flat, name}) => {
     const chrome = new THREE.MeshStandardMaterial({color:0xd8dce4, metalness:0.85, roughness:0.25, flatShading:true});
     add(new THREE.BoxGeometry(0.9, 0.8, 0.6, 2, 2, 1), chrome, [0, 0.5, 0]);
     add(new THREE.BoxGeometry(0.92, 0.06, 0.62), flat({color:0x2a2a2e}), [0, 0.12, 0]);
-    for (const x of [-0.18, 0.18]){ add(new THREE.BoxGeometry(0.12, 0.02, 0.44), flat({color:0x111114}), [x, 0.905, 0]);
-      add(new THREE.BoxGeometry(0.1, 0.32, 0.4), flat({map:skinTex("#d8a050", (c, w, h) => { c.fillStyle = "#8a5420"; c.fillRect(0, 0, w, 10); })}), [x, 0.98, 0], [0, 0, x*0.3]); }
+    [-0.18, 0.18].forEach((x, i) => { add(new THREE.BoxGeometry(0.12, 0.02, 0.44), flat({color:0x111114}), [x, 0.905, 0]);
+      name(add(new THREE.BoxGeometry(0.1, 0.32, 0.4), flat({map:skinTex("#d8a050", (c, w, h) => { c.fillStyle = "#8a5420"; c.fillRect(0, 0, w, 10); })}), [x, 0.98, 0], [0, 0, x*0.3]), "Toast" + i); });
+    add(new THREE.CylinderGeometry(0.05, 0.05, 0.03, 10), flat({color:0x2a2a2e}), [0.3, 0.25, 0.31], [Math.PI/2, 0, 0]);   // the browning dial
+    add(new THREE.BoxGeometry(0.5, 0.03, 0.04), flat({color:0x3a3a3e}), [0, 0.16, 0.31]);                                     // crumb tray
     add(new THREE.BoxGeometry(0.06, 0.1, 0.12), flat({color:0x2a2a2e}), [0.48, 0.62, 0.05]);
     for (const x of [-0.32, 0.32]) for (const z of [-0.2, 0.2]) add(new THREE.CylinderGeometry(0.04, 0.05, 0.1, 6), flat({color:0x2a2a2e}), [x, 0.05, z]);
+    return (b, id) => [new THREE.AnimationClip("Pop", 2.4, [0, 1].flatMap(i => { const x = i ? 0.18 : -0.18;
+      return [VT(`${id}_Toast${i}.position`, [0, 0.9, 1.05, 1.3, 1.6, 2.4], [[x, 0.98, 0], [x, 0.98, 0], [x, 1.45 + i*0.06, 0], [x, 1.2, 0], [x, 0.98, 0], [x, 0.98, 0]]),
+        QT(`${id}_Toast${i}.quaternion`, [0, 0.9, 1.05, 1.3, 2.4], [[0, 0, x*0.3], [0, 0, x*0.3], [0.5*(i ? 1 : -1), 0, x*1.6], [0, 0, x*0.3], [0, 0, x*0.3]])]; })
+      .concat([VT(`${b}.scale`, [0, 0.8, 0.95, 1.15, 2.4], [[1, 1, 1], [1.04, 0.94, 1.04], [0.97, 1.05, 0.97], [1, 1, 1], [1, 1, 1]])]))];
   })},
   cactus:{name:"Cactus", icon:"🌵", cat:"odd", face:[0, 1.05, 0.23], make:() => makeProp("Cactus", ({add, flat, lathe}) => {
     const green = flat({map:skinTex("#3f8a3a", (x, w, h) => { x.fillStyle = "rgba(20,60,20,.5)"; for (let i = 0; i < w; i += 16) x.fillRect(i, 0, 4, h); dots(x, w, h, "#f2f0d8", 70, 0.9); })});
@@ -1624,6 +1730,7 @@ const PROPS = {
       add(new THREE.CylinderGeometry(0.1, 0.1, 0.32, 7), green, [0.43*s, y + 0.16, 0]);
       add(new THREE.SphereGeometry(0.1, 7, 4, 0, Math.PI*2, 0, Math.PI/2), green, [0.43*s, y + 0.32, 0]); }
     for (let i = 0; i < 5; i++){ const a = i*Math.PI*2/5; add(new THREE.SphereGeometry(0.06, 5, 3).scale(1, 0.4, 1.6), flat({color:0xf06aa0}), [Math.sin(a)*0.06, 1.75, Math.cos(a)*0.06], [0, a, 0]); }
+    return b => [new THREE.AnimationClip("Windy", 3, [QT(`${b}.quaternion`, [0, 0.6, 1.1, 1.5, 2.2, 3], [[0, 0, 0], [0, 0, -0.09], [0, 0, -0.05], [0, 0, -0.1], [0, 0, 0.03], [0, 0, 0]])])];
   })},
   ghost:{name:"Ghost", icon:"👻", cat:"odd", face:[0, 1.1, 0.42], make:() => makeProp("Ghost", ({add, flat}) => {
     const g = new THREE.CylinderGeometry(0.42, 0.52, 1.0, 14, 4, true), pos = g.attributes.position;
@@ -1632,6 +1739,11 @@ const PROPS = {
     const sheet = flat({color:0xf2f4fa, roughness:0.9, side:THREE.DoubleSide, emissive:0x22283a});
     add(g, sheet); add(new THREE.SphereGeometry(0.42, 14, 7, 0, Math.PI*2, 0, Math.PI/2), sheet, [0, 1.12, 0]);
     for (const s of [1, -1]) add(new THREE.SphereGeometry(0.11, 7, 5).scale(1, 0.6, 0.7), sheet, [0.48*s, 0.8, 0.05], [0, 0, -0.6*s]);
+    return b => [
+      new THREE.AnimationClip("Float", 4, [VT(`${b}.position`, [0, 1, 2, 3, 4], [[0, 0.05, 0], [0.06, 0.2, 0], [0, 0.12, 0], [-0.06, 0.22, 0], [0, 0.05, 0]]),
+        QT(`${b}.quaternion`, [0, 1, 2, 3, 4], [[0, 0, 0.05], [0, 0.1, -0.06], [0, 0, 0.05], [0, -0.1, -0.06], [0, 0, 0.05]])]),
+      new THREE.AnimationClip("Boo!", 2.5, [VT(`${b}.scale`, [0, 0.9, 1.1, 1.6, 2.5], [[1, 1, 1], [0.9, 0.88, 0.9], [1.25, 1.22, 1.25], [1, 1, 1], [1, 1, 1]]),
+        VT(`${b}.position`, [0, 0.9, 1.1, 1.6, 2.5], [[0, 0.05, 0], [0, 0, 0], [0, 0.15, 0.12], [0, 0.05, 0], [0, 0.05, 0]])])];
   })},
   moai:{name:"Moai", icon:"🗿", cat:"odd", face:[0, 1.02, 0.33], k:1.3, make:() => makeProp("Moai", ({add, flat}) => {
     const stone = flat({map:skinTex("#7a766e", (x, w, h) => { dots(x, w, h, "rgba(0,0,0,.25)", 200, 1.2); dots(x, w, h, "rgba(255,255,255,.12)", 120, 1); })});
@@ -1641,6 +1753,7 @@ const PROPS = {
     add(new THREE.BoxGeometry(0.66, 0.16, 0.6), stone, [0, 0.42, 0.02]);                  // chin
     for (const s of [1, -1]) add(new THREE.BoxGeometry(0.06, 0.4, 0.14), stone, [0.33*s, 1.15, -0.05]);
     add(new THREE.BoxGeometry(0.9, 0.32, 0.72), stone, [0, 0.16, 0]);                     // shoulders
+    return b => [new THREE.AnimationClip("Rumble", 2, [QT(`${b}.quaternion`, [0, 0.1, 0.2, 0.3, 0.4, 1.2, 2], [[0, 0, 0], [0, 0, 0.03], [0, 0, -0.03], [0, 0, 0.02], [0, 0, 0], [0.05, 0, 0], [0, 0, 0]])])];
   })},
   burger:{name:"Burger", icon:"🍔", cat:"odd", face:[0, 0.82, 0.44], make:() => makeProp("Burger", ({add, flat}) => {
     const bun = flat({map:skinTex("#d8913c", (x, w, h) => { x.fillStyle = "#f6ecd0"; for (let i = 0; i < 40; i++){ x.beginPath(); x.ellipse((i*41) % w, 10 + (i*23) % (h*0.6), 2.4, 1.2, i, 0, 7); x.fill(); } })});
@@ -1650,11 +1763,13 @@ const PROPS = {
     add(new THREE.BoxGeometry(0.78, 0.03, 0.78), flat({color:0xf2b62a}), [0, 0.5, 0], [0, Math.PI/4, 0]);                         // cheese
     add(new THREE.CylinderGeometry(0.5, 0.5, 0.13, 14), flat({map:skinTex("#5a3220", (x, w, h) => dots(x, w, h, "rgba(0,0,0,.35)", 120, 1.5))}), [0, 0.42, 0]);   // patty
     add(new THREE.CylinderGeometry(0.5, 0.46, 0.2, 14), flat({color:0xd08a38}), [0, 0.24, 0]);                                     // bottom bun
+    return b => [new THREE.AnimationClip("Squish", 1.6, [VT(`${b}.scale`, [0, 0.3, 0.55, 0.8, 1.05, 1.6], [[1, 1, 1], [1.12, 0.8, 1.12], [0.95, 1.08, 0.95], [1.04, 0.95, 1.04], [1, 1, 1], [1, 1, 1]])])];
   })},
-  cone:{name:"Traffic Cone", icon:"🚧", cat:"odd", face:[0, 0.62, 0.2], make:() => makeProp("Traffic Cone", ({add, flat}) => {
+  cone:{name:"Traffic Cone", icon:"🚧", cat:"odd", face:[0, 0.62, 0.2], k:1.4, make:() => makeProp("Traffic Cone", ({add, flat}) => {
     const tex = skinTex("#f06a1a", (x, w, h) => { x.fillStyle = "#f4f4f0"; x.fillRect(0, h*0.3, w, h*0.14); x.fillRect(0, h*0.56, w, h*0.12); });
     add(new THREE.CylinderGeometry(0.06, 0.32, 1.1, 10, 1, true), flat({map:tex, side:THREE.DoubleSide}), [0, 0.67, 0]);
     add(new THREE.BoxGeometry(0.8, 0.09, 0.8), flat({color:0x1a1a1a}), [0, 0.05, 0]);
+    return b => [new THREE.AnimationClip("Wobble", 1.6, [QT(`${b}.quaternion`, [0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.6], [[0, 0, 0], [0.12, 0, 0], [0, 0, 0.12], [-0.1, 0, 0], [0, 0, -0.08], [0.05, 0, 0], [0, 0, 0.03], [0, 0, 0]])])];
   })}
 };
 for (const [k, p] of Object.entries(PROPS)) BUILTIN[k] = {name:p.name, icon:p.icon, cat:p.cat, make:p.make, cfg:{mFrame:"full", facePt:p.face, mFaceK:p.k || (p.cat === "fruit" ? 1.25 : 1)}};
@@ -1679,6 +1794,36 @@ function builtinPicker(){
     b.append(el("p", "note", "Low-poly characters made in the app. People have full skeletons, so your head, arms and fingers drive them; fruit and the strange ones turn with your head like the Peanut. Each one you add gets its own settings, and you can add the same one twice."));
   });
 }
+
+// ---- the live character's ambient animation (Settings › Model › Animation). It plays under your tracking: never
+// your head and neck, not the arms while arm tracking is on, and not the legs while it's sitting in a scene.
+// Built-in characters start on Idle; imported models start still. Shows in recordings and live streams.
+function animName(M, want){
+  if (!M?.anims?.length || want === "off") return "";
+  if (want && want !== "auto" && M.anims.some(a => a.name === want)) return want;
+  return M.builtin && M.anims.some(a => a.name === "Idle") ? "Idle" : "";
+}
+function liveClip(M, name, arms, seated){
+  const key = `${name}|${arms}|${seated}`, base = M.anims.find(a => a.name === name);
+  if ((M.clips ||= {})[key]) return M.clips[key];
+  const skip = t => {
+    const n = t.name.slice(0, t.name.lastIndexOf(".")).replace(/^.*[:|]/, "").replace(/^mixamorig\d*_?/i, "").toLowerCase();
+    return /^(head|neck)/.test(n) || (arms && /(shoulder|arm|hand)/.test(n)) || (seated && (/(upleg|leg|foot|toe)/.test(n) || (n === "hips" && t.name.endsWith(".position"))));
+  };
+  return M.clips[key] = new THREE.AnimationClip(name, base.duration, base.tracks.filter(t => !skip(t)));
+}
+function stepModelAnim(dt){
+  const M = MDL; if (!M) return;
+  const name = PF.on || RIGE.on ? "" : animName(M, S.mAnim), arms = !!S.body, seated = SIT.M === M, key = name ? `${name}|${arms}|${seated}` : "";
+  if (key !== M.animKey){
+    M.animKey = key; M.act?.stop(); M.act = null;                    // stopping puts the bones back where they were
+    if (seated){ const dy = SIT.dy; sitDown(M); SIT.dy = dy; }         // ...so sit down again
+    const board = M.root.getObjectByName("Skater_Board"); if (board) board.visible = !seated;
+    if (name){ M.mixer ||= new THREE.AnimationMixer(M.root); M.act = M.mixer.clipAction(liveClip(M, name, arms, seated)); M.act.play(); }
+  }
+  if (M.act){ M.act.setEffectiveWeight(S.mAnimAmt); M.act.timeScale = S.mAnimSpeed; M.mixer.update(dt); }
+}
+function stopModelAnim(M){ if (!M) return; M.act?.stop(); M.act = null; M.animKey = ""; }
 
 /* ---------- where the eyes and mouth sit on a model ----------
    Spot = the point you placed (stored relative to the model), else the head joint/bone, else near the top;
@@ -1774,6 +1919,7 @@ function fitFace(M = MDL, anchor = faceAnchor, body = mbody, cs = S){
   anchor.position.set(cx, cy, 0); anchor.rotation.set(0, 0, 0); anchor.scale.set(1, 1, 1);
   body.add(anchor); body.updateWorldMatrix(true, true);
   if (rig.head && cs.mHeadBone) rig.head.attach(anchor);
+  else { const bn = root.name && root.getObjectByName(root.name + "_Body"); if (bn) bn.attach(anchor); }   // built-in objects: the face moves with the body's animations
   M.face = {z0, R, f:Math.max(0.05, r/0.9)};
   M.faceRest = new THREE.Vector3(cx, cy, z0);                        // in the body's frame (= world with the model at rest)
   M.tint = new THREE.Color().setRGB(...tint);
@@ -3971,7 +4117,7 @@ function openModal(title, build){
   $("#modal").hidden = false;
 }
 /* ---------- about & legal ---------- */
-const VERSION = "5.5";
+const VERSION = "5.6";
 function openLegal(){
   openModal("About & legal", b => {
     const d = el("div", "legal");
@@ -4133,7 +4279,7 @@ const TABS = {
     lookTab, motionTab, captureTab, cameraTab
   ],
   model: [
-    ["model","Model",[CH("mFrame","Framing",[["full","Full body"],["upper","Upper body"],["head","Head"]]), CH("mTurn","Facing",[[0,"Front"],[1,"Left"],[2,"Back"],[3,"Right"]]), TG("mHeadBone","Turn only the head (if it has one)"), {t:"rigtools"}, {t:"modelinfo"}]],
+    ["model","Model",[{t:"anims"}, CH("mFrame","Framing",[["full","Full body"],["upper","Upper body"],["head","Head"]]), CH("mTurn","Facing",[[0,"Front"],[1,"Left"],[2,"Back"],[3,"Right"]]), TG("mHeadBone","Turn only the head (if it has one)"), {t:"rigtools"}, {t:"modelinfo"}]],
     ["face","Face",[CH("faceMode","Face",[["overlay","Your eyes & mouth"],["model","Model's own face"],["both","Both"]]),
       {t:"if", when:() => S.faceMode !== "model", items:[SEC("Placement"), {t:"faceplace"}, RG("mFaceK","Face size",0.3,3,0.02,fmtX), RG("mEyeSpacing","Eye spacing",-0.3,0.5,0.005,fmtN), RG("mEyeY","Eye height",-0.6,0.6,0.005,fmtN), RG("mMouthY","Mouth height",-0.6,0.6,0.005,fmtN),
         RG("mEyeSize","Eye size",0.3,2,0.02,fmtX), RG("mMouthSize","Mouth size",0.3,2,0.02,fmtX), RG("mFaceZ","Face depth (both)",-1,1,0.01,fmtN), RG("mEyeZ","Eye depth",-1,1,0.01,fmtN), RG("mMouthZ","Mouth depth",-1,1,0.01,fmtN), RG("mEyeRot","Eye tilt",-0.6,0.6,0.0087,fmtDeg), RG("mMouthRot","Mouth tilt",-0.6,0.6,0.0087,fmtDeg), RG("mCurve","Face roundness",0.3,3,0.02,fmtX),
@@ -4318,6 +4464,19 @@ function buildItem(it){
     return el("p", "note", phoneAudioOk()
       ? "Phone sound records whatever is playing on the phone (music, videos, games), even through headphones. Android asks once per recording or stream; tap Start. A few apps (calls, some protected players) block it and stay silent. Peanut Cam's own videos are counted once, never twice."
       : "Phone sound (other apps) can be recorded in the Android app.");
+  }
+  if (it.t === "anims"){
+    const w = el("div"), M = MDL; w.append(el("div", "sec", "Animation"));
+    if (!M?.anims?.length){ w.append(el("p", "note", "This model has no animations of its own.")); return w; }
+    const g = el("div", "chips"), cur = animName(M, S.mAnim);
+    for (const [v, label] of [["off", "Still"], ...M.anims.map(a => [a.name, a.name])]){
+      const c = el("button", "chip press", label); c.setAttribute("aria-pressed", v === "off" ? !cur : v === cur);
+      c.onclick = () => { S.mAnim = v; buzz(6); save(); g.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === c)); };
+      g.append(c);
+    }
+    w.append(g, rangeRow(RG("mAnimAmt", "Strength", 0, 1, 0.01)), rangeRow(RG("mAnimSpeed", "Speed", 0.25, 2, 0.05, fmtX)),
+      el("p", "note", "Moves the character while you use it, so it's never stiff in recordings and streams. Your head always leads; so do your arms when arm tracking is on, and in a scene the legs stay seated."));
+    return w;
   }
   if (it.t === "perfinfo"){
     const p = el("p", "note"), show = () => {
@@ -4915,7 +5074,7 @@ async function buildExtra(uid, ref){
       X.turn = new THREE.Group(); X.turn.rotation.y = X.M.turn; X.turn.add(X.M.root); X.body.add(X.turn);
       X.anchor = new THREE.Group(); fitFace(X.M, X.anchor, X.body, X.cfg); X.M.anchor = X.anchor; applyModelStyle(X.M);
       X.tint = X.M.tint; X.surf = modelSurf(X); X.faceHost = X.anchor;
-      if (X.M.anims.length){ X.mixer = new THREE.AnimationMixer(X.M.root); X.action = X.mixer.clipAction(X.M.anims[0]); }
+      castMixer(X);
     } else {
       X.kind = "puppet"; X.P = await puppetData(c); buildPuppetInto(X.P, X.body, X.cfg);
       X.tint = X.P.tint; X.surf = onFlat; X.faceHost = X.body;
@@ -4978,14 +5137,24 @@ function removeFromCast(uid){
 
 // ---- motion: recorded loop, idle sway, the model's own animation, or still
 const MOTIONS = [["loop", "My recorded loop"], ["idle", "Gentle sway"], ["clip", "Model's animation"], ["still", "Still"]];
+// "clip:<name>" plays one of the model's animations ("clip" alone: its first)
+const castClips = X => X.M?.anims?.map(a => a.name) || [];
+function castMixer(X){ if (X.M.anims.length){ X.mixer = new THREE.AnimationMixer(X.M.root); X.action = true; X.actions = {}; } }
 function motionOf(X){
   const e = castEntry(X.uid) || stuCfg(), m = X.uid === "host" ? (e.hostMotion || "auto") : (e.motion || "auto");
-  if (m !== "auto") return m === "clip" && !X.action ? "idle" : m === "loop" && !X.loopData ? "idle" : m;
+  if (m !== "auto"){
+    if (m.startsWith("clip")) return X.action && (m === "clip" || castClips(X).includes(m.slice(5))) ? m : "idle";
+    return m === "loop" && !X.loopData ? "idle" : m;
+  }
   return X.loopData ? "loop" : X.action ? "clip" : "idle";
 }
 function syncMotion(X){
   const m = motionOf(X);
-  if (X.action){ if (m === "clip") X.action.play(); else X.action.stop(); }
+  if (X.action){
+    const want = m.startsWith("clip") ? (m.slice(5) || castClips(X)[0]) : null;
+    for (const [n, a] of Object.entries(X.actions)) if (n !== want) a.stop();
+    if (want){ X.actions[want] ||= X.mixer.clipAction(X.M.anims.find(a => a.name === want)); X.actions[want].play(); }
+  }
   if (m === "loop" && X.loopData){ if (!X.loop) startLoopPlayer(X); } else if (X.loop){ X.loop.dispose(); X.loop = null; setFacesVisible(X, false); }
   if (m !== "loop") restPose(X);
 }
@@ -5164,7 +5333,7 @@ function stepStudio(now, dt){
       const t = now/1000 + X.phase;
       X.pose.rotation.set(Math.sin(t*0.7)*0.03, Math.sin(t*0.45)*0.12, Math.sin(t*0.9)*0.04); X.pose.position.y = Math.sin(t*1.6)*0.025;
     }
-    if (X.mixer && m === "clip") X.mixer.update(dt);
+    if (X.mixer && m.startsWith("clip")) X.mixer.update(dt);
   }
 }
 
@@ -5182,11 +5351,11 @@ async function swapLead(uid){
     if (stageMode === "puppet" && PUP){
       O.kind = "puppet"; O.P = PUP; for (const m of PUP.meshes || []) O.body.add(m); O.tint = PUP.tint; O.surf = onFlat; O.faceHost = O.body; PUP = null;
     } else if (stageMode === "model" && MDL){
-      O.kind = "model"; O.M = MDL; O.c = CHARS.find(c => c.id === leadRef); faceAnchor.parent?.remove(faceAnchor);
+      stopModelAnim(MDL); O.kind = "model"; O.M = MDL; O.c = CHARS.find(c => c.id === leadRef); faceAnchor.parent?.remove(faceAnchor);
       O.turn = new THREE.Group(); O.turn.rotation.y = MDL.turn; O.turn.add(MDL.root); O.body.add(O.turn);
       O.anchor = new THREE.Group(); fitFace(O.M, O.anchor, O.body, O.cfg); O.M.anchor = O.anchor;
       O.tint = O.M.tint; O.surf = modelSurf(O); O.faceHost = O.anchor;
-      if (O.M.anims.length){ O.mixer = new THREE.AnimationMixer(O.M.root); O.action = O.mixer.clipAction(O.M.anims[0]); }
+      castMixer(O);
       MDL = null;
     } else { O.kind = "peanut"; O.nut = cloneNut(); O.body.add(O.nut); O.tint = shellTint.clone(); O.surf = onSurface; O.faceHost = O.nut; }
     // 2) the cast member steps into the stage rig and puts your face on
@@ -5374,7 +5543,7 @@ function studioCastBody(b){
     const list = el("div", "vlist");
     for (const u of ["host", ...st.cast.map(e => e.uid)]){
       const ref = refOf(u), X = STU.extras.get(u), live = STU.lead === u;
-      const tag = live ? "Live (you)" : X ? MOTIONS.find(m => m[0] === motionOf(X))?.[1] || "" : "Loading…";
+      const mo = X && motionOf(X), tag = live ? "Live (you)" : X ? (mo.startsWith("clip") ? mo.slice(5) || castClips(X)[0] : MOTIONS.find(m => m[0] === mo)?.[1] || "") : "Loading…";
       const r = el("div", "vrow" + (live ? " on" : ""), `<button class="vname press"><b>${u === "host" ? "★" : "•"}</b><span></span><small></small></button>
         <button class="step press" aria-label="Camera on this character">${ico("t-camera")}</button><button class="step press" aria-label="Options">${ico("dots")}</button>`);
       r.querySelector("span").textContent = charName(ref); r.querySelector("small").textContent = tag;
@@ -5438,9 +5607,10 @@ function castOptions(uid){
     else if (X){
       b.append(el("div", "sec", "When it's not on camera"));
       const ch = el("div", "chips"), cur = motionOf(X);
-      for (const [m, label] of MOTIONS){
-        if (m === "loop" && !X.loopData) continue; if (m === "clip" && !X.action) continue;
-        const c = el("button", "chip press", label); c.setAttribute("aria-pressed", cur === m);
+      const opts = [["loop", "My recorded loop"], ...castClips(X).map(n => ["clip:" + n, n]), ["idle", "Gentle sway"], ["still", "Still"]];
+      for (const [m, label] of opts){
+        if (m === "loop" && !X.loopData) continue;
+        const c = el("button", "chip press", label); c.setAttribute("aria-pressed", cur === m || (cur === "clip" && m === "clip:" + castClips(X)[0]));
         c.onclick = () => { if (uid === "host") st.hostMotion = m; else e.motion = m; save(); syncMotion(X); buzz(6); ch.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === c)); };
         ch.append(c);
       }
@@ -7373,9 +7543,11 @@ function loop(now){
     nut.rotation.set(-spr.pitch.v * 0.025 * wob, 0, -spr.yaw.v * 0.02 * wob - spr.tx.v * 0.05 * wob);
     if (NUT_ARMS && S.body) driveArms(NUT_ARMS, now, Math.min(1, dt*14));
   } else if (stageMode === "model" && MDL && (RIGE.on || PF.on)){
+    stepModelAnim(dt);
     mrig.position.set(0, 0, 0); mrig.rotation.set(0, 0, 0); mrig.scale.set(1, 1, 1);
     if (PF.on && MDL.head){ const R = MDL.rig, k0 = Math.min(1, dt*8); if (R.neck) turnWorld(R, R.neck, 0, 0, 0, k0); turnWorld(R, R.head, 0, 0, 0, k0); }   // face straight on while placing
   } else if (stageMode === "model" && MDL){
+    stepModelAnim(dt);
     const useHead = MDL.head && S.mHeadBone, bodyK = useHead ? 0.2 : 1;
     const idle = (seen ? 0 : Math.sin(now/900) * 0.05) + mk * Math.sin(now/1600) * 0.35;
     mrig.rotation.set(spr.pitch.p*bodyK + spr.nti.p, spr.yaw.p*bodyK + idle + spr.nsp.p, spr.roll.p*bodyK + spr.nr.p);

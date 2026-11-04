@@ -22,6 +22,14 @@ In a scene you can still move, turn and resize the character and the TV, zoom th
 - **Fruit:** Apple, Banana, Orange, Strawberry, Pineapple, Watermelon, Pear, Lemon and Avocado.
 - **Strange:** Alien (a person with a big head), Toaster, Cactus, Ghost, Moai, Burger and Traffic Cone.
 
+**Animations.** Every ready-made character has a few ambient animations, so it's never stiff in recordings and streams. Pick one in **Settings › Model › Animation**, with **Strength** and **Speed** (built-in characters start on Idle; imported models start still). The animation plays under your tracking: your head always leads, your arms too when arm tracking is on, and in a scene the legs stay seated.
+
+- People: Idle, Groove, Talk and Wave, plus two of their own: Skater (Ollie, which pops his board, and Balance), Punk (Headbang, Air guitar), B-Boy (Toprock, Bounce), Surfer (Surf, Hang loose), Office Worker (Check watch, Shrug), Grandma (Knit, Rock), Chef (Stir, Chef's kiss), Alien (Float, Robot).
+- Fruit and strange ones: Idle, Bounce, Jelly, Dance and Hop, plus the Toaster's Pop, the Ghost's Float and Boo!, the Cactus's Windy, the Burger's Squish, the Cone's Wobble and the Moai's Rumble. The face rides on the body as it moves.
+- Cast members can play any of them: tap the member in **Studio › Cast** and pick one (or a recorded loop, a gentle sway, or still).
+
+The people carry props: the Skater's board, the Chef's wooden spoon, Grandma's knitting, the Office Worker's mug, the B-Boy's gold chain and the Alien's antennae.
+
 Fruit and the strange objects have no bones: they turn with your head like the Peanut and sway gently when they're cast members. Every one can host a studio or scene, and you can add the same one more than once (each has its own settings).
 
 ## Cast
