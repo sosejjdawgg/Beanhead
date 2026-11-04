@@ -16,7 +16,13 @@ In a scene you can still move, turn and resize the character and the TV, zoom th
 
 ## Built-in characters
 
-**Add › Skater (built in)** adds a low-poly, PS2-era skater made in the app itself: about 2,600 triangles with painted textures and a full skeleton (head, arms, hands and fingers). Head, arm and hand tracking drive it like any rigged model, and it has an idle animation for when it's a cast member. It can host any studio or scene in place of the Peanut.
+**Add › Ready-made** has characters made in the app itself, in a low-poly, PS2-era style with small painted textures. The Skater is on the home screen from the start.
+
+- **People:** Skater, Punk, B-Boy, Surfer, Office Worker, Grandma and Chef. They share one full skeleton (head, arms, hands and fingers), so head, arm and hand tracking drive them like any rigged model, and they have an idle animation for when they're cast members.
+- **Fruit:** Apple, Banana, Orange, Strawberry, Pineapple, Watermelon, Pear, Lemon and Avocado.
+- **Strange:** Alien (a person with a big head), Toaster, Cactus, Ghost, Moai, Burger and Traffic Cone.
+
+Fruit and the strange objects have no bones: they turn with your head like the Peanut and sway gently when they're cast members. Every one can host a studio or scene, and you can add the same one more than once (each has its own settings).
 
 ## Cast
 
